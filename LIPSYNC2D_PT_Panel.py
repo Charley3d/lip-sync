@@ -19,25 +19,30 @@ class LIPSYNC2D_PT_Panel(bpy.types.Panel):
         if not hasattr(context.scene, "lipsync2d_props"):
             return
         
-        props = context.scene.lipsync2d_props # type: ignore
+        props = context.active_object.lipsync2d_props # type: ignore
 
         if props is None:
             return
         
         
         # Create a simple row.
-        row = layout.row()
-        row.label(text="Select your Sprite sheet")
-        row = layout.row()
-        layout.template_ID_preview(props, "lip_sync_2d_sprite_sheet", rows=2, cols=6, open="image.open" )
-        
-        row = layout.row()
-        row.operator('mesh.set_lips_area', text="Set Mouth Area")
-
+                
         row = layout.row(align=True)
         row.operator('mesh.set_lips_material', text="Add Spritesheet on Selection")
 
         
+        if context.active_object is None or not hasattr(context.active_object,"lipsync2d_props") or "lip_sync_2d_sprite_sheet" not in context.active_object["lipsync2d_props"]: return
+        
+        row = layout.row()
+        row.label(text="Select your Sprite sheet")
+        row = layout.row()
+        layout.template_ID_preview(props, "lip_sync_2d_sprite_sheet", rows=2, cols=6, open="image.open" )
+
+        row = layout.row()
+        row.label(text="Area")
+        row = layout.row()
+        row.operator('mesh.set_lips_area', text="Set Mouth Area (Edit Mode)")
+
         row = layout.row()
         row.label(text="Spritesheet Size")
         row = layout.row(align=True)

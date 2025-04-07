@@ -332,7 +332,7 @@ def cgp_spritesheet_reader_node_group(spriteratio, sprite_image):
 
     #node Image Texture.001
     image_texture_001 = cgp_spritesheet_reader.nodes.new("ShaderNodeTexImage")
-    image_texture_001.name = "Image Texture.001"
+    image_texture_001.name = "CGP_LipSyncSpritesheet"
     image_texture_001.extension = 'CLIP'
     if sprite_image and sprite_image.name in bpy.data.images:
         image_texture_001.image = sprite_image
