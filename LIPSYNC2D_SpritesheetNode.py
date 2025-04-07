@@ -2,18 +2,18 @@
 import bpy
 
 #initialize CGP_SpriteRatio node group
-def spriteratio_node_group():
+def cgp_spriteratio_node_group():
 
-    spriteratio = bpy.data.node_groups.new(type = 'ShaderNodeTree', name = "CGP_SpriteRatio")
+    cgp_spriteratio = bpy.data.node_groups.new(type = 'ShaderNodeTree', name = "CGP_SpriteRatio")
 
-    spriteratio.color_tag = 'NONE'
-    spriteratio.description = ""
-    spriteratio.default_group_node_width = 140
+    cgp_spriteratio.color_tag = 'NONE'
+    cgp_spriteratio.description = ""
+    cgp_spriteratio.default_group_node_width = 140
     
 
-    #spriteratio interface
+    #cgp_spriteratio interface
     #Socket Vector
-    vector_socket = spriteratio.interface.new_socket(name = "Vector", in_out='OUTPUT', socket_type = 'NodeSocketVector')
+    vector_socket = cgp_spriteratio.interface.new_socket(name = "Vector", in_out='OUTPUT', socket_type = 'NodeSocketVector')
     vector_socket.default_value = (0.0, 0.0, 0.0)
     vector_socket.min_value = -3.4028234663852886e+38
     vector_socket.max_value = 3.4028234663852886e+38
@@ -21,7 +21,7 @@ def spriteratio_node_group():
     vector_socket.attribute_domain = 'POINT'
 
     #Socket X
-    x_socket = spriteratio.interface.new_socket(name = "X", in_out='INPUT', socket_type = 'NodeSocketFloat')
+    x_socket = cgp_spriteratio.interface.new_socket(name = "X", in_out='INPUT', socket_type = 'NodeSocketFloat')
     x_socket.default_value = 0.0
     x_socket.min_value = -10000.0
     x_socket.max_value = 10000.0
@@ -29,7 +29,7 @@ def spriteratio_node_group():
     x_socket.attribute_domain = 'POINT'
 
     #Socket Y
-    y_socket = spriteratio.interface.new_socket(name = "Y", in_out='INPUT', socket_type = 'NodeSocketFloat')
+    y_socket = cgp_spriteratio.interface.new_socket(name = "Y", in_out='INPUT', socket_type = 'NodeSocketFloat')
     y_socket.default_value = 0.0
     y_socket.min_value = -10000.0
     y_socket.max_value = 10000.0
@@ -37,23 +37,23 @@ def spriteratio_node_group():
     y_socket.attribute_domain = 'POINT'
 
 
-    #initialize spriteratio nodes
+    #initialize cgp_spriteratio nodes
     #node Group Output
-    group_output = spriteratio.nodes.new("NodeGroupOutput")
+    group_output = cgp_spriteratio.nodes.new("NodeGroupOutput")
     group_output.name = "Group Output"
     group_output.is_active_output = True
 
     #node Group Input
-    group_input = spriteratio.nodes.new("NodeGroupInput")
+    group_input = cgp_spriteratio.nodes.new("NodeGroupInput")
     group_input.name = "Group Input"
 
     #node Vector Math.002
-    vector_math_002 = spriteratio.nodes.new("ShaderNodeVectorMath")
+    vector_math_002 = cgp_spriteratio.nodes.new("ShaderNodeVectorMath")
     vector_math_002.name = "Vector Math.002"
     vector_math_002.operation = 'NORMALIZE'
 
     #node Combine XYZ
-    combine_xyz = spriteratio.nodes.new("ShaderNodeCombineXYZ")
+    combine_xyz = cgp_spriteratio.nodes.new("ShaderNodeCombineXYZ")
     combine_xyz.name = "Combine XYZ"
     #Z
     combine_xyz.inputs[2].default_value = 1.0
@@ -71,21 +71,21 @@ def spriteratio_node_group():
     vector_math_002.width, vector_math_002.height = 140.0, 100.0
     combine_xyz.width, combine_xyz.height = 140.0, 100.0
 
-    #initialize spriteratio links
+    #initialize cgp_spriteratio links
     #combine_xyz.Vector -> vector_math_002.Vector
-    spriteratio.links.new(combine_xyz.outputs[0], vector_math_002.inputs[0])
+    cgp_spriteratio.links.new(combine_xyz.outputs[0], vector_math_002.inputs[0])
     #group_input.X -> combine_xyz.X
-    spriteratio.links.new(group_input.outputs[0], combine_xyz.inputs[0])
+    cgp_spriteratio.links.new(group_input.outputs[0], combine_xyz.inputs[0])
     #group_input.Y -> combine_xyz.Y
-    spriteratio.links.new(group_input.outputs[1], combine_xyz.inputs[1])
+    cgp_spriteratio.links.new(group_input.outputs[1], combine_xyz.inputs[1])
     #vector_math_002.Vector -> group_output.Vector
-    spriteratio.links.new(vector_math_002.outputs[0], group_output.inputs[0])
-    return spriteratio
+    cgp_spriteratio.links.new(vector_math_002.outputs[0], group_output.inputs[0])
+    return cgp_spriteratio
 
-# spriteratio = spriteratio_node_group()
+# cgp_spriteratio = cgp_spriteratio_node_group()
 
 #initialize cgp_spritesheet_reader node group
-def cgp_spritesheet_reader_node_group(spriteratio, sprite_image):
+def cgp_spritesheet_reader_node_group(cgp_spriteratio, sprite_image):
 
     cgp_spritesheet_reader = bpy.data.node_groups.new(type = 'ShaderNodeTree', name = "cgp_spritesheet_reader")
 
@@ -330,22 +330,22 @@ def cgp_spritesheet_reader_node_group(spriteratio, sprite_image):
     uv_map.from_instancer = False
     uv_map.uv_map = "Mouth"
 
-    #node Image Texture.001
-    image_texture_001 = cgp_spritesheet_reader.nodes.new("ShaderNodeTexImage")
-    image_texture_001.name = "CGP_LipSyncSpritesheet"
-    image_texture_001.extension = 'CLIP'
+    #node CGP_LipSyncSpritesheet
+    cgp_lipsyncspritesheet = cgp_spritesheet_reader.nodes.new("ShaderNodeTexImage")
+    cgp_lipsyncspritesheet.name = "CGP_LipSyncSpritesheet"
+    cgp_lipsyncspritesheet.extension = 'CLIP'
     if sprite_image and sprite_image.name in bpy.data.images:
-        image_texture_001.image = sprite_image
-    image_texture_001.image_user.frame_current = 0
-    image_texture_001.image_user.frame_duration = 1
-    image_texture_001.image_user.frame_offset = -1
-    image_texture_001.image_user.frame_start = 1
-    image_texture_001.image_user.tile = 0
-    image_texture_001.image_user.use_auto_refresh = False
-    image_texture_001.image_user.use_cyclic = False
-    image_texture_001.interpolation = 'Cubic'
-    image_texture_001.projection = 'FLAT'
-    image_texture_001.projection_blend = 0.0
+        cgp_lipsyncspritesheet.image = sprite_image
+    cgp_lipsyncspritesheet.image_user.frame_current = 0
+    cgp_lipsyncspritesheet.image_user.frame_duration = 1
+    cgp_lipsyncspritesheet.image_user.frame_offset = -1
+    cgp_lipsyncspritesheet.image_user.frame_start = 1
+    cgp_lipsyncspritesheet.image_user.tile = 0
+    cgp_lipsyncspritesheet.image_user.use_auto_refresh = False
+    cgp_lipsyncspritesheet.image_user.use_cyclic = False
+    cgp_lipsyncspritesheet.interpolation = 'Cubic'
+    cgp_lipsyncspritesheet.projection = 'FLAT'
+    cgp_lipsyncspritesheet.projection_blend = 0.0
 
     #node Attribute.002
     attribute_002 = cgp_spritesheet_reader.nodes.new("ShaderNodeAttribute")
@@ -632,12 +632,6 @@ def cgp_spritesheet_reader_node_group(spriteratio, sprite_image):
     #node Group Input.006
     group_input_006 = cgp_spritesheet_reader.nodes.new("NodeGroupInput")
     group_input_006.name = "Group Input.006"
-    group_input_006.outputs[0].hide = True
-    group_input_006.outputs[1].hide = True
-    group_input_006.outputs[3].hide = True
-    group_input_006.outputs[4].hide = True
-    group_input_006.outputs[5].hide = True
-    group_input_006.outputs[6].hide = True
 
     #node Math.033
     math_033 = cgp_spritesheet_reader.nodes.new("ShaderNodeMath")
@@ -648,6 +642,8 @@ def cgp_spritesheet_reader_node_group(spriteratio, sprite_image):
     #node Group Input.007
     group_input_007 = cgp_spritesheet_reader.nodes.new("NodeGroupInput")
     group_input_007.name = "Group Input.007"
+    group_input_007.outputs[0].hide = True
+    group_input_007.outputs[1].hide = True
     group_input_007.outputs[3].hide = True
     group_input_007.outputs[4].hide = True
     group_input_007.outputs[5].hide = True
@@ -670,7 +666,7 @@ def cgp_spritesheet_reader_node_group(spriteratio, sprite_image):
     #node Group
     group = cgp_spritesheet_reader.nodes.new("ShaderNodeGroup")
     group.name = "Group"
-    group.node_tree = spriteratio
+    group.node_tree = cgp_spriteratio
 
     #node Group Input.008
     group_input_008 = cgp_spritesheet_reader.nodes.new("NodeGroupInput")
@@ -684,7 +680,7 @@ def cgp_spritesheet_reader_node_group(spriteratio, sprite_image):
     #node Group.001
     group_001 = cgp_spritesheet_reader.nodes.new("ShaderNodeGroup")
     group_001.name = "Group.001"
-    group_001.node_tree = spriteratio
+    group_001.node_tree = cgp_spriteratio
 
     #node Vector Math.002
     vector_math_002_1 = cgp_spritesheet_reader.nodes.new("ShaderNodeVectorMath")
@@ -906,6 +902,24 @@ def cgp_spritesheet_reader_node_group(spriteratio, sprite_image):
     frame_012.label_size = 39
     frame_012.shrink = False
 
+    #node Math.018
+    math_018 = cgp_spritesheet_reader.nodes.new("ShaderNodeMath")
+    math_018.name = "Math.018"
+    math_018.operation = 'GREATER_THAN'
+    math_018.use_clamp = False
+    #Value_001
+    math_018.inputs[1].default_value = 1.0
+
+    #node Math.035
+    math_035 = cgp_spritesheet_reader.nodes.new("ShaderNodeMath")
+    math_035.name = "Math.035"
+    math_035.operation = 'MULTIPLY'
+    math_035.use_clamp = False
+
+    #node Reroute.035
+    reroute_035 = cgp_spritesheet_reader.nodes.new("NodeReroute")
+    reroute_035.name = "Reroute.035"
+    reroute_035.socket_idname = "NodeSocketVector"
     #Set parents
     separate_xyz.parent = frame
     mapping_001.parent = frame
@@ -930,7 +944,7 @@ def cgp_spritesheet_reader_node_group(spriteratio, sprite_image):
     frame_002.parent = frame
     reroute_005.parent = frame
     uv_map.parent = frame
-    image_texture_001.parent = frame_007
+    cgp_lipsyncspritesheet.parent = frame_007
     attribute_002.parent = frame_007
     math_011.parent = frame_007
     color_ramp.parent = frame_011
@@ -982,10 +996,13 @@ def cgp_spritesheet_reader_node_group(spriteratio, sprite_image):
     reroute_029.parent = frame_011
     reroute_030.parent = frame_011
     reroute_031.parent = frame_011
+    math_018.parent = frame_005
+    math_035.parent = frame_005
+    reroute_035.parent = frame_007
 
     #Set locations
     group_output_1.location = (3720.0, 740.0)
-    group_input_1.location = (-4415.060546875, -24.059814453125)
+    group_input_1.location = (-5214.41259765625, -24.059814453125)
     frame.location = (500.0, 252.5)
     separate_xyz.location = (686.036865234375, -489.8516845703125)
     mapping_001.location = (502.601318359375, -497.6370849609375)
@@ -1010,7 +1027,7 @@ def cgp_spritesheet_reader_node_group(spriteratio, sprite_image):
     frame_002.location = (518.0, -972.5)
     reroute_005.location = (599.8408203125, -364.7384033203125)
     uv_map.location = (29.726806640625, -591.9075927734375)
-    image_texture_001.location = (1270.0, -261.0)
+    cgp_lipsyncspritesheet.location = (1270.0, -261.0)
     attribute_002.location = (230.0, -85.0)
     math_011.location = (230.0, -425.0)
     math_012.location = (2700.0, 520.0)
@@ -1033,29 +1050,29 @@ def cgp_spritesheet_reader_node_group(spriteratio, sprite_image):
     math_015.location = (370.0, -56.25)
     reroute_012.location = (-1860.0, 330.0)
     reroute_014.location = (-1860.0, -450.0)
-    math_023.location = (272.53173828125, -95.82254028320312)
-    math_028.location = (430.0, -95.0)
-    math_029.location = (274.7841796875, -275.1216125488281)
-    math_030.location = (650.0, -175.0)
-    math_026.location = (30.0, -96.25)
-    math_027.location = (510.0, -96.25)
-    math_031.location = (270.0, -336.25)
-    math_032.location = (270.0, -76.25)
-    reroute_007.location = (-3402.95166015625, 37.15393829345703)
-    map_range_001.location = (340.30322265625, -95.10816955566406)
-    math_025.location = (29.61474609375, -240.17730712890625)
+    math_023.location = (273.000244140625, -95.82254028320312)
+    math_028.location = (430.468505859375, -95.0)
+    math_029.location = (275.252685546875, -275.1216125488281)
+    math_030.location = (650.468505859375, -175.0)
+    math_026.location = (30.468505859375, -96.25)
+    math_027.location = (510.468505859375, -96.25)
+    math_031.location = (270.468505859375, -336.25)
+    math_032.location = (270.468505859375, -76.25)
+    reroute_007.location = (-4202.3037109375, 37.15393829345703)
+    map_range_001.location = (341.18505859375, -95.10816955566406)
+    math_025.location = (30.49658203125, -240.17730712890625)
     group_input_001.location = (30.0, -208.0)
     group_input_002.location = (-1720.0, 80.0)
     reroute_017.location = (-1520.0, -180.0)
     vector_math_007.location = (430.0, -85.0)
     group_input_003.location = (30.0, -325.0)
-    group_input_004.location = (270.0, -236.25)
-    group_input_005.location = (270.0, -496.25)
-    group_input_006.location = (30.0, -255.0)
-    math_033.location = (1030.0, -195.0)
-    group_input_007.location = (650.0, -655.0)
-    math_016.location = (650.0, -355.0)
-    math_017.location = (650.0, -515.0)
+    group_input_004.location = (270.468505859375, -236.25)
+    group_input_005.location = (270.468505859375, -496.25)
+    group_input_006.location = (30.468505859375, -255.0)
+    math_033.location = (1030.468505859375, -195.0)
+    group_input_007.location = (650.468505859375, -660.7783813476562)
+    math_016.location = (650.468505859375, -355.0)
+    math_017.location = (650.468505859375, -515.0)
     group.location = (230.0, -285.0)
     group_input_008.location = (30.0, -100.0)
     group_001.location = (190.0, -60.0)
@@ -1066,8 +1083,8 @@ def cgp_spritesheet_reader_node_group(spriteratio, sprite_image):
     math_034.location = (218.0, -692.5)
     vector_math_009.location = (510.0, -100.0)
     vector_math_010.location = (34.726806640625, -451.9076232910156)
-    frame_004.location = (-3180.0, -200.0)
-    frame_005.location = (-3190.0, 516.25)
+    frame_004.location = (-3979.35205078125, -200.0)
+    frame_005.location = (-3989.35205078125, 516.25)
     frame_006.location = (-2380.0, 720.0)
     reroute_006.location = (270.0, -220.0)
     reroute_008.location = (290.0, -188.25)
@@ -1097,7 +1114,10 @@ def cgp_spritesheet_reader_node_group(spriteratio, sprite_image):
     frame_009.location = (-1790.0, 550.0)
     frame_010.location = (-1810.0, -203.75)
     frame_011.location = (2610.0, 1098.75)
-    frame_012.location = (-3977.0, 168.0)
+    frame_012.location = (-4776.35205078125, 168.0)
+    math_018.location = (525.95947265625, -340.6490478515625)
+    math_035.location = (693.75390625, -92.30340576171875)
+    reroute_035.location = (850.625244140625, -460.89617919921875)
 
     #Set dimensions
     group_output_1.width, group_output_1.height = 140.0, 100.0
@@ -1126,7 +1146,7 @@ def cgp_spritesheet_reader_node_group(spriteratio, sprite_image):
     frame_002.width, frame_002.height = 428.0, 225.0
     reroute_005.width, reroute_005.height = 10.0, 100.0
     uv_map.width, uv_map.height = 150.0, 100.0
-    image_texture_001.width, image_texture_001.height = 240.0, 100.0
+    cgp_lipsyncspritesheet.width, cgp_lipsyncspritesheet.height = 240.0, 100.0
     attribute_002.width, attribute_002.height = 140.0, 100.0
     math_011.width, math_011.height = 140.0, 100.0
     math_012.width, math_012.height = 140.0, 100.0
@@ -1182,8 +1202,8 @@ def cgp_spritesheet_reader_node_group(spriteratio, sprite_image):
     math_034.width, math_034.height = 140.0, 100.0
     vector_math_009.width, vector_math_009.height = 140.0, 100.0
     vector_math_010.width, vector_math_010.height = 140.0, 100.0
-    frame_004.width, frame_004.height = 1200.0, 781.0
-    frame_005.width, frame_005.height = 680.0, 578.25
+    frame_004.width, frame_004.height = 1200.96533203125, 873.0
+    frame_005.width, frame_005.height = 863.35205078125, 578.25
     frame_006.width, frame_006.height = 200.0, 290.0
     reroute_006.width, reroute_006.height = 10.0, 100.0
     reroute_008.width, reroute_008.height = 10.0, 100.0
@@ -1213,7 +1233,10 @@ def cgp_spritesheet_reader_node_group(spriteratio, sprite_image):
     frame_009.width, frame_009.height = 480.0, 268.0
     frame_010.width, frame_010.height = 540.0, 294.25
     frame_011.width, frame_011.height = 660.0, 545.75
-    frame_012.width, frame_012.height = 510.0, 438.0
+    frame_012.width, frame_012.height = 511.67626953125, 438.0
+    math_018.width, math_018.height = 140.0, 100.0
+    math_035.width, math_035.height = 140.0, 100.0
+    reroute_035.width, reroute_035.height = 10.0, 100.0
 
     #initialize cgp_spritesheet_reader links
     #math_022.Value -> math_013.Value
@@ -1222,8 +1245,6 @@ def cgp_spritesheet_reader_node_group(spriteratio, sprite_image):
     cgp_spritesheet_reader.links.new(reroute_001.outputs[0], reroute_005.inputs[0])
     #map_range_001.Result -> reroute_007.Input
     cgp_spritesheet_reader.links.new(map_range_001.outputs[0], reroute_007.inputs[0])
-    #vector_math.Vector -> vector_math_006.Vector
-    cgp_spritesheet_reader.links.new(vector_math.outputs[0], vector_math_006.inputs[1])
     #reroute_007.Output -> math_023.Value
     cgp_spritesheet_reader.links.new(reroute_007.outputs[0], math_023.inputs[0])
     #math_011.Value -> mapping_003.Scale
@@ -1236,14 +1257,14 @@ def cgp_spritesheet_reader_node_group(spriteratio, sprite_image):
     cgp_spritesheet_reader.links.new(reroute_002.outputs[0], math_005.inputs[0])
     #reroute_012.Output -> math_022.Value
     cgp_spritesheet_reader.links.new(reroute_012.outputs[0], math_022.inputs[1])
-    #math_027.Value -> math_022.Value
-    cgp_spritesheet_reader.links.new(math_027.outputs[0], math_022.inputs[0])
+    #math_035.Value -> math_022.Value
+    cgp_spritesheet_reader.links.new(math_035.outputs[0], math_022.inputs[0])
     #math_024.Value -> math_015.Value
     cgp_spritesheet_reader.links.new(math_024.outputs[0], math_015.inputs[0])
     #reroute_010.Output -> math_011.Value
     cgp_spritesheet_reader.links.new(reroute_010.outputs[0], math_011.inputs[0])
-    #mapping_003.Vector -> image_texture_001.Vector
-    cgp_spritesheet_reader.links.new(mapping_003.outputs[0], image_texture_001.inputs[0])
+    #mapping_003.Vector -> cgp_lipsyncspritesheet.Vector
+    cgp_spritesheet_reader.links.new(mapping_003.outputs[0], cgp_lipsyncspritesheet.inputs[0])
     #separate_xyz.Y -> reroute_004.Input
     cgp_spritesheet_reader.links.new(separate_xyz.outputs[1], reroute_004.inputs[0])
     #math_008.Value -> math_012.Value
@@ -1300,8 +1321,8 @@ def cgp_spritesheet_reader_node_group(spriteratio, sprite_image):
     cgp_spritesheet_reader.links.new(combine_xyz_003.outputs[0], vector_math.inputs[0])
     #group_input_1.Rows -> math_025.Value
     cgp_spritesheet_reader.links.new(group_input_1.outputs[2], math_025.inputs[1])
-    #image_texture_001.Alpha -> math_012.Value
-    cgp_spritesheet_reader.links.new(image_texture_001.outputs[1], math_012.inputs[0])
+    #cgp_lipsyncspritesheet.Alpha -> math_012.Value
+    cgp_spritesheet_reader.links.new(cgp_lipsyncspritesheet.outputs[1], math_012.inputs[0])
     #vector_math_006.Vector -> mapping_003.Vector
     cgp_spritesheet_reader.links.new(vector_math_006.outputs[0], mapping_003.inputs[0])
     #math_003.Value -> math_004.Value
@@ -1350,8 +1371,6 @@ def cgp_spritesheet_reader_node_group(spriteratio, sprite_image):
     cgp_spritesheet_reader.links.new(group_input_001.outputs[3], math.inputs[1])
     #attribute_002.Vector -> vector_math_007.Vector
     cgp_spritesheet_reader.links.new(attribute_002.outputs[1], vector_math_007.inputs[0])
-    #group.Vector -> vector_math_007.Vector
-    cgp_spritesheet_reader.links.new(group.outputs[0], vector_math_007.inputs[1])
     #math_013.Value -> combine_xyz_003.X
     cgp_spritesheet_reader.links.new(math_013.outputs[0], combine_xyz_003.inputs[0])
     #group_input_1.Columns -> math_025.Value
@@ -1360,22 +1379,14 @@ def cgp_spritesheet_reader_node_group(spriteratio, sprite_image):
     cgp_spritesheet_reader.links.new(group_input_004.outputs[1], math_032.inputs[1])
     #group_input_005.Columns -> math_031.Value
     cgp_spritesheet_reader.links.new(group_input_005.outputs[1], math_031.inputs[1])
-    #group_input_006.Rows -> math_023.Value
-    cgp_spritesheet_reader.links.new(group_input_006.outputs[2], math_023.inputs[1])
     #group_input_006.Rows -> math_029.Value
     cgp_spritesheet_reader.links.new(group_input_006.outputs[2], math_029.inputs[1])
-    #math_030.Value -> math_033.Value
-    cgp_spritesheet_reader.links.new(math_030.outputs[0], math_033.inputs[0])
     #math_017.Value -> math_016.Value
     cgp_spritesheet_reader.links.new(math_017.outputs[0], math_016.inputs[0])
     #group_input_007.Rows -> math_017.Value
     cgp_spritesheet_reader.links.new(group_input_007.outputs[2], math_017.inputs[0])
     #math_016.Value -> math_033.Value
     cgp_spritesheet_reader.links.new(math_016.outputs[0], math_033.inputs[1])
-    #group_input_003.Rows -> group.X
-    cgp_spritesheet_reader.links.new(group_input_003.outputs[2], group.inputs[0])
-    #group_input_003.Columns -> group.Y
-    cgp_spritesheet_reader.links.new(group_input_003.outputs[1], group.inputs[1])
     #group_input_008.Rows -> group_001.X
     cgp_spritesheet_reader.links.new(group_input_008.outputs[2], group_001.inputs[0])
     #group_input_008.Columns -> group_001.Y
@@ -1450,42 +1461,76 @@ def cgp_spritesheet_reader_node_group(spriteratio, sprite_image):
     cgp_spritesheet_reader.links.new(reroute_028.outputs[0], reroute_030.inputs[0])
     #reroute_030.Output -> reroute_031.Input
     cgp_spritesheet_reader.links.new(reroute_030.outputs[0], reroute_031.inputs[0])
-    #image_texture_001.Color -> reroute_032.Input
-    cgp_spritesheet_reader.links.new(image_texture_001.outputs[0], reroute_032.inputs[0])
+    #cgp_lipsyncspritesheet.Color -> reroute_032.Input
+    cgp_spritesheet_reader.links.new(cgp_lipsyncspritesheet.outputs[0], reroute_032.inputs[0])
     #reroute_032.Output -> reroute_033.Input
     cgp_spritesheet_reader.links.new(reroute_032.outputs[0], reroute_033.inputs[0])
     #group_input_002.Main Scale -> reroute_011.Input
     cgp_spritesheet_reader.links.new(group_input_002.outputs[4], reroute_011.inputs[0])
     #reroute_011.Output -> reroute_017.Input
     cgp_spritesheet_reader.links.new(reroute_011.outputs[0], reroute_017.inputs[0])
+    #math_030.Value -> math_033.Value
+    cgp_spritesheet_reader.links.new(math_030.outputs[0], math_033.inputs[0])
+    #group_input_006.Columns -> math_023.Value
+    cgp_spritesheet_reader.links.new(group_input_006.outputs[1], math_023.inputs[1])
+    #group_input_005.Columns -> math_018.Value
+    cgp_spritesheet_reader.links.new(group_input_005.outputs[1], math_018.inputs[0])
+    #math_018.Value -> math_035.Value
+    cgp_spritesheet_reader.links.new(math_018.outputs[0], math_035.inputs[1])
+    #math_027.Value -> math_035.Value
+    cgp_spritesheet_reader.links.new(math_027.outputs[0], math_035.inputs[0])
+    #group.Vector -> vector_math_007.Vector
+    cgp_spritesheet_reader.links.new(group.outputs[0], vector_math_007.inputs[1])
+    #vector_math.Vector -> reroute_035.Input
+    cgp_spritesheet_reader.links.new(vector_math.outputs[0], reroute_035.inputs[0])
+    #group_input_003.Rows -> group.X
+    cgp_spritesheet_reader.links.new(group_input_003.outputs[2], group.inputs[0])
+    #group_input_003.Columns -> group.Y
+    cgp_spritesheet_reader.links.new(group_input_003.outputs[1], group.inputs[1])
+    #reroute_035.Output -> vector_math_006.Vector
+    cgp_spritesheet_reader.links.new(reroute_035.outputs[0], vector_math_006.inputs[1])
     return cgp_spritesheet_reader
 
 # cgp_spritesheet_reader = cgp_spritesheet_reader_node_group()
 
-#initialize Mouth-v2 node group
-def mouth_v2_node_group():
+#initialize Material node group
+def material_node_group():
 
-    mouth_v2 = mat.node_tree
+    material = mat.node_tree
     #start with a clean node tree
-    for node in mouth_v2.nodes:
-        mouth_v2.nodes.remove(node)
-    mouth_v2.color_tag = 'NONE'
-    mouth_v2.description = ""
-    mouth_v2.default_group_node_width = 140
+    for node in material.nodes:
+        material.nodes.remove(node)
+    material.color_tag = 'NONE'
+    material.description = ""
+    material.default_group_node_width = 140
     
 
-    #mouth_v2 interface
+    #material interface
 
-    #initialize mouth_v2 nodes
+    #initialize material nodes
+    #node Material Output
+    material_output = material.nodes.new("ShaderNodeOutputMaterial")
+    material_output.name = "Material Output"
+    material_output.is_active_output = True
+    material_output.target = 'ALL'
+    #Displacement
+    material_output.inputs[2].default_value = (0.0, 0.0, 0.0)
+    #Thickness
+    material_output.inputs[3].default_value = 0.0
+
     #node Principled BSDF
-    principled_bsdf = mouth_v2.nodes.new("ShaderNodeBsdfPrincipled")
+    principled_bsdf = material.nodes.new("ShaderNodeBsdfPrincipled")
     principled_bsdf.name = "Principled BSDF"
     principled_bsdf.distribution = 'MULTI_GGX'
     principled_bsdf.subsurface_method = 'RANDOM_WALK'
+    #Base Color
+    principled_bsdf.inputs[0].default_value = (0.800000011920929, 0.800000011920929, 0.800000011920929, 1.0)
     #Metallic
     principled_bsdf.inputs[1].default_value = 0.0
+    #Roughness
+    principled_bsdf.inputs[2].default_value = 0.5
     #IOR
-    principled_bsdf.inputs[3].default_value = 1.5
+    principled_bsdf.inputs[3].default_value = 1.4500000476837158
     #Alpha
     principled_bsdf.inputs[4].default_value = 1.0
     #Normal
@@ -1500,6 +1545,8 @@ def mouth_v2_node_group():
     principled_bsdf.inputs[10].default_value = 0.05000000074505806
     #Subsurface Anisotropy
     principled_bsdf.inputs[12].default_value = 0.0
+    #Specular IOR Level
+    principled_bsdf.inputs[13].default_value = 0.5
     #Specular Tint
     principled_bsdf.inputs[14].default_value = (1.0, 1.0, 1.0, 1.0)
     #Anisotropic
@@ -1535,27 +1582,30 @@ def mouth_v2_node_group():
     #Thin Film IOR
     principled_bsdf.inputs[30].default_value = 1.3300000429153442
 
-    #node Material Output
-    material_output = mouth_v2.nodes.new("ShaderNodeOutputMaterial")
-    material_output.name = "Material Output"
-    material_output.is_active_output = True
-    material_output.target = 'ALL'
-    #Displacement
-    material_output.inputs[2].default_value = (0.0, 0.0, 0.0)
-    #Thickness
-    material_output.inputs[3].default_value = 0.0
+    #node cgp_spritesheet_reader
+    cgp_spritesheet_reader_1 = material.nodes.new("ShaderNodeGroup")
+    cgp_spritesheet_reader_1.name = "cgp_spritesheet_reader"
+    cgp_spritesheet_reader_1.node_tree = cgp_spritesheet_reader
+    #Socket_4
+    cgp_spritesheet_reader_1.inputs[0].default_value = 1.0
+    #Socket_5
+    cgp_spritesheet_reader_1.inputs[1].default_value = 2.0
+    #Socket_6
+    cgp_spritesheet_reader_1.inputs[2].default_value = 5.0
+    #Socket_7
+    cgp_spritesheet_reader_1.inputs[3].default_value = 1.8370000123977661
+    #Socket_8
+    cgp_spritesheet_reader_1.inputs[4].default_value = 0.4570000171661377
+    #Socket_9
+    cgp_spritesheet_reader_1.inputs[5].default_value = (0.0, 0.0, 0.0)
 
     #node Principled BSDF.001
-    principled_bsdf_001 = mouth_v2.nodes.new("ShaderNodeBsdfPrincipled")
+    principled_bsdf_001 = material.nodes.new("ShaderNodeBsdfPrincipled")
     principled_bsdf_001.name = "Principled BSDF.001"
     principled_bsdf_001.distribution = 'MULTI_GGX'
     principled_bsdf_001.subsurface_method = 'RANDOM_WALK'
-    #Base Color
-    principled_bsdf_001.inputs[0].default_value = (0.800133466720581, 0.36626043915748596, 0.07181036472320557, 1.0)
     #Metallic
     principled_bsdf_001.inputs[1].default_value = 0.0
-    #Roughness
-    principled_bsdf_001.inputs[2].default_value = 0.7954545021057129
     #IOR
     principled_bsdf_001.inputs[3].default_value = 1.5
     #Alpha
@@ -1572,8 +1622,6 @@ def mouth_v2_node_group():
     principled_bsdf_001.inputs[10].default_value = 0.05000000074505806
     #Subsurface Anisotropy
     principled_bsdf_001.inputs[12].default_value = 0.0
-    #Specular IOR Level
-    principled_bsdf_001.inputs[13].default_value = 0.5
     #Specular Tint
     principled_bsdf_001.inputs[14].default_value = (1.0, 1.0, 1.0, 1.0)
     #Anisotropic
@@ -1600,74 +1648,50 @@ def mouth_v2_node_group():
     principled_bsdf_001.inputs[25].default_value = 0.5
     #Sheen Tint
     principled_bsdf_001.inputs[26].default_value = (1.0, 1.0, 1.0, 1.0)
-    #Emission Color
-    principled_bsdf_001.inputs[27].default_value = (1.0, 1.0, 1.0, 1.0)
     #Emission Strength
-    principled_bsdf_001.inputs[28].default_value = 0.0
+    principled_bsdf_001.inputs[28].default_value = 0.6499999761581421
     #Thin Film Thickness
     principled_bsdf_001.inputs[29].default_value = 0.0
     #Thin Film IOR
     principled_bsdf_001.inputs[30].default_value = 1.3300000429153442
 
     #node Mix Shader
-    mix_shader = mouth_v2.nodes.new("ShaderNodeMixShader")
+    mix_shader = material.nodes.new("ShaderNodeMixShader")
     mix_shader.name = "Mix Shader"
 
-    #node Group
-    group_1 = mouth_v2.nodes.new("ShaderNodeGroup")
-    group_1.name = "Group"
-    group_1.node_tree = cgp_spritesheet_reader
-    #Socket_5
-    group_1.inputs[1].default_value = 9.0
-    #Socket_6
-    group_1.inputs[2].default_value = 1.0
-    #Socket_7
-    group_1.inputs[3].default_value = 0.9900000095367432
-    #Socket_8
-    group_1.inputs[4].default_value = 1.0
-    #Socket_12
-    group_1.inputs[5].default_value = (0.03999999910593033, 0.0, 0.0)
-
-    #node Value
-    value = mouth_v2.nodes.new("ShaderNodeValue")
-    value.name = "Value"
-
-    value.outputs[0].default_value = 0.0
 
     #Set locations
-    principled_bsdf.location = (-366.04656982421875, -1293.2890625)
-    material_output.location = (406.7846984863281, -1098.980712890625)
-    principled_bsdf_001.location = (-397.0885314941406, -820.210693359375)
-    mix_shader.location = (75.23101043701172, -1138.629638671875)
-    group_1.location = (-941.168701171875, -1197.708984375)
-    value.location = (-1420.0, -1320.0)
+    material_output.location = (629.5435180664062, 55.70344543457031)
+    principled_bsdf.location = (-710.3483276367188, 295.7697448730469)
+    cgp_spritesheet_reader_1.location = (0.0, 0.0)
+    principled_bsdf_001.location = (303.02337646484375, -66.42927551269531)
+    mix_shader.location = (-271.45098876953125, 165.58432006835938)
 
     #Set dimensions
-    principled_bsdf.width, principled_bsdf.height = 240.0, 100.0
     material_output.width, material_output.height = 140.0, 100.0
+    principled_bsdf.width, principled_bsdf.height = 240.0, 100.0
+    cgp_spritesheet_reader_1.width, cgp_spritesheet_reader_1.height = 140.0, 100.0
     principled_bsdf_001.width, principled_bsdf_001.height = 240.0, 100.0
     mix_shader.width, mix_shader.height = 140.0, 100.0
-    group_1.width, group_1.height = 210.59588623046875, 100.0
-    value.width, value.height = 140.0, 100.0
 
-    #initialize mouth_v2 links
-    #principled_bsdf_001.BSDF -> mix_shader.Shader
-    mouth_v2.links.new(principled_bsdf_001.outputs[0], mix_shader.inputs[1])
+    #initialize material links
+    #cgp_spritesheet_reader_1.Sprite -> principled_bsdf_001.Base Color
+    material.links.new(cgp_spritesheet_reader_1.outputs[0], principled_bsdf_001.inputs[0])
+    #cgp_spritesheet_reader_1.Specular -> principled_bsdf_001.Specular IOR Level
+    material.links.new(cgp_spritesheet_reader_1.outputs[2], principled_bsdf_001.inputs[13])
+    #cgp_spritesheet_reader_1.Roughness -> principled_bsdf_001.Roughness
+    material.links.new(cgp_spritesheet_reader_1.outputs[3], principled_bsdf_001.inputs[2])
+    #cgp_spritesheet_reader_1.Mix -> mix_shader.Fac
+    material.links.new(cgp_spritesheet_reader_1.outputs[1], mix_shader.inputs[0])
     #principled_bsdf.BSDF -> mix_shader.Shader
-    mouth_v2.links.new(principled_bsdf.outputs[0], mix_shader.inputs[2])
-    #group_1.Sprite -> principled_bsdf.Base Color
-    mouth_v2.links.new(group_1.outputs[0], principled_bsdf.inputs[0])
-    #group_1.Mix -> mix_shader.Fac
-    mouth_v2.links.new(group_1.outputs[1], mix_shader.inputs[0])
-    #group_1.Roughness -> principled_bsdf.Roughness
-    mouth_v2.links.new(group_1.outputs[3], principled_bsdf.inputs[2])
-    #group_1.Specular -> principled_bsdf.Specular IOR Level
-    mouth_v2.links.new(group_1.outputs[2], principled_bsdf.inputs[13])
-    #value.Value -> group_1.Sprite Index
-    mouth_v2.links.new(value.outputs[0], group_1.inputs[0])
+    material.links.new(principled_bsdf.outputs[0], mix_shader.inputs[1])
+    #principled_bsdf_001.BSDF -> mix_shader.Shader
+    material.links.new(principled_bsdf_001.outputs[0], mix_shader.inputs[2])
     #mix_shader.Shader -> material_output.Surface
-    mouth_v2.links.new(mix_shader.outputs[0], material_output.inputs[0])
-    return mouth_v2
+    material.links.new(mix_shader.outputs[0], material_output.inputs[0])
+    #cgp_spritesheet_reader_1.Sprite -> principled_bsdf_001.Emission Color
+    material.links.new(cgp_spritesheet_reader_1.outputs[0], principled_bsdf_001.inputs[27])
+    return material
 
-# mouth_v2 = mouth_v2_node_group()
+# material = material_node_group()
 

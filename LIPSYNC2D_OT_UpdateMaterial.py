@@ -2,7 +2,7 @@ from typing import Literal, cast
 
 import bpy
 
-from .LIPSYNC2D_SpritesheetNode import cgp_spritesheet_reader_node_group, spriteratio_node_group
+from .LIPSYNC2D_SpritesheetNode import cgp_spritesheet_reader_node_group, cgp_spriteratio_node_group
 
 class LIPSYNC2D_OT_UpdateMaterial(bpy.types.Operator):
     bl_idname = "mesh.set_lips_material"
@@ -110,7 +110,7 @@ def create_spritesheet_nodes(context) -> bpy.types.ShaderNodeTree:
     
     #TODO: Here we could have an issue if node is found but is not a shadernodetree. See if we should delete it or not
     if node_sprite_ratio is None:
-        node_sprite_ratio = spriteratio_node_group()
+        node_sprite_ratio = cgp_spriteratio_node_group()
     if nodes_spritesheet_reader is None:
         nodes_spritesheet_reader = cast(bpy.types.ShaderNodeTree, cgp_spritesheet_reader_node_group(node_sprite_ratio, context.scene.lipsync2d_props.lip_sync_2d_sprite_sheet))
 
