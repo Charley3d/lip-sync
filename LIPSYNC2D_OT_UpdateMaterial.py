@@ -12,7 +12,7 @@ class LIPSYNC2D_OT_UpdateMaterial(bpy.types.Operator):
     @classmethod
     def poll(cls, context: bpy.types.Context) -> bool:
         obj = context.active_object
-        return obj is not None and (obj.type == 'MESH' and not hasattr(obj, "lipsync2d_props") or "lip_sync_2d_sprite_sheet" not in obj.lipsync2d_props) #type: ignore
+        return obj is not None and obj.type == 'MESH' and (not hasattr(obj, "lipsync2d_props") or "lip_sync_2d_sprite_sheet" not in obj.lipsync2d_props) #type: ignore
 
     def execute(self, context: bpy.types.Context) -> set[Literal['RUNNING_MODAL', 'CANCELLED', 'FINISHED', 'PASS_THROUGH', 'INTERFACE']]:
         if context.active_object is None:
@@ -29,7 +29,6 @@ class LIPSYNC2D_OT_UpdateMaterial(bpy.types.Operator):
         
         add_spritesheet_node_to_mat(context.active_object, main_material, nodes_spritesheet_reader)
 
-        
         return {'FINISHED'}
 
 def create_custom_prop(obj: bpy.types.Object):
@@ -39,8 +38,7 @@ def create_custom_prop(obj: bpy.types.Object):
     obj.lipsync2d_props.lip_sync_2d_sprite_sheet_rows = 1 # type: ignore
     obj.lipsync2d_props.lip_sync_2d_sprite_sheet_sprite_scale = 1 # type: ignore
     obj.lipsync2d_props.lip_sync_2d_sprite_sheet_main_scale = 1 # type: ignore
-    obj.lipsync2d_props.lip_sync_2d_sprite_sheet_index = 1 # type: ignore
-
+    obj.lipsync2d_props.lip_sync_2d_sprite_sheet_index = 0 # type: ignore
 
 def add_spritesheet_node_to_mat(active_obj, material: bpy.types.Material, spritesheet_reader: bpy.types.ShaderNodeTree):
     if material.node_tree is None: return

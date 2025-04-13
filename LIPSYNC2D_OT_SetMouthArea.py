@@ -24,7 +24,7 @@ class LIPSYNC2D_OT_SetMouthArea(bpy.types.Operator):
     
     def execute(self, context: bpy.types.Context) -> set[Literal['RUNNING_MODAL', 'CANCELLED', 'FINISHED', 'PASS_THROUGH', 'INTERFACE']]:
         obj = bpy.context.active_object
-
+        print("EXECUTE")
         if obj and obj.mode == 'EDIT' and isinstance(obj.data, bpy.types.Mesh):
             
             mesh = obj.data

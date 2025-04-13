@@ -11,12 +11,17 @@ class LIPSYNC2D_PT_Panel(bpy.types.Panel):
     def draw(self, context: bpy.types.Context):
         if self.layout is None: return
         if context.scene is None: return
+        if context.preferences is None: return
         
-        layout = self.layout
+        prefs = context.preferences.addons[__package__].preferences # type: ignore
 
-        
+        if prefs.espeak_path == "":
+            return
 
         if not hasattr(context.scene, "lipsync2d_props"):
+            return
+        
+        if context.active_object is None:
             return
         
         props = context.active_object.lipsync2d_props # type: ignore
@@ -24,13 +29,12 @@ class LIPSYNC2D_PT_Panel(bpy.types.Panel):
         if props is None:
             return
         
-        
-        # Create a simple row.
-                
-        row = layout.row(align=True)
-        row.operator('mesh.set_lips_material', text="Add Spritesheet on Selection")
+        layout = self.layout
 
-        
+        if "lip_sync_2d_sprite_sheet" not in context.active_object.lipsync2d_props: # type: ignore
+            row = layout.row(align=True)
+            row.operator('mesh.set_lips_material', text="Add Spritesheet on Selection")
+
         if context.active_object is None or not hasattr(context.active_object,"lipsync2d_props") or "lip_sync_2d_sprite_sheet" not in context.active_object["lipsync2d_props"]: return
         
         row = layout.row()
@@ -57,5 +61,19 @@ class LIPSYNC2D_PT_Panel(bpy.types.Panel):
         
         row = layout.row()
         row.prop(props, "lip_sync_2d_sprite_sheet_index")
-        
-        
+
+        if props.lip_sync_2d_sprite_sheet is not None:
+            row = layout.row()
+            row.operator("audio.cgp_analyze_audio", text="Analyze audio")
+
+            row = layout.row()
+            i = 0
+
+            row = layout.row(align=True)
+            row.label(text=f"Image index")
+            row.label(text=f"Viseme")
+            while i < props.lip_sync_2d_sprite_sheet_columns * props.lip_sync_2d_sprite_sheet_rows:
+                row = layout.row(align=True)
+                row.label(text=f"{i}")
+                row.prop(props, f"lip_sync_2d_viseme_{i}", text="")
+                i += 1
