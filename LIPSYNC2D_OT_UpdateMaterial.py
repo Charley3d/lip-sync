@@ -39,6 +39,25 @@ def create_custom_prop(obj: bpy.types.Object):
     obj.lipsync2d_props.lip_sync_2d_sprite_sheet_sprite_scale = 1 # type: ignore
     obj.lipsync2d_props.lip_sync_2d_sprite_sheet_main_scale = 1 # type: ignore
     obj.lipsync2d_props.lip_sync_2d_sprite_sheet_index = 0 # type: ignore
+    
+    #TODO: Generate this from the phoneme dict
+    obj.lipsync2d_props.lip_sync_2d_viseme_sil = 0 # type: ignore
+    obj.lipsync2d_props.lip_sync_2d_viseme_PP = 1 # type: ignore
+    obj.lipsync2d_props.lip_sync_2d_viseme_FF = 2 # type: ignore
+    obj.lipsync2d_props.lip_sync_2d_viseme_TH = 3 # type: ignore
+    obj.lipsync2d_props.lip_sync_2d_viseme_DD = 4 # type: ignore
+    obj.lipsync2d_props.lip_sync_2d_viseme_kk = 5 # type: ignore
+    obj.lipsync2d_props.lip_sync_2d_viseme_CH = 6 # type: ignore
+    obj.lipsync2d_props.lip_sync_2d_viseme_SS = 7 # type: ignore
+    obj.lipsync2d_props.lip_sync_2d_viseme_nn = 8 # type: ignore
+    obj.lipsync2d_props.lip_sync_2d_viseme_RR = 9 # type: ignore
+    obj.lipsync2d_props.lip_sync_2d_viseme_aa = 10 # type: ignore
+    obj.lipsync2d_props.lip_sync_2d_viseme_E = 11 # type: ignore
+    obj.lipsync2d_props.lip_sync_2d_viseme_ih = 12 # type: ignore
+    obj.lipsync2d_props.lip_sync_2d_viseme_oh = 13 # type: ignore
+    obj.lipsync2d_props.lip_sync_2d_viseme_ou = 14 # type: ignore
+    obj.lipsync2d_props.lip_sync_2d_viseme_UNK = 0 # type: ignore
+
 
 def add_spritesheet_node_to_mat(active_obj, material: bpy.types.Material, spritesheet_reader: bpy.types.ShaderNodeTree):
     if material.node_tree is None: return

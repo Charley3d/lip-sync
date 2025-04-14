@@ -1,6 +1,6 @@
 import bpy
 
-from .phoneme_to_viseme import viseme_items_arkit as viseme_items
+from .phoneme_to_viseme import viseme_items_arkit_v2 as viseme_items
 
 def update_sprite_sheet(self, context: bpy.types.Context):
     obj = context.active_object
@@ -58,22 +58,21 @@ class LIPSYNC2D_PG_CustomProperties(bpy.types.PropertyGroup):
         description="Sprite Index. Start at 0, from Bottom Left to Top Right)",
         default=1
     ) # type: ignore
-    # lip_sync_2d_visemes: bpy.props.EnumProperty( # type: ignore
-    #     name="Viseme",
-    #     description="Select a viseme shape",
-    #     items=viseme_items
-    # )
-    lip_sync_2d_viseme_0: bpy.props.EnumProperty(name="Viseme 0", items=viseme_items, default=0) #type: ignore
-    lip_sync_2d_viseme_1: bpy.props.EnumProperty(name="Viseme 1", items=viseme_items, default=1) #type: ignore
-    lip_sync_2d_viseme_2: bpy.props.EnumProperty(name="Viseme 2", items=viseme_items, default=2) #type: ignore
-    lip_sync_2d_viseme_3: bpy.props.EnumProperty(name="Viseme 3", items=viseme_items, default=3) #type: ignore
-    lip_sync_2d_viseme_4: bpy.props.EnumProperty(name="Viseme 4", items=viseme_items, default=4) #type: ignore
-    lip_sync_2d_viseme_5: bpy.props.EnumProperty(name="Viseme 5", items=viseme_items, default=5) #type: ignore
-    lip_sync_2d_viseme_6: bpy.props.EnumProperty(name="Viseme 6", items=viseme_items, default=6) #type: ignore
-    lip_sync_2d_viseme_7: bpy.props.EnumProperty(name="Viseme 7", items=viseme_items, default=7) #type: ignore
-    lip_sync_2d_viseme_8: bpy.props.EnumProperty(name="Viseme 8", items=viseme_items, default=8) #type: ignore
-    lip_sync_2d_viseme_9: bpy.props.EnumProperty(name="Viseme 9", items=viseme_items, default=9) #type: ignore
-    lip_sync_2d_viseme_10: bpy.props.EnumProperty(name="Viseme 10", items=viseme_items, default=10) #type: ignore
-    lip_sync_2d_viseme_11: bpy.props.EnumProperty(name="Viseme 11", items=viseme_items, default=11) #type: ignore
-    lip_sync_2d_viseme_12: bpy.props.EnumProperty(name="Viseme 12", items=viseme_items, default=12) #type: ignore
-    # lip_sync_2d_espeak_path: bpy.props.StringProperty(name="Espeak library (.dll/.so/.dylib)", subtype='FILE_PATH') #type: ignore
+
+    #TODO: Generate this from the phoneme dict
+    lip_sync_2d_viseme_sil: bpy.props.IntProperty(name="Viseme 0", min=0, max=99, default=0) #type: ignore
+    lip_sync_2d_viseme_PP: bpy.props.IntProperty(name="Viseme 1", min=0, max=99, default=1) #type: ignore
+    lip_sync_2d_viseme_FF: bpy.props.IntProperty(name="Viseme 2", min=0, max=99, default=2) #type: ignore
+    lip_sync_2d_viseme_TH: bpy.props.IntProperty(name="Viseme 3", min=0, max=99, default=3) #type: ignore
+    lip_sync_2d_viseme_DD: bpy.props.IntProperty(name="Viseme 4", min=0, max=99, default=4) #type: ignore
+    lip_sync_2d_viseme_kk: bpy.props.IntProperty(name="Viseme 5", min=0, max=99, default=5) #type: ignore
+    lip_sync_2d_viseme_CH: bpy.props.IntProperty(name="Viseme 6", min=0, max=99, default=6) #type: ignore
+    lip_sync_2d_viseme_SS: bpy.props.IntProperty(name="Viseme 7", min=0, max=99, default=7) #type: ignore
+    lip_sync_2d_viseme_nn: bpy.props.IntProperty(name="Viseme 8", min=0, max=99, default=8) #type: ignore
+    lip_sync_2d_viseme_RR: bpy.props.IntProperty(name="Viseme 9", min=0, max=99, default=9) #type: ignore
+    lip_sync_2d_viseme_aa: bpy.props.IntProperty(name="Viseme 10", min=0, max=99, default=10) #type: ignore
+    lip_sync_2d_viseme_E: bpy.props.IntProperty(name="Viseme 11", min=0, max=99, default=11) #type: ignore
+    lip_sync_2d_viseme_ih: bpy.props.IntProperty(name="Viseme 12", min=0, max=99, default=12) #type: ignore
+    lip_sync_2d_viseme_oh: bpy.props.IntProperty(name="Viseme 13", min=0, max=99, default=13) #type: ignore
+    lip_sync_2d_viseme_ou: bpy.props.IntProperty(name="Viseme 14", min=0, max=99, default=14) #type: ignore
+    lip_sync_2d_viseme_UNK: bpy.props.IntProperty(name="Viseme 14", min=0, max=99, default=0) #type: ignore

@@ -1,10 +1,10 @@
-import math
 from typing import Literal, TypedDict, cast
 
 import bpy
 import bmesh
 import mathutils
 import functools
+
 
 class ViewState(TypedDict):
     location: mathutils.Vector
@@ -24,7 +24,7 @@ class LIPSYNC2D_OT_SetMouthArea(bpy.types.Operator):
     
     def execute(self, context: bpy.types.Context) -> set[Literal['RUNNING_MODAL', 'CANCELLED', 'FINISHED', 'PASS_THROUGH', 'INTERFACE']]:
         obj = bpy.context.active_object
-        print("EXECUTE")
+
         if obj and obj.mode == 'EDIT' and isinstance(obj.data, bpy.types.Mesh):
             
             mesh = obj.data
@@ -35,8 +35,6 @@ class LIPSYNC2D_OT_SetMouthArea(bpy.types.Operator):
 
             quat = average_normal.to_track_quat('Z', 'Y')
 
-
-            #TODO: Align view to selected faces
             view_state = align_view_to_selection(quat)
 
             if view_state is not None:

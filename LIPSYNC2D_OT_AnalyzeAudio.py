@@ -4,11 +4,10 @@ import wave
 import json
 from phonemizer import phonemize
 from phonemizer.backend import EspeakBackend
-import phonemizer
 import bpy 
 import os
-from .phoneme_to_viseme import phoneme_to_viseme_arkit as phoneme_to_viseme
-import time
+
+from .phoneme_to_viseme import phoneme_to_viseme_arkit_v2 as phoneme_to_viseme
 
 class LIPSYNC2D_OT_AnalyzeAudio(bpy.types.Operator):
     bl_idname = "audio.cgp_analyze_audio"
@@ -20,7 +19,7 @@ class LIPSYNC2D_OT_AnalyzeAudio(bpy.types.Operator):
         return context.scene is not None or context.active_object is not None
 
     def execute(self, context: bpy.types.Context) -> set[Literal['RUNNING_MODAL', 'CANCELLED', 'FINISHED', 'PASS_THROUGH', 'INTERFACE']]:
-       
+        prefs = context.preferences.addons[__package__].preferences # type: ignore
         obj = context.active_object
         
         if context.scene is None or obj is None or context.scene.sequence_editor is None:
@@ -42,20 +41,27 @@ class LIPSYNC2D_OT_AnalyzeAudio(bpy.types.Operator):
         
         self.set_backend_library()
         props = obj.lipsync2d_props # type: ignore
-        self.set_sprite_by_viseme_dict(props)
         self.based_fps = context.scene.render.fps * context.scene.render.fps_base
 
-        model = Model("models/vosk-model-small-fr-0.22")
+        model = Model(lang=prefs.current_lang)
         result = self.vosk_recognize_voice(file_path, model)
         words_timings = result['result']
 
         os.remove(file_path) # Need to be removed AFTER vosk_recognize_voice
         
-        
+        self.clear_previous_keyframes(obj)
         self.insert_keyframe_on_phoneme(words_timings, obj, props)
         self.set_constant_interpolation(obj)
 
         return {'FINISHED'}
+
+    def clear_previous_keyframes(self, obj):
+        action = obj.animation_data.action if obj.animation_data else None
+        if action:
+            for fcurve in action.fcurves:
+                print(fcurve.data_path)
+                if fcurve.data_path == "lipsync2d_props.lip_sync_2d_sprite_sheet_index": 
+                    fcurve.keyframe_points.clear()
 
     def set_constant_interpolation(self, obj):
         action = obj.animation_data.action if obj.animation_data else None
@@ -69,8 +75,6 @@ class LIPSYNC2D_OT_AnalyzeAudio(bpy.types.Operator):
         words = [word['word'] for word in words_timings]
         total_words = len(words)
         phonemes = self.extract_phonemes(words)
-        # final = []
-
         
         for index, word_timing in enumerate(words_timings):
             start = word_timing['start']
@@ -89,56 +93,25 @@ class LIPSYNC2D_OT_AnalyzeAudio(bpy.types.Operator):
 
             for viseme_index, v in enumerate(visemes):
                 add_sil_at_word_end = ((delay_until_next_word > .100) and (viseme_index + 1) == visemes_len) or (index == total_words -1)
-                viseme_frame_start = word_frame_start + (viseme_index*visemes_parts)
+                viseme_frame_start = word_frame_start + round(viseme_index*visemes_parts)
                 
-                props["lip_sync_2d_sprite_sheet_index"] = self.get_sprite_by_viseme(v)
+                gindex = props[f"lip_sync_2d_viseme_{v}"]
+
+                if gindex > 9:
+                    gindex = 1
+
+                props["lip_sync_2d_sprite_sheet_index"] = gindex
                 obj.keyframe_insert("lipsync2d_props.lip_sync_2d_sprite_sheet_index", frame=viseme_frame_start)
                 if add_sil_at_word_end:
-                    props["lip_sync_2d_sprite_sheet_index"] = self.get_sprite_by_viseme("SIL")
+                    props["lip_sync_2d_sprite_sheet_index"] = props[f"lip_sync_2d_viseme_sil"]
                     obj.keyframe_insert("lipsync2d_props.lip_sync_2d_sprite_sheet_index", frame=word_frame_end)
 
     def extract_phonemes(self, words):
         phonemes = cast(list[str],phonemize(words, language='fr-fr', backend='espeak', strip=False))
         return phonemes
 
-            
-            # visemes_in_time = [
-            #     {
-            #     "sprite_index": self.get_sprite_by_viseme(v),
-            #     "viseme":v, 
-            #     "frame_start": word_frame_start + (viseme_index*visemes_parts),
-            #     "end_sil": ((delay_until_next_word > .100) and (viseme_index + 1) == visemes_len) or (index == total_words -1)
-            #     } 
-            #     for viseme_index, v in enumerate(visemes)]
-
-            # for v in visemes_in_time:
-            #     props["lip_sync_2d_sprite_sheet_index"] = v["sprite_index"]
-            #     obj.keyframe_insert("lipsync2d_props.lip_sync_2d_sprite_sheet_index", frame=v["frame_start"])
-            #     if v["end_sil"]:
-            #         props["lip_sync_2d_sprite_sheet_index"] = self.get_sprite_by_viseme("SIL")
-            #         obj.keyframe_insert("lipsync2d_props.lip_sync_2d_sprite_sheet_index", frame=word_frame_end)
-
-        
-            # final.append({
-            #     "start": start,
-            #     "end": end,
-            #     "frame_start": frame_start,
-            #     "frame_end": frame_end,
-            #     "phoneme": phoneme,
-            #     "visemes":visemes
-            # })
-
     def time_to_frame(self, time):
         return round(time * self.based_fps)
-
-    def set_sprite_by_viseme_dict(self, props):
-        self.viseme_to_prop_name = {
-            getattr(props, f"lip_sync_2d_viseme_{i}"): i
-            for i in range(0,13)
-        }
-
-    def get_sprite_by_viseme(self, viseme: str) -> int:
-        return self.viseme_to_prop_name.get(viseme, 0)
 
     def set_backend_library(self):
         EspeakBackend.set_library("C:\\Program Files\\eSpeak NG\\libespeak-ng.dll")
@@ -171,18 +144,14 @@ def extract_audio():
         container='WAV',
         codec='PCM',
         format='S16',
-        # accuracy=1024,
-        mixrate=16000,        # Sample rate for Vosk
+        mixrate=16000,    # Sample rate for Vosk
         channels='MONO'   # Vosk prefers mono
     )
 
     return output_path
 
 
-
 def ipaphoneme_to_viseme(ipa_phoneme):
     clean = ipa_phoneme.strip("ː̥̬̃012")  # remove length, nasal, stress etc
     return phoneme_to_viseme.get(clean, "UNK")
     
-
-

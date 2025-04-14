@@ -1,5 +1,7 @@
 import bpy
 
+from .phoneme_to_viseme import viseme_items_arkit_v2 as viseme_items_arkit
+
 class LIPSYNC2D_PT_Panel(bpy.types.Panel):
     """Creates a Panel in the scene context of the properties editor"""
     bl_label = "Lip Sync 2D"
@@ -37,6 +39,8 @@ class LIPSYNC2D_PT_Panel(bpy.types.Panel):
 
         if context.active_object is None or not hasattr(context.active_object,"lipsync2d_props") or "lip_sync_2d_sprite_sheet" not in context.active_object["lipsync2d_props"]: return
         
+        is_model_installed = True if prefs.current_lang not in ["", "none"] else False
+
         row = layout.row()
         row.label(text="Select your Sprite sheet")
         row = layout.row()
@@ -62,18 +66,34 @@ class LIPSYNC2D_PT_Panel(bpy.types.Panel):
         row = layout.row()
         row.prop(props, "lip_sync_2d_sprite_sheet_index")
 
+        
+
+        if not is_model_installed:
+            row = layout.row()
+            row.label(text="Select a Language Model before Analyzing audio")
+        
+        row = layout.row()
+        row.operator("audio.cgp_analyze_audio", text="Analyze audio")
+        row.enabled = is_model_installed
+
+
         if props.lip_sync_2d_sprite_sheet is not None:
-            row = layout.row()
-            row.operator("audio.cgp_analyze_audio", text="Analyze audio")
+            panel_head, panel_body = layout.panel("cgp_lipsync_viseme_dropdown")
+            panel_head.label(text="Viseme to Sprite")
+            if panel_body is not None:
+                row = panel_body.row()
+                i = 0
 
-            row = layout.row()
-            i = 0
+                row = panel_body.row(align=True)
+                row.label(text=f"Viseme")
+                row.label(text=f"Image index")
 
-            row = layout.row(align=True)
-            row.label(text=f"Image index")
-            row.label(text=f"Viseme")
-            while i < props.lip_sync_2d_sprite_sheet_columns * props.lip_sync_2d_sprite_sheet_rows:
-                row = layout.row(align=True)
-                row.label(text=f"{i}")
-                row.prop(props, f"lip_sync_2d_viseme_{i}", text="")
-                i += 1
+                visemes = viseme_items_arkit(None, None)
+
+                for i, viseme in enumerate(visemes):
+                    lang_code = list(viseme)[0]
+                    row = panel_body.row(align=True)
+                    row.label(text=f"{lang_code}")
+                    row.prop(props, f"lip_sync_2d_viseme_{lang_code}", text="")
+            
+
