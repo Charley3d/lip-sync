@@ -8,9 +8,11 @@ from .Operators.LIPSYNC2D_OT_SetMouthArea import LIPSYNC2D_OT_SetMouthArea
 from .Panels.LIPSYNC2D_PT_Panel import LIPSYNC2D_PT_Panel
 from .Operators.LIPSYNC2D_OT_FindEspeak import LIPSYNC2D_OT_FindEspeak
 from .Panels.LIPSYNC2D_PT_Settings import LIPSYNC2D_PT_Settings
+from .Core.LIPSYNC2D_EspeakInspector import LIPSYNC2D_EspeakInspector
 
 
 def register():
+    LIPSYNC2D_EspeakInspector.unzip_binaries()
     bpy.utils.register_class(LIPSYNC2D_AP_Preferences)
     bpy.utils.register_class(LIPSYNC2D_PG_CustomProperties)
     bpy.utils.register_class(LIPSYNC2D_PT_Settings)

@@ -1,62 +1,52 @@
-name: Build eSpeak NG
+name: Build eSpeak NG for Linux (Ubuntu 18.04)
 
 on:
   push:
-    branches: [main]
+    branches: [master]
   pull_request:
+    branches: [master]
 
 jobs:
-  build:
-    strategy:
-      matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
-    runs-on: ${{ matrix.os }}
-
-    env:
-      MACOSX_DEPLOYMENT_TARGET: "10.13"
+  build-linux:
+    runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout your repo
+      # Step 1: Checkout the repository
+      - name: Checkout repository
         uses: actions/checkout@v3
 
+      # Step 2: Install dependencies
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential \
+            autoconf \
+            automake \
+            libtool \
+            pkg-config \
+            libpcaudio-dev \
+            libsonic-dev \
+            libespeak-ng-dev \
+            portaudio19-dev \
+            git libasound2-dev
+
+      # Step 3: Clone the eSpeak NG repository
       - name: Clone eSpeak NG
         run: git clone --depth 1 https://github.com/espeak-ng/espeak-ng.git
-        shell: bash
 
-      - name: Install dependencies (Ubuntu)
-        if: matrix.os == 'ubuntu-latest'
-        run: |
-          sudo apt update
-          sudo apt install -y make autoconf automake libtool pkg-config gcc g++ libpcaudio-dev
-        shell: bash
-
-      - name: Install dependencies (Windows)
-        if: matrix.os == 'windows-latest'
-        run: |
-          choco install -y msys2
-          echo "Windows build requires MSYS2; make sure shell/paths are correctly configured."
-        shell: powershell
-
-      - name: Install dependencies (macOS)
-        if: matrix.os == 'macos-latest'
-        run: |
-          brew install automake libtool pkg-config portaudio
-        shell: bash
-
+      # Step 4: Build eSpeak NG
       - name: Build eSpeak NG
-        working-directory: ./espeak-ng
-        shell: bash
-        env:
-          CFLAGS: "-mmacosx-version-min=10.13"
-          CXXFLAGS: "-mmacosx-version-min=10.13"
+        working-directory: espeak-ng
         run: |
           ./autogen.sh
-          ./configure --prefix=$PWD/../build
-          make -j$(nproc || sysctl -n hw.ncpu)
+          ./configure --prefix=$PWD/../build --enable-shared --disable-static
+          make -j$(nproc)
           make install
 
-      - name: Upload artifact
-        uses: actions/upload-artifact@v3
+      # Step 5: Upload the built binaries
+      - name: Upload built binary
+        uses: actions/upload-artifact@v4
         with:
-          name: espeak-ng-${{ matrix.os }}
+          name: espeak-ng-linux
           path: ./build/bin/

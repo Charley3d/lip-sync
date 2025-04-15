@@ -3,6 +3,13 @@ import ctypes.util
 import os
 import pathlib
 import platform
+import zipfile
+from typing import cast
+
+import bpy
+from phonemizer.backend import EspeakBackend
+
+from ..LIPSYNC2D_Utils import get_package_name
 
 
 class LIPSYNC2D_EspeakInspector():
@@ -58,4 +65,31 @@ class LIPSYNC2D_EspeakInspector():
         drives = buffer.value.split('\x00')
         return [d for d in drives if d]
 
-    
+    @staticmethod
+    def unzip_binaries():
+        plat = str.lower(platform.system())
+
+        script_dir = pathlib.Path(__file__).parent  # Get the directory where the script is located
+        input_archive = script_dir / ".." / "Assets" / "Archives" / plat / f"espeak-ng_{plat}.zip"
+        package_name = cast(str, get_package_name())
+
+        try:
+            output_dir = bpy.utils.extension_path_user(package_name, path=f"bin/{plat}", create=True)
+            with zipfile.ZipFile(input_archive, 'r') as zip_ref:
+                zip_ref.extractall(output_dir)  # Extract all files to the output directory
+
+        except FileNotFoundError:
+            raise FileNotFoundError(f"Input archive '{input_archive}' not found")
+        except zipfile.BadZipFile:
+            raise Exception(f"The file '{input_archive}' is not a valid zip archive")
+        except Exception as e:
+            raise Exception(f"Error during archive extraction: {e}")
+
+        if plat == "windows":
+            EspeakBackend.set_library(pathlib.Path(output_dir) / "libespeak-ng.dll")
+        elif plat == "linux":
+            EspeakBackend.set_library(pathlib.Path(output_dir) / "libespeak-ng.so")
+        elif plat == "darwin":
+            EspeakBackend.set_library(pathlib.Path(output_dir) / "libespeak-ng.dylib")
+        else:
+            raise Exception(f"Unsupported platform: {plat}")

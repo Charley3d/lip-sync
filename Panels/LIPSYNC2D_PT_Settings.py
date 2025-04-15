@@ -17,14 +17,10 @@ class LIPSYNC2D_PT_Settings(bpy.types.Panel):
     def draw(self, context: bpy.types.Context):
         layout = self.layout
         prefs = context.preferences.addons[get_package_name()].preferences # type: ignore
-        if not layout:
+        if not layout or prefs is None:
             return
-        
-        if prefs.espeak_path == "":
-            self.draw_espeak_instructions(layout, prefs)
 
-        else:
-            self.draw_espeak_model_settings(layout, prefs)
+        self.draw_espeak_model_settings(layout, prefs)
 
     def draw_espeak_instructions(self, layout: bpy.types.UILayout, prefs: bpy.types.Preferences):
         box = layout.box()
@@ -69,7 +65,7 @@ class LIPSYNC2D_PT_Settings(bpy.types.Panel):
                 box.label(text="1- sudo apt-get install espeak-ng")
                 box.label(text="2- Select the .so file in installation folder")
 
-    def draw_espeak_model_settings(self, layout: bpy.types.UILayout, prefs: bpy.types.Preferences):
+    def draw_espeak_model_settings(self, layout: bpy.types.UILayout, prefs: bpy.types.AddonPreferences):
         row = layout.row()
         row.label(text="Language Model")
         row.prop(prefs, "current_lang", text="")

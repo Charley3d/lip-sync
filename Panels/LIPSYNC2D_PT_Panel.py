@@ -20,12 +20,6 @@ class LIPSYNC2D_PT_Panel(bpy.types.Panel):
         prefs = context.preferences.addons[package_name].preferences # type: ignore
         active_obj = context.active_object
 
-        if prefs.espeak_path == "":
-            layout = self.layout
-            box = layout.box()
-            box.label(text="Please complete the Quick Setup process")
-            return
-
         if active_obj is None:
             return
 
