@@ -1,0 +1,62 @@
+name: Build eSpeak NG
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+
+    env:
+      MACOSX_DEPLOYMENT_TARGET: "10.13"
+
+    steps:
+      - name: Checkout your repo
+        uses: actions/checkout@v3
+
+      - name: Clone eSpeak NG
+        run: git clone --depth 1 https://github.com/espeak-ng/espeak-ng.git
+        shell: bash
+
+      - name: Install dependencies (Ubuntu)
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          sudo apt update
+          sudo apt install -y make autoconf automake libtool pkg-config gcc g++ libpcaudio-dev
+        shell: bash
+
+      - name: Install dependencies (Windows)
+        if: matrix.os == 'windows-latest'
+        run: |
+          choco install -y msys2
+          echo "Windows build requires MSYS2; make sure shell/paths are correctly configured."
+        shell: powershell
+
+      - name: Install dependencies (macOS)
+        if: matrix.os == 'macos-latest'
+        run: |
+          brew install automake libtool pkg-config portaudio
+        shell: bash
+
+      - name: Build eSpeak NG
+        working-directory: ./espeak-ng
+        shell: bash
+        env:
+          CFLAGS: "-mmacosx-version-min=10.13"
+          CXXFLAGS: "-mmacosx-version-min=10.13"
+        run: |
+          ./autogen.sh
+          ./configure --prefix=$PWD/../build
+          make -j$(nproc || sysctl -n hw.ncpu)
+          make install
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: espeak-ng-${{ matrix.os }}
+          path: ./build/bin/

@@ -1,3 +1,4 @@
+import os
 from typing import Literal, cast
 
 import bpy
@@ -17,45 +18,58 @@ class LIPSYNC2D_OT_UpdateMaterial(bpy.types.Operator):
     def execute(self, context: bpy.types.Context) -> set[Literal['RUNNING_MODAL', 'CANCELLED', 'FINISHED', 'PASS_THROUGH', 'INTERFACE']]:
         if context.active_object is None:
             return {'CANCELLED'}
-        
+
+
         create_custom_prop(context.active_object)
         main_material = get_or_create_first_material(context.active_object)
         context.active_object.lipsync2d_props.lip_sync_2d_main_material = main_material # type: ignore
         nodes_spritesheet_reader = create_spritesheet_nodes(context)
 
         if nodes_spritesheet_reader is None:
-            print("Cancelled")
             return {'CANCELLED'}
         
         add_spritesheet_node_to_mat(context.active_object, main_material, nodes_spritesheet_reader)
+        context.active_object.lipsync2d_props.lip_sync_2d_sprite_sheet = add_default_image_spritesheet() #type: ignore
 
         return {'FINISHED'}
+
+def add_default_image_spritesheet():
+    image = bpy.data.images.get("CGP_default_spritesheet_visemes")
+
+    if image is None:
+        spritesheet_path = os.path.join(os.path.dirname(__file__),"..", "Assets", "Images", "spritesheet_visemes.png")
+        image = bpy.data.images.new("CGP_default_spritesheet_visemes", width=512, height=6144)
+        image.source = 'FILE'
+        image.filepath = spritesheet_path
+
+    return image
 
 def create_custom_prop(obj: bpy.types.Object):
     obj.lipsync2d_props.lip_sync_2d_sprite_sheet = None # type: ignore
     obj.lipsync2d_props.lip_sync_2d_main_material = None # type: ignore
     obj.lipsync2d_props.lip_sync_2d_sprite_sheet_columns = 1 # type: ignore
-    obj.lipsync2d_props.lip_sync_2d_sprite_sheet_rows = 1 # type: ignore
+    obj.lipsync2d_props.lip_sync_2d_sprite_sheet_rows = 12 # type: ignore
     obj.lipsync2d_props.lip_sync_2d_sprite_sheet_sprite_scale = 1 # type: ignore
     obj.lipsync2d_props.lip_sync_2d_sprite_sheet_main_scale = 1 # type: ignore
     obj.lipsync2d_props.lip_sync_2d_sprite_sheet_index = 0 # type: ignore
-    
+    obj.lipsync2d_props.lip_sync_2d_sprite_sheet_format = "VLINE" # type: ignore
+
     #TODO: Generate this from the phoneme dict
     obj.lipsync2d_props.lip_sync_2d_viseme_sil = 0 # type: ignore
-    obj.lipsync2d_props.lip_sync_2d_viseme_PP = 1 # type: ignore
-    obj.lipsync2d_props.lip_sync_2d_viseme_FF = 2 # type: ignore
-    obj.lipsync2d_props.lip_sync_2d_viseme_TH = 3 # type: ignore
-    obj.lipsync2d_props.lip_sync_2d_viseme_DD = 4 # type: ignore
-    obj.lipsync2d_props.lip_sync_2d_viseme_kk = 5 # type: ignore
-    obj.lipsync2d_props.lip_sync_2d_viseme_CH = 6 # type: ignore
-    obj.lipsync2d_props.lip_sync_2d_viseme_SS = 7 # type: ignore
-    obj.lipsync2d_props.lip_sync_2d_viseme_nn = 8 # type: ignore
-    obj.lipsync2d_props.lip_sync_2d_viseme_RR = 9 # type: ignore
-    obj.lipsync2d_props.lip_sync_2d_viseme_aa = 10 # type: ignore
-    obj.lipsync2d_props.lip_sync_2d_viseme_E = 11 # type: ignore
-    obj.lipsync2d_props.lip_sync_2d_viseme_ih = 12 # type: ignore
-    obj.lipsync2d_props.lip_sync_2d_viseme_oh = 13 # type: ignore
-    obj.lipsync2d_props.lip_sync_2d_viseme_ou = 14 # type: ignore
+    obj.lipsync2d_props.lip_sync_2d_viseme_PP = 4 # type: ignore
+    obj.lipsync2d_props.lip_sync_2d_viseme_FF = 7 # type: ignore
+    obj.lipsync2d_props.lip_sync_2d_viseme_TH = 1 # type: ignore
+    obj.lipsync2d_props.lip_sync_2d_viseme_DD = 9 # type: ignore
+    obj.lipsync2d_props.lip_sync_2d_viseme_kk = 9 # type: ignore
+    obj.lipsync2d_props.lip_sync_2d_viseme_CH = 10 # type: ignore
+    obj.lipsync2d_props.lip_sync_2d_viseme_SS = 2 # type: ignore
+    obj.lipsync2d_props.lip_sync_2d_viseme_nn = 10 # type: ignore
+    obj.lipsync2d_props.lip_sync_2d_viseme_RR = 3 # type: ignore
+    obj.lipsync2d_props.lip_sync_2d_viseme_aa = 11 # type: ignore
+    obj.lipsync2d_props.lip_sync_2d_viseme_E = 8 # type: ignore
+    obj.lipsync2d_props.lip_sync_2d_viseme_ih = 6 # type: ignore
+    obj.lipsync2d_props.lip_sync_2d_viseme_oh = 5 # type: ignore
+    obj.lipsync2d_props.lip_sync_2d_viseme_ou = 5 # type: ignore
     obj.lipsync2d_props.lip_sync_2d_viseme_UNK = 0 # type: ignore
 
 
@@ -119,7 +133,7 @@ def link_nodes(node_tree: bpy.types.NodeTree, output_node: bpy.types.Node, input
     node_tree.links.new(input, output)
 
 
-def create_spritesheet_nodes(context) -> bpy.types.ShaderNodeTree:
+def create_spritesheet_nodes(context: bpy.types.Context) -> bpy.types.ShaderNodeTree:
     node_sprite_ratio = bpy.data.node_groups.get("CGP_SpriteRatio")
     nodes_spritesheet_reader = cast(bpy.types.ShaderNodeTree,bpy.data.node_groups.get("cgp_spritesheet_reader"))
 
@@ -129,7 +143,7 @@ def create_spritesheet_nodes(context) -> bpy.types.ShaderNodeTree:
     if node_sprite_ratio is None:
         node_sprite_ratio = cgp_spriteratio_node_group()
     if nodes_spritesheet_reader is None:
-        nodes_spritesheet_reader = cast(bpy.types.ShaderNodeTree, cgp_spritesheet_reader_node_group(node_sprite_ratio, context.scene.lipsync2d_props.lip_sync_2d_sprite_sheet))
+        nodes_spritesheet_reader = cast(bpy.types.ShaderNodeTree, cgp_spritesheet_reader_node_group(node_sprite_ratio, context.active_object.lipsync2d_props.lip_sync_2d_sprite_sheet)) # type: ignore
 
     return nodes_spritesheet_reader
 
@@ -154,26 +168,6 @@ def get_or_create_first_material(obj: bpy.types.Object) -> bpy.types.Material:
         obj.material_slots[0].material = new_mat
 
     return new_mat
-
-def add_scene_driver(
-    target: bpy.types.ID,
-    target_property: str,
-    data_path: str,
-    expression: str = "var"
-):
-    """Add a driver to a node socket (input) inside a material."""
-
-    fcurve = cast(bpy.types.FCurve, target.driver_add(target_property))
-    driver = fcurve.driver
-    if driver is None: return
-
-    driver.type = 'SCRIPTED'
-    var = driver.variables.new()
-    var.name = "var"
-    var.targets[0].data_path = data_path
-    var.type = 'CONTEXT_PROP'
-    var.targets[0].context_property = 'ACTIVE_SCENE'
-    driver.expression = expression
 
 
 def add_object_driver(

@@ -1,11 +1,15 @@
+from pathlib import Path
+import pathlib
 from typing import Literal, cast
-from vosk import Model, KaldiRecognizer  # Ensure the 'vosk' library is installed
+from vosk import Model, KaldiRecognizer, MODEL_DIRS 
 import wave
 import json
 from phonemizer import phonemize
 from phonemizer.backend import EspeakBackend
 import bpy 
 import os
+
+from ..Core.LIPSYNC2D_VoskWrapper import extensionpath
 
 from ..LIPSYNC2D_Utils import get_package_name
 from ..Core.phoneme_to_viseme import phoneme_to_viseme_arkit_v2 as phoneme_to_viseme
@@ -40,11 +44,10 @@ class LIPSYNC2D_OT_AnalyzeAudio(bpy.types.Operator):
             self.report(type={'ERROR'}, message="Error while importing extracted audio WAV file from /tmp")
             return {'CANCELLED'}
         
-        self.set_backend_library()
         props = obj.lipsync2d_props # type: ignore
         self.based_fps = context.scene.render.fps * context.scene.render.fps_base
 
-        model = Model(lang=prefs.current_lang)  # Ensure vosk library dependency is satisfied (install it via pip)
+        model = self.get_model(prefs)
         result = self.vosk_recognize_voice(file_path, model)
         words_timings = result['result']
 
@@ -56,11 +59,15 @@ class LIPSYNC2D_OT_AnalyzeAudio(bpy.types.Operator):
 
         return {'FINISHED'}
 
+    @extensionpath
+    def get_model(self, prefs):
+        model = Model(lang=prefs.current_lang)
+        return model
+
     def clear_previous_keyframes(self, obj):
         action = obj.animation_data.action if obj.animation_data else None
         if action:
             for fcurve in action.fcurves:
-                print(fcurve.data_path)
                 if fcurve.data_path == "lipsync2d_props.lip_sync_2d_sprite_sheet_index": 
                     fcurve.keyframe_points.clear()
 
@@ -114,9 +121,6 @@ class LIPSYNC2D_OT_AnalyzeAudio(bpy.types.Operator):
     def time_to_frame(self, time):
         return round(time * self.based_fps)
 
-    def set_backend_library(self):
-        EspeakBackend.set_library("C:\\Program Files\\eSpeak NG\\libespeak-ng.dll")
-
     def vosk_recognize_voice(self, file_path: str, model: Model):
         with wave.open(file_path, "rb") as wf:
             # Check audio format
@@ -138,10 +142,13 @@ class LIPSYNC2D_OT_AnalyzeAudio(bpy.types.Operator):
         return result
 
 def extract_audio():
-    output_path = "/tmp/cgp_lipsync_extracted_audio.wav"
-
+    package_name = cast(str, get_package_name())
+    output_path = bpy.utils.extension_path_user(package_name, path="tmp", create=True) 
+    filepath = os.path.join(output_path, "cgp_lipsync_extracted_audio.wav")
+    
     bpy.ops.sound.mixdown(
-        filepath=output_path,
+        filepath=filepath,
+        check_existing=False,
         container='WAV',
         codec='PCM',
         format='S16',
@@ -149,7 +156,7 @@ def extract_audio():
         channels='MONO'   # Vosk prefers mono
     )
 
-    return output_path
+    return filepath
 
 
 def ipaphoneme_to_viseme(ipa_phoneme):

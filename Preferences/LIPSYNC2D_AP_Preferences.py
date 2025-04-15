@@ -1,12 +1,16 @@
 import os
+import pathlib
 import threading
 from pathlib import Path
 from re import match
+from typing import cast
 
 import bpy
 import requests
 from phonemizer.backend import EspeakBackend
 from vosk import MODEL_DIRS, MODEL_LIST_URL, Model
+
+from ..Core.LIPSYNC2D_VoskWrapper import extensionpath
 
 from ..Core.LIPSYNC2D_EspeakInspector import LIPSYNC2D_EspeakInspector
 from ..LIPSYNC2D_Utils import get_package_name
@@ -51,9 +55,8 @@ def install_model(self, context):
     if self.current_lang == "none":
         return
     
+    @extensionpath
     def install_model_thread():
-        if not MODEL_DIRS[3].exists():
-            MODEL_DIRS[3].mkdir(parents=True, exist_ok=True)
         Model(lang=self.current_lang)
 
     threading.Thread(target=install_model_thread).start()

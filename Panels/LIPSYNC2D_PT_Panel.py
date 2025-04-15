@@ -56,36 +56,48 @@ class LIPSYNC2D_PT_Panel(bpy.types.Panel):
         row.label(text="Area - Edit Mode Only")
         row = layout.row()
         row.operator('mesh.set_lips_area', text="Set Mouth Area")
-
-        row = layout.row()
-        row.label(text="Spritesheet Size")
-        row = layout.row(align=True)
-        row.prop(props, "lip_sync_2d_sprite_sheet_columns")
-        row.prop(props, "lip_sync_2d_sprite_sheet_rows")
-        
-        row = layout.row()
-        row.label(text="Scale")
-        row = layout.row(align=True)
-        row.prop(props, "lip_sync_2d_sprite_sheet_sprite_scale")
-        row.prop(props, "lip_sync_2d_sprite_sheet_main_scale")
-        
         row = layout.row()
         row.prop(props, "lip_sync_2d_sprite_sheet_index")
 
-        
+        panel_header, panel_body = layout.panel("cgp_lipsync_sprite_settings_dropdown", default_closed=True)
+        panel_header.label(text="Spritesheet Settings")
+        if panel_body is not None:
+            row = panel_body.row()
+            row.label(text="Spritesheet Format")
+            row = panel_body.row(align=True)
+            row.prop(props, "lip_sync_2d_sprite_sheet_format")
+            row = panel_body.row(align=True)
+            if props["lip_sync_2d_sprite_sheet_format"] == 3:
+                row.prop(props, "lip_sync_2d_sprite_sheet_rows")
+            elif props["lip_sync_2d_sprite_sheet_format"] == 2:
+                row.prop(props, "lip_sync_2d_sprite_sheet_columns")
+            elif props["lip_sync_2d_sprite_sheet_format"] == 0:
+                row.prop(props, "lip_sync_2d_sprite_sheet_rows")
+            elif props["lip_sync_2d_sprite_sheet_format"] == 1:
+                row.prop(props, "lip_sync_2d_sprite_sheet_columns")
+                row.prop(props, "lip_sync_2d_sprite_sheet_rows")
 
-        if not is_model_installed:
+            row = panel_body.row()
+            row.label(text="Scale")
+            row = panel_body.row(align=True)
+            row.prop(props, "lip_sync_2d_sprite_sheet_sprite_scale")
+            row.prop(props, "lip_sync_2d_sprite_sheet_main_scale", text="Main")
+
+        panel_header, panel_body = layout.panel("cgp_lipsync_sprite_audio_dropdown", default_closed=False)
+        panel_header.label(text="Audio Analysis")
+        if panel_body is not None:
+            if not is_model_installed:
+                row = layout.row()
+                row.label(text="Select a Language Model before Analyzing audio")
+
             row = layout.row()
-            row.label(text="Select a Language Model before Analyzing audio")
-        
-        row = layout.row()
-        row.operator("audio.cgp_analyze_audio", text="Analyze audio")
-        row.enabled = is_model_installed
+            row.operator("audio.cgp_analyze_audio", text="Analyze audio")
+            row.enabled = is_model_installed
 
 
         if props.lip_sync_2d_sprite_sheet is not None:
-            panel_head, panel_body = layout.panel("cgp_lipsync_viseme_dropdown")
-            panel_head.label(text="Viseme to Sprite")
+            panel_head, panel_body = layout.panel("cgp_lipsync_viseme_dropdown", default_closed=True)
+            panel_head.label(text="Viseme Settings")
             if panel_body is not None:
                 row = panel_body.row()
                 i = 0

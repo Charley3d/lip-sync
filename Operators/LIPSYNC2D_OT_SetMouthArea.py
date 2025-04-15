@@ -37,6 +37,14 @@ class LIPSYNC2D_OT_SetMouthArea(bpy.types.Operator):
 
             view_state = align_view_to_selection(quat)
 
+            if context.screen is not None and context.area is not None:
+                for area in context.screen.areas:
+                    if area.type == 'VIEW_3D':
+                        for space in area.spaces:
+                            if space.type == 'VIEW_3D':
+                                space_view3d = cast(bpy.types.SpaceView3D, space)
+                                space_view3d.shading.type = "MATERIAL"
+
             if view_state is not None:
                 bpy.app.timers.register(functools.partial(callback, view_state), first_interval=.01)
 
