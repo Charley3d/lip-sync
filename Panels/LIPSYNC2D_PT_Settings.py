@@ -7,11 +7,11 @@ from ..Preferences.LIPSYNC2D_AP_Preferences import draw_model_state
 
 class LIPSYNC2D_PT_Settings(bpy.types.Panel):
     bl_idname="LIPSYNC2D_PT_Settings"
-    bl_label="Lip Sync Settings"
+    bl_label="Quick Setup"
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
-    bl_parent_id="LIPSYNC2D_PT_Panel"
-    bl_order=0
+    bl_category = 'Lip Sync 2D'
+
     platform = platform.system()
 
     def draw(self, context: bpy.types.Context):

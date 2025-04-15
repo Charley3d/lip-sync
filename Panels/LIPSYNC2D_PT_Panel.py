@@ -21,6 +21,9 @@ class LIPSYNC2D_PT_Panel(bpy.types.Panel):
         active_obj = context.active_object
 
         if prefs.espeak_path == "":
+            layout = self.layout
+            box = layout.box()
+            box.label(text="Please complete the Quick Setup process")
             return
 
         if active_obj is None:
@@ -50,9 +53,9 @@ class LIPSYNC2D_PT_Panel(bpy.types.Panel):
         layout.template_ID_preview(props, "lip_sync_2d_sprite_sheet", rows=2, cols=6, open="image.open" )
 
         row = layout.row()
-        row.label(text="Area")
+        row.label(text="Area - Edit Mode Only")
         row = layout.row()
-        row.operator('mesh.set_lips_area', text="Set Mouth Area (Edit Mode)")
+        row.operator('mesh.set_lips_area', text="Set Mouth Area")
 
         row = layout.row()
         row.label(text="Spritesheet Size")
