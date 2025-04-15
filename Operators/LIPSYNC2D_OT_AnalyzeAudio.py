@@ -1,5 +1,5 @@
 from typing import Literal, cast
-from vosk import Model, KaldiRecognizer
+from vosk import Model, KaldiRecognizer  # Ensure the 'vosk' library is installed
 import wave
 import json
 from phonemizer import phonemize
@@ -7,7 +7,8 @@ from phonemizer.backend import EspeakBackend
 import bpy 
 import os
 
-from .phoneme_to_viseme import phoneme_to_viseme_arkit_v2 as phoneme_to_viseme
+from ..LIPSYNC2D_Utils import get_package_name
+from ..Core.phoneme_to_viseme import phoneme_to_viseme_arkit_v2 as phoneme_to_viseme
 
 class LIPSYNC2D_OT_AnalyzeAudio(bpy.types.Operator):
     bl_idname = "audio.cgp_analyze_audio"
@@ -19,7 +20,7 @@ class LIPSYNC2D_OT_AnalyzeAudio(bpy.types.Operator):
         return context.scene is not None or context.active_object is not None
 
     def execute(self, context: bpy.types.Context) -> set[Literal['RUNNING_MODAL', 'CANCELLED', 'FINISHED', 'PASS_THROUGH', 'INTERFACE']]:
-        prefs = context.preferences.addons[__package__].preferences # type: ignore
+        prefs = context.preferences.addons[get_package_name()].preferences # type: ignore
         obj = context.active_object
         
         if context.scene is None or obj is None or context.scene.sequence_editor is None:
@@ -43,7 +44,7 @@ class LIPSYNC2D_OT_AnalyzeAudio(bpy.types.Operator):
         props = obj.lipsync2d_props # type: ignore
         self.based_fps = context.scene.render.fps * context.scene.render.fps_base
 
-        model = Model(lang=prefs.current_lang)
+        model = Model(lang=prefs.current_lang)  # Ensure vosk library dependency is satisfied (install it via pip)
         result = self.vosk_recognize_voice(file_path, model)
         words_timings = result['result']
 

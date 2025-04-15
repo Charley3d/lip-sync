@@ -1,6 +1,7 @@
 import bpy
 
-from .phoneme_to_viseme import viseme_items_arkit_v2 as viseme_items_arkit
+from ..LIPSYNC2D_Utils import get_package_name
+from ..Core.phoneme_to_viseme import viseme_items_arkit_v2 as viseme_items_arkit
 
 class LIPSYNC2D_PT_Panel(bpy.types.Panel):
     """Creates a Panel in the scene context of the properties editor"""
@@ -14,19 +15,21 @@ class LIPSYNC2D_PT_Panel(bpy.types.Panel):
         if self.layout is None: return
         if context.scene is None: return
         if context.preferences is None: return
-        
-        prefs = context.preferences.addons[__package__].preferences # type: ignore
+
+        package_name = get_package_name()
+        prefs = context.preferences.addons[package_name].preferences # type: ignore
+        active_obj = context.active_object
 
         if prefs.espeak_path == "":
             return
 
-        if not hasattr(context.scene, "lipsync2d_props"):
+        if active_obj is None:
+            return
+
+        if not hasattr(active_obj, "lipsync2d_props"):
             return
         
-        if context.active_object is None:
-            return
-        
-        props = context.active_object.lipsync2d_props # type: ignore
+        props = active_obj.lipsync2d_props # type: ignore
 
         if props is None:
             return

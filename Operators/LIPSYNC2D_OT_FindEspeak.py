@@ -3,7 +3,8 @@ from typing import Literal
 import bpy
 from bpy.types import Context
 
-from .LIPSYNC2D_EspeakInspector import LIPSYNC2D_EspeakInspector
+from ..LIPSYNC2D_Utils import get_package_name
+from ..Core.LIPSYNC2D_EspeakInspector import LIPSYNC2D_EspeakInspector
 
 
 class LIPSYNC2D_OT_FindEspeak(bpy.types.Operator):
@@ -12,7 +13,7 @@ class LIPSYNC2D_OT_FindEspeak(bpy.types.Operator):
     bl_options={'UNDO', 'REGISTER'}
 
     def execute(self, context: Context) -> set[Literal['RUNNING_MODAL', 'CANCELLED', 'FINISHED', 'PASS_THROUGH', 'INTERFACE']]:
-        prefs = context.preferences.addons[__package__].preferences # type: ignore
+        prefs = context.preferences.addons[get_package_name()].preferences # type: ignore
         espeak_inspector = LIPSYNC2D_EspeakInspector()
         
         try:

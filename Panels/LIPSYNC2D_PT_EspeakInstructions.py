@@ -1,31 +1,33 @@
 import platform
 
 import bpy
+from bpy.types import Context
 
-from .LIPSYNC2D_AP_Preferences import draw_model_state
+from ..LIPSYNC2D_Utils import get_package_name
 
-class LIPSYNC2D_PT_Settings(bpy.types.Panel):
-    bl_idname="LIPSYNC2D_PT_Settings"
-    bl_label="Lip Sync Settings"
+
+class LIPSYNC2D_PT_EspeakInstructions(bpy.types.Panel):
+    bl_idname="LIPSYNC2D_PT_EspeakInstructions"
+    bl_label="Espeak Instructions"
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
-    bl_parent_id="LIPSYNC2D_PT_Panel"
-    bl_order=0
+    bl_parent_id="LIPSYNC2D_PT_Settings"
     platform = platform.system()
 
-    def draw(self, context: bpy.types.Context):
-        layout = self.layout
-        prefs = context.preferences.addons[__package__].preferences # type: ignore
-        if not layout:
-            return
+    @classmethod
+    def poll(cls, context: Context) -> bool:
+        prefs = context.preferences.addons[get_package_name()].preferences # type: ignore
         
-        if prefs.espeak_path == "":
-            self.draw_espeak_instructions(layout, prefs)
+        return prefs.espeak_path == ""
 
-        else:
-            self.draw_espeak_model_settings(layout, prefs)
+    def draw(self, context):
+        if self.layout is None: return
+        if context.scene is None: return
+        if context.preferences is None: return
+        
+        prefs = context.preferences.addons[__package__].preferences # type: ignore
+        layout = self.layout
 
-    def draw_espeak_instructions(self, layout: bpy.types.UILayout, prefs: bpy.types.Preferences):
         box = layout.box()
         box.label(text="This addon needs espeak-ng library.")
 
@@ -68,9 +70,4 @@ class LIPSYNC2D_PT_Settings(bpy.types.Panel):
                 box.label(text="1- sudo apt-get install espeak-ng")
                 box.label(text="2- Select the .so file in installation folder")
 
-    def draw_espeak_model_settings(self, layout: bpy.types.UILayout, prefs: bpy.types.Preferences):
-        row = layout.row()
-        row.label(text="Language Model")
-        row.prop(prefs, "current_lang", text="")
-        draw_model_state(row, prefs.current_lang) #type: ignore
-
+        return

@@ -1,8 +1,8 @@
+from typing import cast
 import bpy
 
-from .phoneme_to_viseme import viseme_items_arkit_v2 as viseme_items
 
-def update_sprite_sheet(self, context: bpy.types.Context):
+def update_sprite_sheet(self: bpy.types.bpy_struct, context: bpy.types.Context):
     obj = context.active_object
     mat: bpy.types.Material = obj.lipsync2d_props.lip_sync_2d_main_material # type: ignore
 
@@ -16,7 +16,7 @@ def update_sprite_sheet(self, context: bpy.types.Context):
 
     if not isinstance(image_node, bpy.types.ShaderNodeTexImage): return
 
-    image_node.image = self.lip_sync_2d_sprite_sheet
+    image_node.image = self["lip_sync_2d_sprite_sheet"]
     
     return None
 
@@ -30,7 +30,7 @@ class LIPSYNC2D_PG_CustomProperties(bpy.types.PropertyGroup):
     ) # type: ignore
     lip_sync_2d_main_material: bpy.props.PointerProperty(
         name="Main Material",
-        description="Material containing Spritesheet",
+        description="Material containing Sprite sheet",
         type=bpy.types.Material
     ) # type: ignore
     lip_sync_2d_sprite_sheet_columns: bpy.props.IntProperty(

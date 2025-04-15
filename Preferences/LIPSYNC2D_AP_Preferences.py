@@ -1,12 +1,16 @@
 import os
-from pathlib import Path
 import threading
-import requests
-import bpy
+from pathlib import Path
 from re import match
-from .LIPSYNC2D_EspeakInspector import LIPSYNC2D_EspeakInspector
+
+import bpy
+import requests
 from phonemizer.backend import EspeakBackend
-from vosk import Model, MODEL_LIST_URL, MODEL_DIRS
+from vosk import MODEL_DIRS, MODEL_LIST_URL, Model
+
+from ..Core.LIPSYNC2D_EspeakInspector import LIPSYNC2D_EspeakInspector
+from ..LIPSYNC2D_Utils import get_package_name
+
 
 def update_espeak_lib(self, context: bpy.types.Context):
     espeak_path = self["espeak_path"]
@@ -55,7 +59,7 @@ def install_model(self, context):
     threading.Thread(target=install_model_thread).start()
 
 class LIPSYNC2D_AP_Preferences(bpy.types.AddonPreferences):
-    bl_idname = __package__ # type: ignore
+    bl_idname = get_package_name() # type: ignore
     espeak_inspector = LIPSYNC2D_EspeakInspector()
     espeak_path: bpy.props.StringProperty(name="Path to espeak lib file",subtype='FILE_PATH', default="", update=update_espeak_lib) # type: ignore
     available_langs = online_available_langs()

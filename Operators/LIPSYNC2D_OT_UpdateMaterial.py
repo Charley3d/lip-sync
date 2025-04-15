@@ -2,7 +2,7 @@ from typing import Literal, cast
 
 import bpy
 
-from .LIPSYNC2D_SpritesheetNode import cgp_spritesheet_reader_node_group, cgp_spriteratio_node_group
+from ..Core.LIPSYNC2D_SpritesheetNode import cgp_spritesheet_reader_node_group, cgp_spriteratio_node_group
 
 class LIPSYNC2D_OT_UpdateMaterial(bpy.types.Operator):
     bl_idname = "mesh.set_lips_material"
