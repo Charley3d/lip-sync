@@ -1,118 +1,98 @@
-name: Build eSpeak NG macOS Universal Library with Data
+name: Full Build (Espeak + Blender Addon)
 
 on:
-  push:
-    branches: [ master ]
   workflow_dispatch:
 
 jobs:
-  build-windows:
-    name: Build Windows
-    runs-on: windows-latest
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      # Clone Espeak NG repo
-      - name: Clone espeak NG
-        run: git clone --depth 1 https://github.com/espeak-ng/espeak-ng.git
-
-      # Clone pcaudiolib repo (required for Windows build)
-      - name: Clone pcaudiolib
-        run: git clone --depth 1 https://github.com/espeak-ng/pcaudiolib.git espeak-ng/src/pcaudiolib
-
-      # Build Espeak NG for Windows
-      - name: Build with MSBuild
-        working-directory: espeak-ng
-        shell: cmd
-        run: |
-          cd src/windows
-          "%ProgramFiles(x86)%\Microsoft Visual Studio\Installer\vswhere.exe" -latest -products * -requires Microsoft.Component.MSBuild -find MSBuild\**\Bin\MSBuild.exe > msbuild_path.txt
-          set /p MSBUILD_PATH=<msbuild_path.txt
-          call "%MSBUILD_PATH%" espeak-ng.sln /p:Configuration=Release
-
-      # Copy .dll and data folder to temporary dist dir
-      - name: Copy Windows DLL + Data
-        run: |
-          mkdir dist
-          copy espeak-ng\src\windows\x64\Release\libespeak-ng.dll dist\
-          xcopy espeak-ng\espeak-ng-data dist\espeak-ng-data /E /I
-
-      # Upload dll and data artifacts
-      - name: Upload Windows bundle
-        uses: actions/upload-artifact@v4
-        with:
-          name: espeak-ng-windows-bundle
-          path: dist/
-
-      # Zip artifacts
-      - name: Zip Windows build
-        shell: pwsh
-        run: |
-          Compress-Archive -Path dist\* -DestinationPath espeak-ng-windows.zip
-
-      # Copy Zipped artifacts to Assets/windows
-      - name: Copy ZIP to Asset folder
-        run: |
-          New-Item -ItemType Directory -Force -Path Assets\Archives\windows
-          Copy-Item -Path espeak-ng-windows.zip -Destination Assets\Archives\windows\
-
-      # Remove temp files and folders + unwanted files for release
-      - name: Clean up folder to zip Blender Addon
-        shell: pwsh
-        run: |
-          Remove-Item -Recurse -Force espeak-ng
-          Remove-Item -Recurse -Force dist
-          Remove-Item -Force espeak-ng-windows.zip 
-          Remove-Item -Force .gitignore -ErrorAction SilentlyContinue
-          Remove-Item -Force dev_tools.py -ErrorAction SilentlyContinue
-          Remove-Item -Recurse -Force .github -ErrorAction SilentlyContinue
-          Remove-Item -Recurse -Force .idea -ErrorAction SilentlyContinue
-
-      # Upload the full release of Blender Add-on
-      - name: Upload Windows bundle
-        uses: actions/upload-artifact@v4
-        with:
-          name: lipsync-release
-          path: ./
-#  build-linux:
-#    name: Build linux
-#    runs-on: ubuntu-latest
+#  build-windows:
+#    name: Build Espeak NG for Windows
+#    runs-on: windows-latest
 #
 #    steps:
 #      - name: Checkout
 #        uses: actions/checkout@v4
 #
-#      - name: Clone eSpeak NG
+#      # Clone Espeak NG repo
+#      - name: Clone espeak NG
 #        run: git clone --depth 1 https://github.com/espeak-ng/espeak-ng.git
 #
-#      # Step 2: Install Build Dependencies
-#      - name: Install dependencies
-#        run: |
-#          sudo apt-get update
-#          sudo apt-get install -y make autoconf automake libtool pkg-config
-#          sudo apt-get install -y gcc g++
-#          sudo apt-get install -y libpcaudio-dev
+#      # Clone pcaudiolib repo (required for Windows build)
+#      - name: Clone pcaudiolib
+#        run: git clone --depth 1 https://github.com/espeak-ng/pcaudiolib.git espeak-ng/src/pcaudiolib
 #
-#      - name: Build linux
+#      # Build Espeak NG for Windows
+#      - name: Build with MSBuild
 #        working-directory: espeak-ng
+#        shell: cmd
 #        run: |
-#          ./autogen.sh
-#          ./configure
-#          make
-#          mkdir -p ../dist
-#          cp src/.libs/libespeak-ng.so* ../dist/
-#          cp -r espeak-ng-data ../dist/espeak-ng-data
+#          cd src/windows
+#          "%ProgramFiles(x86)%\Microsoft Visual Studio\Installer\vswhere.exe" -latest -products * -requires Microsoft.Component.MSBuild -find MSBuild\**\Bin\MSBuild.exe > msbuild_path.txt
+#          set /p MSBUILD_PATH=<msbuild_path.txt
+#          call "%MSBUILD_PATH%" espeak-ng.sln /p:Configuration=Release
 #
-#      - name: Upload Linux lib + data
+#      # Copy .dll and data folder to temporary dist dir
+#      - name: Copy Windows DLL + Data
+#        run: |
+#          mkdir dist
+#          copy espeak-ng\src\windows\x64\Release\libespeak-ng.dll dist\
+#          xcopy espeak-ng\espeak-ng-data dist\espeak-ng-data /E /I
+#
+#      # Zip artifacts
+#      - name: Zip Windows build
+#        shell: pwsh
+#        run: |
+#          Compress-Archive -Path dist\* -DestinationPath espeak-ng-windows.zip
+#
+#      # Upload ZIP artifacts
+#      - name: Upload Windows Build of Espeak NG
 #        uses: actions/upload-artifact@v4
 #        with:
-#          name: espeak-ng-linux-bundle
-#          path: dist/
+#          name: espeak-ng-windows
+#          path: espeak-ng-windows.zip
+
+  build-linux:
+    name: Build Espeak NG for linux
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Clone eSpeak NG
+        run: git clone --depth 1 https://github.com/espeak-ng/espeak-ng.git
+
+      # Step 2: Install Build Dependencies
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y make autoconf automake libtool pkg-config
+          sudo apt-get install -y gcc g++
+          sudo apt-get install -y libpcaudio-dev
+
+      # Build & Copy lib and data folder to temporary dist dir
+      - name: Build linux
+        working-directory: espeak-ng
+        run: |
+          ./autogen.sh
+          ./configure
+          make
+          mkdir -p ../dist
+          cp src/.libs/libespeak-ng.so* ../dist/
+          cp -r espeak-ng-data ../dist/espeak-ng-data
+          cd ../dist
+          zip -r ../espeak-ng-linux.zip .
+
+      # Upload ZIP artifacts
+      - name: Upload Linux lib + data
+        uses: actions/upload-artifact@v4
+        with:
+          name: espeak-ng-linux
+          path: espeak-ng-linux.zip
+          working-directory: espeak-ng
+#
 #
 #  build-arm64:
-#    name: Build macOS (arm64)
+#    name: Build Espeak NG for macOS (arm64)
 #    runs-on: macos-latest
 #
 #    steps:
@@ -145,8 +125,9 @@ jobs:
 #            libespeak-ng-arm64.dylib
 #            espeak-ng-data/
 #
+#
 #  build-x86_64:
-#    name: Build macOS (x86_64)
+#    name: Build Espeak NG for macOS (x86_64)
 #    runs-on: macos-13
 #
 #    steps:
@@ -177,7 +158,7 @@ jobs:
 #          path: libespeak-ng-x86_64.dylib
 #
 #  merge:
-#    name: Create Universal macOS lib + bundle data
+#    name: Create Universal macOS Build
 #    runs-on: macos-latest
 #    needs: [build-arm64, build-x86_64]
 #
@@ -200,9 +181,77 @@ jobs:
 #            libespeak-ng-x86_64.dylib
 #          cp -r espeak-ng-data dist/espeak-ng-data
 #          file dist/libespeak-ng.dylib
+#          zip -r espeak-ng-darwin.zip dist/*
 #
 #      - name: Upload Universal lib + Data
 #        uses: actions/upload-artifact@v4
 #        with:
-#          name: espeak-ng-macos-universal-bundle
-#          path: dist/
+#          name: espeak-ng-darwin
+#          path: espeak-ng-darwin.zip
+#
+#  collect-artifacts:
+#    name: Make Blender Addon
+#    runs-on: ubuntu-latest
+#    needs: [ build-windows, merge, build-linux ]
+#
+#    steps:
+#      - name: Checkout repo
+#        uses: actions/checkout@v4
+#
+#      - name: Install Blender via Snap
+#        run: sudo snap install blender --classic
+#
+#      # Download each platform’s build artifact
+#      - name: Download Windows build
+#        uses: actions/download-artifact@v4
+#        with:
+#          name: espeak-ng-windows
+#          path: temp/windows
+#
+#      - name: Download macOS build
+#        uses: actions/download-artifact@v4
+#        with:
+#          name: espeak-ng-darwin
+#          path: temp/macos
+#
+#      - name: Download Linux build
+#        uses: actions/download-artifact@v4
+#        with:
+#          name: espeak-ng-linux
+#          path: temp/linux
+#
+#      # Move them to Assets/{platform}
+#      - name: Move artifacts to Assets
+#        run: |
+#          mkdir -p Assets/Archives/windows Assets/Archives/darwin Assets/Archives/linux
+#
+#          cp -r temp/windows/* Assets/Archives/windows/
+#
+#          cp -r temp/macos/* Assets/Archives/darwin/
+#
+#          cp -r temp/linux/* Assets/Archives/linux/
+#
+#      # Remove temp files and folders + unwanted files for release
+#      - name: Clean up folder to zip Blender Addon
+#        run: |
+#          rm -rf temp || true
+#          rm -rf dist || true
+#          rm -f .gitignore || true
+#          rm -f dev_tools.py || true
+#          rm -rf .github || true
+#          rm -rf .idea || true
+#
+#      - name: Build Extension with blender
+#        run: blender --command extension build
+#
+#      - name: Get generated zip filename
+#        id: get-zip
+#        run: echo "ZIP_NAME=$(basename $(ls ./*.zip))" >> $GITHUB_OUTPUT
+#
+#      # Upload the full release of Blender Add-on
+#      - name: Upload Blender Addon
+#        uses: actions/upload-artifact@v4
+#        with:
+#          name: ${{ steps.get-zip.outputs.ZIP_NAME }}
+#          path: ${{ steps.get-zip.outputs.ZIP_NAME }}
+#

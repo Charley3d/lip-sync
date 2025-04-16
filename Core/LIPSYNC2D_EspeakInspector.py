@@ -70,7 +70,7 @@ class LIPSYNC2D_EspeakInspector():
         plat = str.lower(platform.system())
 
         script_dir = pathlib.Path(__file__).parent  # Get the directory where the script is located
-        input_archive = script_dir / ".." / "Assets" / "Archives" / plat / f"espeak-ng_{plat}.zip"
+        input_archive = script_dir / ".." / "Assets" / "Archives" / plat / f"espeak-ng-{plat}.zip"
         package_name = cast(str, get_package_name())
 
         try:

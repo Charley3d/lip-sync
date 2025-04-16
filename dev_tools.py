@@ -8,7 +8,9 @@ def update_wheels():
     files = os.listdir(folder)
     toml_path = "blender_manifest.toml"
 
-    wheel_paths = glob("./wheels/*.whl")
+    wheel_paths = glob("./wheels/**/*.whl", recursive=True)
+
+
     print(wheel_paths)
     clean = [path.replace("\\", "/") for path in wheel_paths]
 
