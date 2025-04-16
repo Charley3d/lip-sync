@@ -15,7 +15,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      # Step 2: Install dependencies
+      # Step 2: Install build dependencies
       - name: Install build dependencies
         run: |
           sudo apt-get update
@@ -44,9 +44,11 @@ jobs:
           make -j$(nproc)
           make install
 
-      # Step 5: Upload the built binaries
-      - name: Upload built binary
+      # Step 5: Upload the built binaries and shared libraries
+      - name: Upload built binaries and shared libraries
         uses: actions/upload-artifact@v4
         with:
           name: espeak-ng-linux
-          path: ./build/bin/
+          path: |
+            ./build/bin/
+            ./build/lib/
