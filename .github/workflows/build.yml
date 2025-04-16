@@ -1,4 +1,4 @@
-name: Build eSpeak NG for Linux (Ubuntu 18.04)
+name: Build eSpeak NG for macOS
 
 on:
   push:
@@ -7,48 +7,58 @@ on:
     branches: [master]
 
 jobs:
-  build-linux:
-    runs-on: ubuntu-latest
+  macos-build:
+    runs-on: macos-latest
 
     steps:
-      # Step 1: Checkout the repository
+      # Step 1: Checkout Repository
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      # Step 2: Install build dependencies
-      - name: Install build dependencies
+      # Step 2: Install Build Dependencies
+      - name: Install dependencies on macOS
         run: |
-          sudo apt-get update
-          sudo apt-get install -y \
-            build-essential \
-            autoconf \
-            automake \
-            libtool \
-            pkg-config \
-            libpcaudio-dev \
-            libsonic-dev \
-            libespeak-ng-dev \
-            portaudio19-dev \
-            git libasound2-dev
+          brew update
+          brew install autoconf automake libtool pkg-config portaudio
+          brew link --overwrite libtool
 
-      # Step 3: Clone the eSpeak NG repository
-      - name: Clone eSpeak NG
-        run: git clone --depth 1 https://github.com/espeak-ng/espeak-ng.git
+      # Step 2: Clone eSpeak NG Repository
+      - name: Clone eSpeak NG repository
+        run: |
+          git clone --depth 1 https://github.com/espeak-ng/espeak-ng.git
+          cd espeak-ng
+          ls -la
 
-      # Step 4: Build eSpeak NG
-      - name: Build eSpeak NG
+      # Step 6: Fix endian.h Include for macOS
+#      - name: Fix endian.h include for macOS
+#        working-directory: espeak-ng
+#        run: |
+#          sed -i.bak 's|#include <endian.h>|#ifdef __APPLE__\n#include <libkern/OSByteOrder.h>\n#define BYTE_ORDER    __BYTE_ORDER__\n#define BIG_ENDIAN    __ORDER_BIG_ENDIAN__\n#define LITTLE_ENDIAN __ORDER_LITTLE_ENDIAN__\n#else\n#include <endian.h>\n#endif|' src/libespeak-ng/speech.h
+
+      # Step 4: Run autogen.sh to Generate Build Files
+      - name: Run autogen.sh
         working-directory: espeak-ng
         run: |
+          chmod +x autogen.sh
           ./autogen.sh
-          ./configure --prefix=$PWD/../build --enable-shared --disable-static
-          make -j$(nproc)
+
+      # Step 5: Configure and Build
+      - name: Configure Build
+        working-directory: espeak-ng
+        run: |
+          mkdir -p build_x86_64
+          cd build_x86_64
+          ../configure --prefix=$PWD/../install_x86_64 --enable-shared --disable-static CFLAGS="-arch x86_64" CXXFLAGS="-arch x86_64"
+
+      - name: Build eSpeak NG
+        working-directory: espeak-ng/build_x86_64
+        run: |
+          make -j$(sysctl -n hw.ncpu)
           make install
 
-      # Step 5: Upload the built binaries and shared libraries
-      - name: Upload built binaries and shared libraries
+      # Step 6: Upload Artifacts
+      - name: Upload macOS Build Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: espeak-ng-linux
-          path: |
-            ./build/bin/
-            ./build/lib/
+          name: espeak-ng-macos-artifacts
+          path: espeak-ng/install_x86_64/
