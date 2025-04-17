@@ -181,7 +181,7 @@ jobs:
           cp -r espeak-ng-data dist/espeak-ng-data
           file dist/libespeak-ng.dylib
           cd dist
-          zip -r ../espeak-ng-linux.zip .
+          zip -r ../espeak-ng-darwin.zip .
 
       - name: Upload Universal lib + Data
         uses: actions/upload-artifact@v4
