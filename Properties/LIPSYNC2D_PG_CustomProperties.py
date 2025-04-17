@@ -1,4 +1,3 @@
-from typing import cast
 import bpy
 
 
@@ -91,19 +90,19 @@ class LIPSYNC2D_PG_CustomProperties(bpy.types.PropertyGroup):
     )  # type: ignore
 
     #TODO: Generate this from the phoneme dict
-    lip_sync_2d_viseme_sil: bpy.props.IntProperty(name="Viseme 0", min=0, max=99, default=0) #type: ignore
-    lip_sync_2d_viseme_PP: bpy.props.IntProperty(name="Viseme 1", min=0, max=99, default=1) #type: ignore
-    lip_sync_2d_viseme_FF: bpy.props.IntProperty(name="Viseme 2", min=0, max=99, default=2) #type: ignore
-    lip_sync_2d_viseme_TH: bpy.props.IntProperty(name="Viseme 3", min=0, max=99, default=3) #type: ignore
-    lip_sync_2d_viseme_DD: bpy.props.IntProperty(name="Viseme 4", min=0, max=99, default=4) #type: ignore
-    lip_sync_2d_viseme_kk: bpy.props.IntProperty(name="Viseme 5", min=0, max=99, default=5) #type: ignore
-    lip_sync_2d_viseme_CH: bpy.props.IntProperty(name="Viseme 6", min=0, max=99, default=6) #type: ignore
-    lip_sync_2d_viseme_SS: bpy.props.IntProperty(name="Viseme 7", min=0, max=99, default=7) #type: ignore
-    lip_sync_2d_viseme_nn: bpy.props.IntProperty(name="Viseme 8", min=0, max=99, default=8) #type: ignore
-    lip_sync_2d_viseme_RR: bpy.props.IntProperty(name="Viseme 9", min=0, max=99, default=9) #type: ignore
-    lip_sync_2d_viseme_aa: bpy.props.IntProperty(name="Viseme 10", min=0, max=99, default=10) #type: ignore
-    lip_sync_2d_viseme_E: bpy.props.IntProperty(name="Viseme 11", min=0, max=99, default=11) #type: ignore
-    lip_sync_2d_viseme_ih: bpy.props.IntProperty(name="Viseme 12", min=0, max=99, default=12) #type: ignore
-    lip_sync_2d_viseme_oh: bpy.props.IntProperty(name="Viseme 13", min=0, max=99, default=13) #type: ignore
-    lip_sync_2d_viseme_ou: bpy.props.IntProperty(name="Viseme 14", min=0, max=99, default=14) #type: ignore
-    lip_sync_2d_viseme_UNK: bpy.props.IntProperty(name="Viseme 14", min=0, max=99, default=0) #type: ignore
+    lip_sync_2d_viseme_sil: bpy.props.IntProperty(name="Viseme sil", description="Silence or mouth at rest (neutral position)", min=0, max=99, default=0) #type: ignore
+    lip_sync_2d_viseme_PP: bpy.props.IntProperty(name="Viseme PP", description="Closed lips as in \"pop\" or \"map\"", min=0, max=99, default=1) #type: ignore
+    lip_sync_2d_viseme_FF: bpy.props.IntProperty(name="Viseme FF", description="Top teeth over bottom lip, like \"fish\" or \"fifty\"", min=0, max=99, default=2) #type: ignore
+    lip_sync_2d_viseme_TH: bpy.props.IntProperty(name="Viseme TH", description="Tongue between teeth, like \"think\" or \"that\"", min=0, max=99, default=3) #type: ignore
+    lip_sync_2d_viseme_DD: bpy.props.IntProperty(name="Viseme DD", description="Tongue touches roof of mouth, as in \"dog\" or \"add\"", min=0, max=99, default=4) #type: ignore
+    lip_sync_2d_viseme_kk: bpy.props.IntProperty(name="Viseme kk", description="Back of the tongue against the soft palate, like \"cook\" or \"kick\"", min=0, max=99, default=5) #type: ignore
+    lip_sync_2d_viseme_CH: bpy.props.IntProperty(name="Viseme CH", description="Teeth clenched with lips slightly apart, like \"chew\" or \"church\"", min=0, max=99, default=6) #type: ignore
+    lip_sync_2d_viseme_SS: bpy.props.IntProperty(name="Viseme SS", description="Lips apart, teeth close together, for \"see\" or \"snake\"", min=0, max=99, default=7) #type: ignore
+    lip_sync_2d_viseme_nn: bpy.props.IntProperty(name="Viseme nn", description="Tongue on roof of mouth, nasal sound like \"no\" or \"none\"", min=0, max=99, default=8) #type: ignore
+    lip_sync_2d_viseme_RR: bpy.props.IntProperty(name="Viseme RR", description="Rounded lips and retracted tongue, as in \"red\" or \"arrow\"", min=0, max=99, default=9) #type: ignore
+    lip_sync_2d_viseme_aa: bpy.props.IntProperty(name="Viseme aa", description="Wide open mouth, like \"cat\" or \"flat\"", min=0, max=99, default=10) #type: ignore
+    lip_sync_2d_viseme_E: bpy.props.IntProperty(name="Viseme E", description="Slightly open mouth with spread lips, like \"bed\" or \"pen\"", min=0, max=99, default=11) #type: ignore
+    lip_sync_2d_viseme_ih: bpy.props.IntProperty(name="Viseme ih", description="Slightly open mouth, tongue high, like \"bit\" or \"hit\"", min=0, max=99, default=12) #type: ignore
+    lip_sync_2d_viseme_oh: bpy.props.IntProperty(name="Viseme oh", description="Rounded lips, mouth less open, like \"bought\" or \"saw\"", min=0, max=99, default=13) #type: ignore
+    lip_sync_2d_viseme_ou: bpy.props.IntProperty(name="Viseme ou", description="Tight rounded lips, like \"boot\" or \"you\"", min=0, max=99, default=14) #type: ignore
+    lip_sync_2d_viseme_UNK: bpy.props.IntProperty(name="Viseme UNK", description="Default lips if phoneme is unknown", min=0, max=99, default=0) #type: ignore

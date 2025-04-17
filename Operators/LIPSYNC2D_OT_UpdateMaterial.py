@@ -3,7 +3,8 @@ from typing import Literal, cast
 
 import bpy
 
-from ..Core.LIPSYNC2D_SpritesheetNode import cgp_spritesheet_reader_node_group, cgp_spriteratio_node_group
+from ..Core.LIPSYNC2D_SpritesheetNode import cgp_spriteratio_node_group, cgp_spritesheet_reader_node_group
+
 
 class LIPSYNC2D_OT_UpdateMaterial(bpy.types.Operator):
     bl_idname = "mesh.set_lips_material"
@@ -84,7 +85,24 @@ def add_spritesheet_node_to_mat(active_obj, material: bpy.types.Material, sprite
     for node in material.node_tree.nodes:
         
         if node.bl_idname == "ShaderNodeOutputMaterial":
+            x_offset = 800
             next_node = node
+
+            # Quick & Dirty way to reposition nodes to prevent node stacking
+            initial_output_node_loc = next_node.location.copy()
+            next_node.location.x += principled.width + x_offset + x_offset/4
+
+            mix_shader.location = initial_output_node_loc
+            mix_shader.location.x += x_offset / 1.3 + x_offset/4
+
+            principled.location = initial_output_node_loc
+            principled.location.x += x_offset / 4 + x_offset/4
+            principled.location.y -= principled.height
+
+            group.location = initial_output_node_loc
+            group.location.y -= group.height
+            group.location.x += x_offset/4
+
             inputs_name = node.inputs.keys()
 
             for input_name in inputs_name:
@@ -137,7 +155,7 @@ def create_spritesheet_nodes(context: bpy.types.Context) -> bpy.types.ShaderNode
     node_sprite_ratio = bpy.data.node_groups.get("CGP_SpriteRatio")
     nodes_spritesheet_reader = cast(bpy.types.ShaderNodeTree,bpy.data.node_groups.get("cgp_spritesheet_reader"))
 
-    if isinstance(nodes_spritesheet_reader, bpy.types.ShaderNodeTree): return nodes_spritesheet_reader
+    if isinstance(nodes_spritesheet_reader, bpy.types.ShaderNodeTree): return nodes_spritesheet_reader.copy()
     
     #TODO: Here we could have an issue if node is found but is not a shadernodetree. See if we should delete it or not
     if node_sprite_ratio is None:
