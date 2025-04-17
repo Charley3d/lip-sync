@@ -4,8 +4,8 @@ schema_version = "1.0.0"
 # Change the values according to your extension
 id = "iocgpoly_lip_sync_2d"
 version = "1.0.0"
-name = "Lip Sync 2D"
-tagline = "Addon to easily add mouth sprites to your models"
+name = "Lip Sync"
+tagline = "Automatic lip sync for your Blender models"
 maintainer = "Charley 3D <charley@cgpoly.io>"
 # Supported types: "add-on", "theme"
 type = "add-on"
@@ -15,7 +15,7 @@ type = "add-on"
 
 # # Optional: tag list defined by Blender and server, see:
 # # https://docs.blender.org/manual/en/dev/advanced/extensions/tags.html
-# tags = ["Animation", "Sequencer"]
+tags = ["Animation", "Sequencer"]
 
 blender_version_min = "4.4.0"
 # # Optional: Blender version that the extension does not support, earlier versions are supported.

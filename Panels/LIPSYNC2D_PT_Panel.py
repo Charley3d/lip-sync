@@ -6,11 +6,11 @@ from ..LIPSYNC2D_Utils import get_package_name
 
 class LIPSYNC2D_PT_Panel(bpy.types.Panel):
     """Creates a Panel in the scene context of the properties editor"""
-    bl_label = "Lip Sync 2D"
+    bl_label = "Lip Sync"
     bl_idname = "LIPSYNC2D_PT_Panel"
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
-    bl_category = 'Lip Sync 2D'
+    bl_category = 'Lip Sync'
 
     def draw(self, context: bpy.types.Context):
         if self.layout is None: return

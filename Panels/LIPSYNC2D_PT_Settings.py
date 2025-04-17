@@ -10,7 +10,7 @@ class LIPSYNC2D_PT_Settings(bpy.types.Panel):
     bl_label="Quick Setup"
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
-    bl_category = 'Lip Sync 2D'
+    bl_category = 'Lip Sync'
 
     platform = platform.system()
 
