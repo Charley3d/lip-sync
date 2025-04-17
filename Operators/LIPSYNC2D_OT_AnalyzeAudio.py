@@ -44,7 +44,7 @@ class LIPSYNC2D_OT_AnalyzeAudio(bpy.types.Operator):
             return {'CANCELLED'}
         
         props = obj.lipsync2d_props # type: ignore
-        self.based_fps = context.scene.render.fps * context.scene.render.fps_base
+        self.based_fps = context.scene.render.fps / context.scene.render.fps_base
 
         model = self.get_model(prefs)
         result = self.vosk_recognize_voice(file_path, model)
