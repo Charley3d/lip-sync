@@ -1,7 +1,8 @@
 import bpy
 
-from ..LIPSYNC2D_Utils import get_package_name
 from ..Core.phoneme_to_viseme import viseme_items_arkit_v2 as viseme_items_arkit
+from ..LIPSYNC2D_Utils import get_package_name
+
 
 class LIPSYNC2D_PT_Panel(bpy.types.Panel):
     """Creates a Panel in the scene context of the properties editor"""
@@ -43,7 +44,6 @@ class LIPSYNC2D_PT_Panel(bpy.types.Panel):
 
         row = layout.row()
         row.label(text="Select your Sprite sheet")
-        row = layout.row()
         layout.template_ID_preview(props, "lip_sync_2d_sprite_sheet", rows=2, cols=6, open="image.open" )
 
         row = layout.row()
@@ -93,9 +93,6 @@ class LIPSYNC2D_PT_Panel(bpy.types.Panel):
             panel_head, panel_body = layout.panel("cgp_lipsync_viseme_dropdown", default_closed=True)
             panel_head.label(text="Viseme Settings")
             if panel_body is not None:
-                row = panel_body.row()
-                i = 0
-
                 row = panel_body.row(align=True)
                 row.label(text=f"Viseme")
                 row.label(text=f"Image index")

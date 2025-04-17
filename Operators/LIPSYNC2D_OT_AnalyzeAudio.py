@@ -1,18 +1,17 @@
-from pathlib import Path
-import pathlib
 from typing import Literal, cast
-from vosk import Model, KaldiRecognizer, MODEL_DIRS 
-import wave
 import json
-from phonemizer import phonemize
-from phonemizer.backend import EspeakBackend
-import bpy 
 import os
+import wave
+from typing import Literal, cast
 
-from ..Core.LIPSYNC2D_VoskWrapper import extensionpath
+import bpy
+from phonemizer import phonemize
+from vosk import KaldiRecognizer, Model
 
-from ..LIPSYNC2D_Utils import get_package_name
+from ..Core.LIPSYNC2D_VoskWrapper import setextensionpath
 from ..Core.phoneme_to_viseme import phoneme_to_viseme_arkit_v2 as phoneme_to_viseme
+from ..LIPSYNC2D_Utils import get_package_name
+
 
 class LIPSYNC2D_OT_AnalyzeAudio(bpy.types.Operator):
     bl_idname = "audio.cgp_analyze_audio"
@@ -49,6 +48,10 @@ class LIPSYNC2D_OT_AnalyzeAudio(bpy.types.Operator):
 
         model = self.get_model(prefs)
         result = self.vosk_recognize_voice(file_path, model)
+
+        if "result" not in result:
+            return {'FINISHED'}
+        
         words_timings = result['result']
 
         os.remove(file_path) # Need to be removed AFTER vosk_recognize_voice
@@ -59,7 +62,7 @@ class LIPSYNC2D_OT_AnalyzeAudio(bpy.types.Operator):
 
         return {'FINISHED'}
 
-    @extensionpath
+    @setextensionpath
     def get_model(self, prefs):
         model = Model(lang=prefs.current_lang)
         return model

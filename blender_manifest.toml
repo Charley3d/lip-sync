@@ -57,8 +57,8 @@ wheels = ["./wheels/typing_extensions-4.13.2-py3-none-any.whl", "./wheels/pypars
 # # For longer explanations use the documentation or detail page.
 #
 # [permissions]
-# network = "Need to sync motion-capture data to server"
-# files = "Import/export FBX from/to disk"
+ network = "Need to download Voices Models to enable lip sync"
+ files = "Import Models / Extract libs to disk"
 # clipboard = "Copy and paste bone transforms"
 
 # # Optional: advanced build settings.

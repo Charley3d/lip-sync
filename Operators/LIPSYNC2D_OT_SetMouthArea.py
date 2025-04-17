@@ -1,9 +1,9 @@
+import functools
 from typing import Literal, TypedDict, cast
 
-import bpy
 import bmesh
+import bpy
 import mathutils
-import functools
 
 
 class ViewState(TypedDict):
@@ -45,13 +45,14 @@ class LIPSYNC2D_OT_SetMouthArea(bpy.types.Operator):
                                 space_view3d = cast(bpy.types.SpaceView3D, space)
                                 space_view3d.shading.type = "MATERIAL"
 
-            if view_state is not None:
-                bpy.app.timers.register(functools.partial(callback, view_state), first_interval=.01)
+            if view_state is not None and context.area is not None:
+                activate_area_info = get_area_identifier(context.area)
+                bpy.app.timers.register(functools.partial(callback, activate_area_info, view_state), first_interval=.01)
 
         return {'FINISHED'}
     
 
-def callback(view_state: ViewState) -> None:
+def callback(activate_area_info:tuple[float, float, float, float, str], view_state: ViewState) -> None:
     obj = bpy.context.active_object
     if obj is None or not isinstance(obj.data, bpy.types.Mesh):
         return
@@ -82,9 +83,8 @@ def callback(view_state: ViewState) -> None:
     if uv_index != -1:
         mesh.uv_layers.active_index = uv_index
     
-    #TODO: Unwrap from view (bounds) selected faces
     for area in bpy.context.window.screen.areas:
-        if area.type == 'VIEW_3D':
+        if get_area_identifier(area) == activate_area_info:
             for region in area.regions:
                 if region.type == 'WINDOW':
                     override = bpy.context.copy()
@@ -130,6 +130,9 @@ def callback(view_state: ViewState) -> None:
     mesh.uv_layers.active_index = previous_active_uv
     return None
 
+def get_area_identifier(area: bpy.types.Area):
+    return (area.x, area.y, area.width, area.height, area.type)
+
 def save_view_state(region_3d: bpy.types.RegionView3D) -> ViewState:
     return {
         "location": region_3d.view_location.copy(),
@@ -146,12 +149,6 @@ def restore_view_state(region_3d: bpy.types.RegionView3D, view_state: ViewState)
 
 
 def align_view_to_selection(quat: mathutils.Quaternion) -> ViewState | None:
-    # res: ViewState = {
-    #     "location": mathutils.Vector([-math.inf,-math.inf,-math.inf]),
-    #     "rotation": mathutils.Quaternion().identity(),
-    #     "distance": -math.inf,
-    #     "perspective": 'PERSP'
-    # }
     if bpy.context.window is None:
         return None
     
