@@ -85,11 +85,14 @@ class LIPSYNC2D_EspeakInspector():
         except Exception as e:
             raise Exception(f"Error during archive extraction: {e}")
 
+        output_path = pathlib.Path(output_dir)
         if plat == "windows":
-            EspeakBackend.set_library(pathlib.Path(output_dir) / "libespeak-ng.dll")
+            EspeakBackend.set_library(output_path / "libespeak-ng.dll")
         elif plat == "linux":
-            EspeakBackend.set_library(pathlib.Path(output_dir) / "libespeak-ng.so")
+            EspeakBackend.set_library(output_path / "libespeak-ng.so")
         elif plat == "darwin":
-            EspeakBackend.set_library(pathlib.Path(output_dir) / "libespeak-ng.dylib")
+            EspeakBackend.set_library(output_path / "libespeak-ng.dylib")
         else:
             raise Exception(f"Unsupported platform: {plat}")
+
+        os.environ["ESPEAK_DATA_PATH"] = str(output_path / "espeak-ng-data")
