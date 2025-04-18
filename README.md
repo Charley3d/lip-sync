@@ -1,4 +1,4 @@
-# 🗣️ Blender Lip Sync Addon – Automatic Viseme Animation from Audio
+# 🗣️ Blender Lip Sync Addon
 
 A **Blender addon** for automatic lip-syncing based on audio input.  
 Cross-platform (Windows, macOS, Linux), works **out of the box** with **30 languages**.
