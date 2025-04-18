@@ -1,131 +1,90 @@
+import json
 import os
 import threading
 from pathlib import Path
 from re import match
+from typing import Callable
 
 import bpy
 import requests
 from vosk import MODEL_DIRS, MODEL_LIST_URL, Model
 
-from ..Core.LIPSYNC2D_VoskWrapper import setextensionpath
+from ..Core.LIPSYNC2D_BlenderThread import LIPSYNC2D_BlenderThread
+from ..Core.LIPSYNC2D_VoskHelper import LIPSYNC2D_VoskHelper
 from ..LIPSYNC2D_Utils import get_package_name
 
-
-def online_available_langs():
-    """
-    Fetches the available language models for lip-syncing from an online source.
-
-    :return: list[tuple[str, str, str]]
-        A list of tuples representing the available languages. Each tuple contains:
-        - Internal language code
-        - Display name
-        - A brief description (e.g., ('none', '-- None --', 'No selection')).
-    """
-    response = requests.get(MODEL_LIST_URL)
-
-    all_langs = [(l["lang"], l["lang_text"]) for l in response.json() if
-                 l["lang"] != "all" and l["obsolete"] == "false" and l['type'] == 'small']
-    all_langs.sort(key=lambda x: x[1])
-    all_langs = [('none', "-- None --", "No selection"), ] + all_langs
-
-    enum_items = [(list(l)[0], list(l)[1], list(l)[0]) for l in all_langs]
-
-    return enum_items
-
-
-def install_model(self, context):
-    """
-    Installs the selected language model for lip-syncing asynchronously.
-
-    :param self: bpy.types.AddonPreferences
-        The current add-on preferences where the language selection is made.
-    :param context: bpy.types.Context
-        The Blender context.
-    """
-    if self.current_lang == "none":
-        return
-    
-    @setextensionpath
-    def install_model_thread():
-        """
-        Executes the model installation process in a separate thread.
-    
-        This function initializes the installation of the selected Vosk model
-        by using the language code provided in the add-on preferences.
-        """
-        Model(lang=self.current_lang)
-
-    threading.Thread(target=install_model_thread).start()
 
 class LIPSYNC2D_AP_Preferences(bpy.types.AddonPreferences):
     bl_idname = get_package_name() # type: ignore
 
-    available_langs = online_available_langs()
-    current_lang: bpy.props.EnumProperty(name="Lip Sync Lang", items=available_langs, update=install_model, default=0) # type: ignore
+    current_lang: bpy.props.EnumProperty(name="Lip Sync Lang", items=LIPSYNC2D_VoskHelper.get_available_languages, update=LIPSYNC2D_VoskHelper.install_model, default=0) # type: ignore
+    is_downloading: bpy.props.BoolProperty(name="Download Status", default=False) # type: ignore
 
     def draw(self, context):
         layout = self.layout
+
+        LIPSYNC2D_AP_Preferences.draw_online_access_warning(layout)
 
         row = layout.row(align=True)
         row.label(text="Language Model")
         row.prop(self, "current_lang", text="") 
         
-        draw_model_state(row, self.current_lang)
+        LIPSYNC2D_AP_Preferences.draw_model_state(row, self.current_lang)
+        LIPSYNC2D_AP_Preferences.draw_fetch_list_ops(layout)
 
-def patchmodellang(bad_code:str, good_code:str):
-    """
-    A decorator for replacing an invalid language code with a valid one during function execution.
-    
-    :param bad_code: str
-        The incorrect language code to be replaced.
-    :param good_code: str
-        The correct language code to use instead.
-    :return: callable
-        The wrapper function that performs the substitution.
-    """
+    @staticmethod
+    @LIPSYNC2D_VoskHelper.patchmodellang("ua", "uk")
+    @LIPSYNC2D_VoskHelper.setextensionpath
+    def draw_model_state(row: bpy.types.UILayout, current_lang: str) -> None:
+        """
+        Updates the UI to display the current status of the selected language model.
 
-    def decorator(func):
-        def wrapper(*args, **kwargs):
-            _, lang = args  # Your original unpacking logic
-            if lang == bad_code:
-                lang = good_code
-            
-            args = (_, lang)
-            result = func(*args, **kwargs)
-            return result
-        return wrapper
-    return decorator
+        :param row: bpy.types.UILayout
+            The UI layout row on which the display updates are made.
+        :param current_lang: str
+            The currently selected language code for the model.
+        :return: None
+        """
+        prefs = bpy.context.preferences.addons[get_package_name()].preferences # type: ignore
 
+        if prefs is None:
+            return
 
-@patchmodellang("ua", "uk")
-@setextensionpath
-def draw_model_state(row: bpy.types.UILayout, current_lang: str) -> None:
-    """
-    Updates the UI to display the current status of the selected language model.
+        installed = ""
+        if current_lang != "none":
+            directory = MODEL_DIRS[3] if len(MODEL_DIRS) >= 4 else None
 
-    :param row: bpy.types.UILayout
-        The UI layout row on which the display updates are made.
-    :param current_lang: str
-        The currently selected language code for the model.
-    :return: None
-    """
-    installed = ""
-    if current_lang != "none":
-        directory = MODEL_DIRS[3] if len(MODEL_DIRS) >= 4 else None
-        if directory is not None and Path(directory).exists():
-            model_file_list = os.listdir(directory)
-            model_file = [model for model in model_file_list if match(f"vosk-model(-small)?-{current_lang}", model)]
-            if model_file != []:
-                installed = " Installed"
-                row.enabled = True
-                
-            else:
-                installed = " Downloading..."
-                row.enabled = False
-        else:
-                installed = " Downloading..."
-                row.enabled = False
-    row.label(text=installed)
+            if directory is not None and Path(directory).exists():
+                model_file_list = os.listdir(directory)
+                model_file = [model for model in model_file_list if match(f"vosk-model(-small)?-{current_lang}", model) and os.path.isdir(os.path.join(directory, model))]
+                if model_file:
+                    installed = " Installed"
+                    row.enabled = True
+                elif prefs.is_downloading: #type: ignore
+                    installed = " Downloading..."
+                    row.enabled = False
+            elif prefs.is_downloading: #type: ignore
+                    installed = " Downloading..."
+                    row.enabled = False
 
 
+        row.label(text=installed)
+
+    @staticmethod
+    def draw_online_access_warning(layout: bpy.types.UILayout) -> None:
+        if not bpy.app.online_access:
+            row = layout.row(align=False)
+            row.label(text="Blender Online Access is required")
+            row = layout.row(align=True)
+            row.label(text="You will only see models in cache")
+            row = layout.row(align=True)
+            row.label(text="1. Enable Online Access: Preferences > System > Network")
+            row = layout.row(align=True)
+            row.label(text="2. Reload List: Preferences > Add-ons > Lip Sync > Reload")
+
+    @staticmethod
+    def draw_fetch_list_ops(layout: bpy.types.UILayout) -> None:
+        row = layout.row()
+        row.operator("lipsync2d.downloadlist", text="Reload Models List")
+        row.enabled = bpy.app.online_access
 

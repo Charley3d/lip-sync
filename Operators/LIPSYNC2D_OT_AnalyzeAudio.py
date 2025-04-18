@@ -8,7 +8,7 @@ import bpy
 from phonemizer import phonemize
 from vosk import KaldiRecognizer, Model
 
-from ..Core.LIPSYNC2D_VoskWrapper import setextensionpath
+from ..Core.LIPSYNC2D_VoskHelper import LIPSYNC2D_VoskHelper
 from ..Core.phoneme_to_viseme import phoneme_to_viseme_arkit_v2 as phoneme_to_viseme
 from ..LIPSYNC2D_Utils import get_package_name
 
@@ -62,7 +62,7 @@ class LIPSYNC2D_OT_AnalyzeAudio(bpy.types.Operator):
 
         return {'FINISHED'}
 
-    @setextensionpath
+    @LIPSYNC2D_VoskHelper.setextensionpath
     def get_model(self, prefs):
         model = Model(lang=prefs.current_lang)
         return model
