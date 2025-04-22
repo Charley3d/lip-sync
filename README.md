@@ -3,6 +3,8 @@
 A **Blender addon** for automatic lip-syncing based on audio input.  
 Cross-platform (Windows, macOS, Linux), works **out of the box** with **30 languages**.
 
+https://github.com/user-attachments/assets/cf7c1f2d-a497-4f76-8536-8831115f00ab
+
 ⚡ **Just install it from Blender’s Add-ons panel and you’re ready to go!**
 
 ---
