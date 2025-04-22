@@ -66,26 +66,23 @@ class LIPSYNC2D_EspeakInspector():
         return [d for d in drives if d]
 
     @staticmethod
-    def unzip_binaries():
+    def unzip_binaries() -> None:
         plat = str.lower(platform.system())
-
-        script_dir = pathlib.Path(__file__).parent  # Get the directory where the script is located
-        input_archive = script_dir / ".." / "Assets" / "Archives" / plat / f"espeak-ng-{plat}.zip"
-        package_name = cast(str, get_package_name())
-
+        espeak_archive_path = LIPSYNC2D_EspeakInspector.get_espeak_archive_path()
+        espeak_extraction_path = LIPSYNC2D_EspeakInspector.get_espeak_extraction_path()
+        
         try:
-            output_dir = bpy.utils.extension_path_user(package_name, path=f"bin/{plat}", create=True)
-            with zipfile.ZipFile(input_archive, 'r') as zip_ref:
-                zip_ref.extractall(output_dir)  # Extract all files to the output directory
+            with zipfile.ZipFile(espeak_archive_path, 'r') as zip_ref:
+                zip_ref.extractall(espeak_extraction_path)  # Extract all files to the output directory
 
         except FileNotFoundError:
-            raise FileNotFoundError(f"Input archive '{input_archive}' not found")
+            raise FileNotFoundError(f"Input archive '{espeak_archive_path}' not found")
         except zipfile.BadZipFile:
-            raise Exception(f"The file '{input_archive}' is not a valid zip archive")
+            raise Exception(f"The file '{espeak_archive_path}' is not a valid zip archive")
         except Exception as e:
             raise Exception(f"Error during archive extraction: {e}")
 
-        output_path = pathlib.Path(output_dir)
+        output_path = pathlib.Path(espeak_extraction_path)
         if plat == "windows":
             EspeakBackend.set_library(output_path / "libespeak-ng.dll")
         elif plat == "linux":
@@ -96,3 +93,46 @@ class LIPSYNC2D_EspeakInspector():
             raise Exception(f"Unsupported platform: {plat}")
 
         os.environ["ESPEAK_DATA_PATH"] = str(output_path / "espeak-ng-data")
+    
+    @staticmethod
+    def get_espeak_archive_path() -> pathlib.Path:
+        plat = str.lower(platform.system())
+        script_dir = pathlib.Path(__file__).parent  # Get the directory where the script is located
+        archive_path = script_dir / ".." / "Assets" / "Archives" / plat / f"espeak-ng-{plat}.zip"
+
+        return archive_path
+    
+    @staticmethod
+    def get_espeak_extraction_path() -> pathlib.Path:
+        package_name = cast(str, get_package_name())
+        plat = str.lower(platform.system())
+
+        try:
+            user_extension_bin_dir = bpy.utils.extension_path_user(package_name, path=f"bin/{plat}", create=True)
+            user_extension_bin_path = pathlib.Path(user_extension_bin_dir)
+        except Exception as e:
+            raise Exception("Error while trying to get User Extension Path")
+
+        return user_extension_bin_path
+    
+    
+    @staticmethod
+    def get_espeak_filepath() -> pathlib.Path:
+        plat = str.lower(platform.system())
+        espeak_path = LIPSYNC2D_EspeakInspector.get_espeak_extraction_path()
+
+        if plat == "windows":
+            return espeak_path / "libespeak-ng.dll"
+        elif plat == "linux":
+            return espeak_path / "libespeak-ng.so"
+        elif plat == "darwin":
+            return espeak_path / "libespeak-ng.dylib"
+        
+        # Fallback to linux lib
+        return espeak_path / "libespeak-ng.so"
+        
+
+    @staticmethod
+    def is_espeak_already_extracted() -> bool:
+        espeak_filepath = LIPSYNC2D_EspeakInspector.get_espeak_filepath()
+        return espeak_filepath.is_file()

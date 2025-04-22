@@ -6,8 +6,8 @@ import bpy
 from ..Core.LIPSYNC2D_SpritesheetNode import cgp_spriteratio_node_group, cgp_spritesheet_reader_node_group
 
 
-class LIPSYNC2D_OT_UpdateMaterial(bpy.types.Operator):
-    bl_idname = "mesh.set_lips_material"
+class LIPSYNC2D_OT_SetCustomProperties(bpy.types.Operator):
+    bl_idname = "object.set_lipsync_custom_properties"
     bl_label = "Set Lips Material"
     bl_options = {'REGISTER','UNDO'}
 
@@ -20,16 +20,8 @@ class LIPSYNC2D_OT_UpdateMaterial(bpy.types.Operator):
         if context.active_object is None:
             return {'CANCELLED'}
 
-
         create_custom_prop(context.active_object)
-        main_material = get_or_create_first_material(context.active_object)
-        context.active_object.lipsync2d_props.lip_sync_2d_main_material = main_material # type: ignore
-        nodes_spritesheet_reader = create_spritesheet_nodes(context)
 
-        if nodes_spritesheet_reader is None:
-            return {'CANCELLED'}
-        
-        add_spritesheet_node_to_mat(context.active_object, main_material, nodes_spritesheet_reader)
         context.active_object.lipsync2d_props.lip_sync_2d_sprite_sheet = add_default_image_spritesheet() #type: ignore
 
         return {'FINISHED'}
@@ -151,7 +143,8 @@ def link_nodes(node_tree: bpy.types.NodeTree, output_node: bpy.types.Node, input
     node_tree.links.new(input, output)
 
 
-def create_spritesheet_nodes(context: bpy.types.Context) -> bpy.types.ShaderNodeTree:
+def create_spritesheet_nodes(context: bpy.types.Context, material: bpy.types.Material) -> bpy.types.ShaderNodeTree:
+    
     node_sprite_ratio = bpy.data.node_groups.get("CGP_SpriteRatio")
     nodes_spritesheet_reader = cast(bpy.types.ShaderNodeTree,bpy.data.node_groups.get("cgp_spritesheet_reader"))
 
@@ -165,13 +158,13 @@ def create_spritesheet_nodes(context: bpy.types.Context) -> bpy.types.ShaderNode
 
     return nodes_spritesheet_reader
 
-def get_or_create_first_material(obj: bpy.types.Object) -> bpy.types.Material:
+def get_or_create_material(obj: bpy.types.Object, material_index: int) -> bpy.types.Material:
     if not obj or obj.type != 'MESH' or not isinstance(obj.data, bpy.types.Mesh):
         raise TypeError("Object must be a mesh")
 
     # If there's already a material in the first slot
-    if obj.material_slots:
-        mat = obj.material_slots[0].material
+    if obj.material_slots and material_index >= 0 and material_index < len(obj.material_slots) :
+        mat = obj.material_slots[material_index].material
         if mat:
             return mat
 

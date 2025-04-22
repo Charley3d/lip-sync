@@ -36,7 +36,7 @@ class LIPSYNC2D_PT_Panel(bpy.types.Panel):
 
         if "lip_sync_2d_sprite_sheet" not in context.active_object.lipsync2d_props: # type: ignore
             row = layout.row(align=True)
-            row.operator('mesh.set_lips_material', text="Add Spritesheet on Selection")
+            row.operator('object.set_lipsync_custom_properties', text="Add Lip Sync on Selection")
 
         if context.active_object is None or not hasattr(context.active_object,"lipsync2d_props") or "lip_sync_2d_sprite_sheet" not in context.active_object["lipsync2d_props"]: return
         

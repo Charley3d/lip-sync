@@ -5,6 +5,8 @@ import bmesh
 import bpy
 import mathutils
 
+from .LIPSYNC2D_OT_SetCustomProperties import add_default_image_spritesheet, add_spritesheet_node_to_mat, create_spritesheet_nodes, get_or_create_material
+
 
 class ViewState(TypedDict):
     location: mathutils.Vector
@@ -23,36 +25,77 @@ class LIPSYNC2D_OT_SetMouthArea(bpy.types.Operator):
         return obj is not None and obj.mode == 'EDIT' and obj.type == 'MESH'
     
     def execute(self, context: bpy.types.Context) -> set[Literal['RUNNING_MODAL', 'CANCELLED', 'FINISHED', 'PASS_THROUGH', 'INTERFACE']]:
-        obj = bpy.context.active_object
+        obj = context.active_object
+
+        if obj is None:
+            return {'CANCELLED'}
 
         if obj and obj.mode == 'EDIT' and isinstance(obj.data, bpy.types.Mesh):
             
             mesh = obj.data
             bm = bmesh.from_edit_mesh(mesh)
 
-            selected_faces_normals = sum([f.normal for f in bm.faces if f.select], mathutils.Vector())
-            average_normal = selected_faces_normals.normalized()
-
-            quat = average_normal.to_track_quat('Z', 'Y')
-
-            view_state = align_view_to_selection(quat)
-
-            if context.screen is not None and context.area is not None:
-                for area in context.screen.areas:
-                    if area.type == 'VIEW_3D':
-                        for space in area.spaces:
-                            if space.type == 'VIEW_3D':
-                                space_view3d = cast(bpy.types.SpaceView3D, space)
-                                space_view3d.shading.type = "MATERIAL"
+            LIPSYNC2D_OT_SetMouthArea.edit_face_material(context, obj, bm)
+            view_state = LIPSYNC2D_OT_SetMouthArea.change_view(bm)
+            LIPSYNC2D_OT_SetMouthArea.set_shading(context)
 
             if view_state is not None and context.area is not None:
                 activate_area_info = get_area_identifier(context.area)
-                bpy.app.timers.register(functools.partial(callback, activate_area_info, view_state), first_interval=.01)
+                bpy.app.timers.register(functools.partial(uv_unwrap_selection, activate_area_info, view_state), first_interval=.01)
 
         return {'FINISHED'}
+
+    @staticmethod
+    def set_shading(context):
+        if context.screen is not None and context.area is not None:
+            for area in context.screen.areas:
+                if area.type == 'VIEW_3D':
+                    for space in area.spaces:
+                        if space.type == 'VIEW_3D':
+                            space_view3d = cast(bpy.types.SpaceView3D, space)
+                            space_view3d.shading.type = "MATERIAL"
+
+    @staticmethod
+    def change_view(bm):
+        selected_faces_normals = sum([f.normal for f in bm.faces if f.select], mathutils.Vector())
+        average_normal = selected_faces_normals.normalized()
+
+        quat = average_normal.to_track_quat('Z', 'Y')
+
+        view_state = align_view_to_selection(quat)
+        return view_state
+    
+    @staticmethod
+    def edit_face_material(context: bpy.types.Context, obj: bpy.types.Object, bm: bmesh.types.BMesh):
+        face_material_indices = [f.material_index for f in bm.faces if f.select]
+        material_index = face_material_indices[0] if len(face_material_indices) > 0 else -1
+
+        main_material = get_or_create_material(obj, material_index)
+        obj.lipsync2d_props.lip_sync_2d_main_material = main_material # type: ignore
+
+        nodes_spritesheet_reader = get_spritesheet_reader_from_mat(main_material)
+
+        if nodes_spritesheet_reader is None:
+            nodes_spritesheet_reader = create_spritesheet_nodes(context, main_material)
+
+            if nodes_spritesheet_reader is None:
+                return {'CANCELLED'}
+            
+            add_spritesheet_node_to_mat(context.active_object, main_material, nodes_spritesheet_reader)
+            context.active_object.lipsync2d_props.lip_sync_2d_sprite_sheet = add_default_image_spritesheet() #type: ignore
     
 
-def callback(activate_area_info:tuple[float, float, float, float, str], view_state: ViewState) -> None:
+def get_spritesheet_reader_from_mat(main_material: bpy.types.Material):
+    material_node_tree = main_material.node_tree
+    nodes_spritesheet_reader = None
+
+    if material_node_tree is not None:
+        nodes_spritesheet_reader = material_node_tree.nodes.get("cgp_spritesheet_reader")
+
+        
+    return nodes_spritesheet_reader
+
+def uv_unwrap_selection(activate_area_info:tuple[float, float, float, float, str], view_state: ViewState) -> None:
     obj = bpy.context.active_object
     if obj is None or not isinstance(obj.data, bpy.types.Mesh):
         return
@@ -141,10 +184,12 @@ def save_view_state(region_3d: bpy.types.RegionView3D) -> ViewState:
         "perspective": region_3d.view_perspective,
     }
 
-def restore_view_state(region_3d: bpy.types.RegionView3D, view_state: ViewState):
-    region_3d.view_location = view_state["location"]
-    region_3d.view_rotation = view_state["rotation"]
-    region_3d.view_distance = view_state["distance"]
+def restore_view_state(region_3d: bpy.types.RegionView3D, view_state: ViewState, only_perspective: bool = True):
+    if only_perspective is False:
+        region_3d.view_location = view_state["location"]
+        region_3d.view_rotation = view_state["rotation"]
+        region_3d.view_distance = view_state["distance"]
+    
     region_3d.view_perspective = view_state["perspective"]
 
 

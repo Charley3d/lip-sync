@@ -1,4 +1,3 @@
-import os
 import bpy
 
 
@@ -8,7 +7,7 @@ from .Preferences.LIPSYNC2D_AP_Preferences import LIPSYNC2D_AP_Preferences
 from .Operators.LIPSYNC2D_OT_AnalyzeAudio import LIPSYNC2D_OT_AnalyzeAudio
 from .Operators.LIPSYNC2D_OT_DownloadModelsList import LIPSYNC2D_OT_DownloadModelsList
 from .Properties.LIPSYNC2D_PG_CustomProperties import LIPSYNC2D_PG_CustomProperties
-from .Operators.LIPSYNC2D_OT_UpdateMaterial import LIPSYNC2D_OT_UpdateMaterial
+from .Operators.LIPSYNC2D_OT_SetCustomProperties import LIPSYNC2D_OT_SetCustomProperties
 from .Operators.LIPSYNC2D_OT_SetMouthArea import LIPSYNC2D_OT_SetMouthArea
 from .Panels.LIPSYNC2D_PT_Panel import LIPSYNC2D_PT_Panel
 from .Operators.LIPSYNC2D_OT_FindEspeak import LIPSYNC2D_OT_FindEspeak
@@ -17,7 +16,8 @@ from .Core.LIPSYNC2D_EspeakInspector import LIPSYNC2D_EspeakInspector
 
 
 def register():
-    LIPSYNC2D_EspeakInspector.unzip_binaries()
+    if not LIPSYNC2D_EspeakInspector.is_espeak_already_extracted():
+        LIPSYNC2D_EspeakInspector.unzip_binaries()
     if bpy.app.online_access:
         LIPSYNC2D_VoskHelper.cache_online_langs_list()
     bpy.utils.register_class(LIPSYNC2D_AP_Preferences)
@@ -25,7 +25,7 @@ def register():
     bpy.utils.register_class(LIPSYNC2D_PT_Settings)
     bpy.utils.register_class(LIPSYNC2D_PT_Panel)
     bpy.utils.register_class(LIPSYNC2D_OT_SetMouthArea)
-    bpy.utils.register_class(LIPSYNC2D_OT_UpdateMaterial)
+    bpy.utils.register_class(LIPSYNC2D_OT_SetCustomProperties)
     bpy.utils.register_class(LIPSYNC2D_OT_AnalyzeAudio)
     bpy.utils.register_class(LIPSYNC2D_OT_FindEspeak)
     bpy.utils.register_class(LIPSYNC2D_OT_DownloadModelsList)
@@ -35,7 +35,7 @@ def unregister():
     bpy.utils.unregister_class(LIPSYNC2D_PG_CustomProperties)
     bpy.utils.unregister_class(LIPSYNC2D_PT_Panel)
     bpy.utils.unregister_class(LIPSYNC2D_OT_SetMouthArea)
-    bpy.utils.unregister_class(LIPSYNC2D_OT_UpdateMaterial)
+    bpy.utils.unregister_class(LIPSYNC2D_OT_SetCustomProperties)
     bpy.utils.unregister_class(LIPSYNC2D_OT_AnalyzeAudio)
     bpy.utils.unregister_class(LIPSYNC2D_OT_FindEspeak)
     bpy.utils.unregister_class(LIPSYNC2D_AP_Preferences)
