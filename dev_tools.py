@@ -159,6 +159,7 @@ def md5_for_folder(folder_path: str):
 
 
 if __name__ == "__main__":
+    update_wheels()
     # Example usage
     # folder = "./Assets/Archives/darwin/espeak-ng-darwin/espeak-ng-data"
     # print(f"MD5 Hash for the folder '{folder}': {md5_for_folder(folder)}")
