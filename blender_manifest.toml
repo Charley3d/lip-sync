@@ -3,7 +3,7 @@ schema_version = "1.0.0"
 # Example of manifest file for a Blender extension
 # Change the values according to your extension
 id = "iocgpoly_lip_sync"
-version = "1.0.1"
+version = "1.0.2"
 name = "Lip Sync"
 tagline = "Automatic lip sync for your Blender models"
 maintainer = "Charley 3D <charley@cgpoly.fr>"
