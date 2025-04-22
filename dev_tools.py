@@ -160,12 +160,12 @@ def md5_for_folder(folder_path: str):
 
 if __name__ == "__main__":
     # Example usage
-    folder = "./Assets/Archives/darwin/espeak-ng-darwin/espeak-ng-data/voices"
+    # folder = "./Assets/Archives/darwin/espeak-ng-darwin/espeak-ng-data"
+    # print(f"MD5 Hash for the folder '{folder}': {md5_for_folder(folder)}")
+
+    folder = "./Assets/Archives/linux/espeak-ng-data/lang"
     print(f"MD5 Hash for the folder '{folder}': {md5_for_folder(folder)}")
 
-    folder = "./Assets/Archives/linux/espeak-ng-linux/espeak-ng-data/voices"
-    print(f"MD5 Hash for the folder '{folder}': {md5_for_folder(folder)}")
-
-    folder = "./Assets/Archives/windows/espeak-ng-windows/espeak-ng-data/voices"
+    folder = "./Assets/Archives/windows/espeak-ng-data/lang"
     print(f"MD5 Hash for the folder '{folder}': {md5_for_folder(folder)}")
     # update_wheels()
