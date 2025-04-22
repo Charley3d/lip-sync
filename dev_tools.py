@@ -126,5 +126,46 @@ def handle_duplicate_wheels(directory: str):
             print(f"No duplicates for: {file}")
 
 
+import hashlib
+import os
+
+
+def md5_for_folder(folder_path: str):
+    """
+    Compute the MD5 hash of the contents of a folder including file names and contents.
+
+    :param folder_path: str: Path to the folder.
+    :return: str: The MD5 hash of the folder.
+    """
+    md5_hash = hashlib.md5()
+
+    # Walk through the directory
+    for root, dirs, files in os.walk(folder_path):
+        # Sort directories and files to ensure consistent order (important for consistent hash values)
+        for names in sorted(dirs + files):
+            # Update hash with file/folder name
+            path = os.path.join(root, names)
+            md5_hash.update(names.encode('utf-8'))
+
+            # If it's a file, include its content in the hash
+            if os.path.isfile(path):
+                with open(path, 'rb') as f:
+                    while chunk := f.read(8192):  # Read file in chunks
+                        md5_hash.update(chunk)
+
+    return md5_hash.hexdigest()
+
+
+
+
 if __name__ == "__main__":
-    update_wheels()
+    # Example usage
+    folder = "./Assets/Archives/darwin/espeak-ng-darwin/espeak-ng-data/voices"
+    print(f"MD5 Hash for the folder '{folder}': {md5_for_folder(folder)}")
+
+    folder = "./Assets/Archives/linux/espeak-ng-linux/espeak-ng-data/voices"
+    print(f"MD5 Hash for the folder '{folder}': {md5_for_folder(folder)}")
+
+    folder = "./Assets/Archives/windows/espeak-ng-windows/espeak-ng-data/voices"
+    print(f"MD5 Hash for the folder '{folder}': {md5_for_folder(folder)}")
+    # update_wheels()
