@@ -3,7 +3,7 @@ schema_version = "1.0.0"
 # Example of manifest file for a Blender extension
 # Change the values according to your extension
 id = "iocgpoly_lip_sync"
-version = "1.0.0"
+version = "1.0.1"
 name = "Lip Sync"
 tagline = "Automatic lip sync for your Blender models"
 maintainer = "Charley 3D <charley@cgpoly.fr>"
@@ -56,7 +56,7 @@ wheels = ["./wheels/attrs-25.3.0-py3-none-any.whl", "./wheels/babel-2.17.0-py3-n
 # # Keep this a single short sentence without a period (.) at the end.
 # # For longer explanations use the documentation or detail page.
 #
-# [permissions]
+[permissions]
  network = "Need to download Voices Models to enable lip sync"
  files = "Import Models / Extract libs to disk"
 # clipboard = "Copy and paste bone transforms"
