@@ -1,7 +1,11 @@
 import os
+import shutil
 import zipfile
+from collections import defaultdict
 from glob import glob
+
 import tomlkit
+
 
 def update_wheels():
     folder = "./wheels"
@@ -64,4 +68,63 @@ def build_addon():
 
 
 
-# update_wheels()
+
+
+def handle_duplicate_wheels(directory: str):
+    """
+    Find and handle duplicate .whl files in the given directory and its subdirectories.
+    Keeps files in ./wheels/common and removes duplicates. If a file is not in ./wheels/common,
+    moves one to ./wheels/common and deletes the others.
+
+    :param directory: str: The path to the directory to search for .whl files.
+    :return: None
+    """
+    # Path to the common directory
+    common_path = os.path.join(directory, "common")
+    # Create the common directory if it doesn't exist
+    os.makedirs(common_path, exist_ok=True)
+
+    # Dictionary to store .whl filenames and their paths
+    files_dict = defaultdict(list)
+
+    # Traverse the directory and its subdirectories
+    for root, _, files in os.walk(directory):
+        for file in files:
+            print(f"Processing file: {file}")
+
+            # Check if the file is a .whl file
+            if file.endswith(".whl"):
+                # Store the file and its full path in the dictionary
+                full_path = os.path.join(root, file)
+                files_dict[file].append(full_path)
+
+    # Handle duplicates (files with more than one associated path)
+    for file, paths in files_dict.items():
+        if len(paths) > 1:  # Check if there are duplicates
+            print(f"\nDuplicate found for: {file}")
+            print("Locations:")
+            for path in paths:
+                print(f" - {path}")
+
+            # Check if the file already exists in the common directory
+            common_file_path = os.path.join(common_path, file)
+            if os.path.exists(common_file_path):
+                # Remove all duplicates, as the file already exists in common
+                print(f"File already in common directory: {common_file_path}")
+                for path in paths:
+                    if path != common_file_path:
+                        print(f"Removing duplicate: {path}")
+                        os.remove(path)
+            else:
+                # Move one file to common and remove the others
+                print(f"Moving one copy to common directory: {common_file_path}")
+                shutil.move(paths[0], common_file_path)  # Move the first file to common
+                for path in paths[1:]:
+                    print(f"Removing duplicate: {path}")
+                    os.remove(path)
+        else:
+            print(f"No duplicates for: {file}")
+
+
+if __name__ == "__main__":
+    update_wheels()
