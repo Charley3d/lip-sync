@@ -15,11 +15,16 @@ class LIPSYNC2D_EspeakInspector():
     def unzip_binaries() -> None:
         plat = str.lower(platform.system())
         espeak_archive_path = LIPSYNC2D_EspeakInspector.get_espeak_archive_path()
+        espeak_data_archive_path = LIPSYNC2D_EspeakInspector.get_espeak_data_archive_path()
         espeak_extraction_path = LIPSYNC2D_EspeakInspector.get_espeak_extraction_path()
         
         try:
             with zipfile.ZipFile(espeak_archive_path, 'r') as zip_ref:
-                zip_ref.extractall(espeak_extraction_path)  # Extract all files to the output directory
+                zip_ref.extractall(espeak_extraction_path)
+                
+            with zipfile.ZipFile(espeak_data_archive_path, 'r') as zip_ref:
+                zip_ref.extractall(espeak_extraction_path) 
+
 
         except FileNotFoundError:
             raise FileNotFoundError(f"Input archive '{espeak_archive_path}' not found")
@@ -45,6 +50,13 @@ class LIPSYNC2D_EspeakInspector():
         plat = str.lower(platform.system())
         script_dir = pathlib.Path(__file__).parent  # Get the directory where the script is located
         archive_path = script_dir / ".." / "Assets" / "Archives" / plat / f"espeak-ng-{plat}.zip"
+
+        return archive_path
+
+    @staticmethod
+    def get_espeak_data_archive_path() -> pathlib.Path:
+        script_dir = pathlib.Path(__file__).parent  # Get the directory where the script is located
+        archive_path = script_dir / ".." / "Assets" / "Archives" / "common" / "espeak-ng-data.zip"
 
         return archive_path
     
