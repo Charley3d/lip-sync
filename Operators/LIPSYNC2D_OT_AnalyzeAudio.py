@@ -1,4 +1,3 @@
-from typing import Literal, cast
 import json
 import os
 import wave
@@ -8,9 +7,11 @@ import bpy
 from phonemizer import phonemize
 from vosk import KaldiRecognizer, Model
 
+from ..Core.LIPSYNC2D_ISOLangConverter import LIPSYNC2D_ISOLangConverter
 from ..Core.LIPSYNC2D_VoskHelper import LIPSYNC2D_VoskHelper
 from ..Core.phoneme_to_viseme import phoneme_to_viseme_arkit_v2 as phoneme_to_viseme
 from ..LIPSYNC2D_Utils import get_package_name
+from ..Preferences.LIPSYNC2D_AP_Preferences import LIPSYNC2D_AP_Preferences
 
 
 class LIPSYNC2D_OT_AnalyzeAudio(bpy.types.Operator):
@@ -25,7 +26,7 @@ class LIPSYNC2D_OT_AnalyzeAudio(bpy.types.Operator):
     def execute(self, context: bpy.types.Context) -> set[Literal['RUNNING_MODAL', 'CANCELLED', 'FINISHED', 'PASS_THROUGH', 'INTERFACE']]:
         prefs = context.preferences.addons[get_package_name()].preferences # type: ignore
         obj = context.active_object
-        
+
         if context.scene is None or obj is None or context.scene.sequence_editor is None:
             self.report(type={'ERROR'}, message="No Sequence Editor found")
             return {'CANCELLED'}
@@ -55,9 +56,9 @@ class LIPSYNC2D_OT_AnalyzeAudio(bpy.types.Operator):
         words_timings = result['result']
 
         os.remove(file_path) # Need to be removed AFTER vosk_recognize_voice
-        
+
         self.clear_previous_keyframes(obj)
-        self.insert_keyframe_on_phoneme(words_timings, obj, props)
+        self.insert_keyframe_on_phoneme(words_timings, obj, props, context)
         self.set_constant_interpolation(obj)
 
         return {'FINISHED'}
@@ -82,10 +83,10 @@ class LIPSYNC2D_OT_AnalyzeAudio(bpy.types.Operator):
                 for keyframe in fcurve.keyframe_points:
                     keyframe.interpolation = 'CONSTANT'
 
-    def insert_keyframe_on_phoneme(self, words_timings, obj, props):
+    def insert_keyframe_on_phoneme(self, words_timings, obj, props, context: bpy.types.Context):
         words = [word['word'] for word in words_timings]
         total_words = len(words)
-        phonemes = self.extract_phonemes(words)
+        phonemes = self.extract_phonemes(words, context)
         
         for index, word_timing in enumerate(words_timings):
             start = word_timing['start']
@@ -117,8 +118,10 @@ class LIPSYNC2D_OT_AnalyzeAudio(bpy.types.Operator):
                     props["lip_sync_2d_sprite_sheet_index"] = props[f"lip_sync_2d_viseme_sil"]
                     obj.keyframe_insert("lipsync2d_props.lip_sync_2d_sprite_sheet_index", frame=word_frame_end)
 
-    def extract_phonemes(self, words):
-        phonemes = cast(list[str],phonemize(words, language='fr-fr', backend='espeak', strip=False))
+    def extract_phonemes(self, words, context: bpy.types.Context):
+        lang_code = LIPSYNC2D_AP_Preferences.get_current_lang_code(context)
+        iso_639_3 = LIPSYNC2D_ISOLangConverter.convert_iso6391_to_iso6393(lang_code)
+        phonemes = cast(list[str],phonemize(words, language=iso_639_3, backend='espeak'))
         return phonemes
 
     def time_to_frame(self, time):

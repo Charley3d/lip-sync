@@ -67,9 +67,6 @@ def build_addon():
     print(f"Build complete. Addon file saved to {dist_dir}")
 
 
-
-
-
 def handle_duplicate_wheels(directory: str):
     """
     Find and handle duplicate .whl files in the given directory and its subdirectories.

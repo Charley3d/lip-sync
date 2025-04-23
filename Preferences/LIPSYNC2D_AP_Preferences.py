@@ -1,15 +1,10 @@
-import json
 import os
-import threading
 from pathlib import Path
 from re import match
-from typing import Callable
 
 import bpy
-import requests
-from vosk import MODEL_DIRS, MODEL_LIST_URL, Model
+from vosk import MODEL_DIRS
 
-from ..Core.LIPSYNC2D_BlenderThread import LIPSYNC2D_BlenderThread
 from ..Core.LIPSYNC2D_VoskHelper import LIPSYNC2D_VoskHelper
 from ..LIPSYNC2D_Utils import get_package_name
 
@@ -33,7 +28,6 @@ class LIPSYNC2D_AP_Preferences(bpy.types.AddonPreferences):
         LIPSYNC2D_AP_Preferences.draw_fetch_list_ops(layout)
 
     @staticmethod
-    @LIPSYNC2D_VoskHelper.patchmodellang("ua", "uk")
     @LIPSYNC2D_VoskHelper.setextensionpath
     def draw_model_state(row: bpy.types.UILayout, current_lang: str) -> None:
         """
@@ -87,4 +81,9 @@ class LIPSYNC2D_AP_Preferences(bpy.types.AddonPreferences):
         row = layout.row()
         row.operator("lipsync2d.downloadlist", text="Reload Models List")
         row.enabled = bpy.app.online_access
+
+    @staticmethod
+    def get_current_lang_code(context: bpy.types.Context) -> str:
+        prefs = bpy.context.preferences.addons[get_package_name()].preferences # type: ignore
+        return prefs.current_lang
 

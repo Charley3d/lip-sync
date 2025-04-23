@@ -13,7 +13,9 @@ jobs:
         uses: actions/checkout@v4
 
       # Clone Espeak NG repo
-      - name: Clone espeak NG
+      - name: Clone forked espeak NG
+      # Clone fork containing a fix to filter out mbrola voices on Windows
+      # Without it, phonemizer will try to use unexisting voices
         run: git clone --depth 1 -b fix-windows-list-voices https://github.com/Charley3d/espeak-ng.git
 
       # Clone pcaudiolib repo (required for Windows build)
@@ -63,215 +65,214 @@ jobs:
           name: espeak-ng-windows
           path: espeak-ng-windows.zip
 
-  # build-linux:
-  #   name: Build Espeak NG for linux
-  #   runs-on: ubuntu-latest
+  build-linux:
+   name: Build Espeak NG for linux
+   runs-on: ubuntu-latest
 
-  #   steps:
-  #     - name: Checkout
-  #       uses: actions/checkout@v4
+   steps:
+     - name: Checkout
+       uses: actions/checkout@v4
 
-  #     - name: Clone eSpeak NG
-  #       run: git clone --depth 1 https://github.com/espeak-ng/espeak-ng.git
+     - name: Clone forked eSpeak NG
+       run: git clone --depth 1 -b fix-windows-list-voices https://github.com/Charley3d/espeak-ng.git
 
-  #     # Step 2: Install Build Dependencies
-  #     - name: Install dependencies
-  #       run: |
-  #         sudo apt-get update
-  #         sudo apt-get install -y make autoconf automake libtool pkg-config
-  #         sudo apt-get install -y gcc g++
-  #         sudo apt-get install -y libpcaudio-dev
+     # Step 2: Install Build Dependencies
+     - name: Install dependencies
+       run: |
+         sudo apt-get update
+         sudo apt-get install -y make autoconf automake libtool pkg-config
+         sudo apt-get install -y gcc g++
+         sudo apt-get install -y libpcaudio-dev
 
-  #     # Build & Copy lib and data folder to temporary dist dir
-  #     - name: Building
-  #       working-directory: espeak-ng
-  #       run: |
-  #         ./autogen.sh
-  #         ./configure --with-klatt=no --with-speechplayer=no --with-mbrola=no --with-sonic=no --with-async=no
-  #         make
-  #         mkdir -p ../dist
-  #         cp src/.libs/libespeak-ng.so* ../dist/
-  #         zip -r ../espeak-ng-data.zip espeak-ng-data
-  #         cd ../dist
-  #         zip -r ../espeak-ng-linux.zip .
+     # Build & Copy lib and data folder to temporary dist dir
+     - name: Building
+       working-directory: espeak-ng
+       run: |
+         ./autogen.sh
+         ./configure --with-klatt=no --with-speechplayer=no --with-mbrola=no --with-sonic=no --with-async=no
+         make
+         mkdir -p ../dist
+         cp src/.libs/libespeak-ng.so* ../dist/
+         zip -r ../espeak-ng-data.zip espeak-ng-data
+         cd ../dist
+         zip -r ../espeak-ng-linux.zip .
+  
 
+     # Upload ZIP artifacts
+     - name: Upload Linux lib
+       uses: actions/upload-artifact@v4
+       with:
+         name: espeak-ng-linux
+         path: espeak-ng-linux.zip
 
-  #     # Upload ZIP artifacts
-  #     - name: Upload Linux lib
-  #       uses: actions/upload-artifact@v4
-  #       with:
-  #         name: espeak-ng-linux
-  #         path: espeak-ng-linux.zip
+     # Upload ZIP artifacts
+     - name: Upload espeak data folder
+       uses: actions/upload-artifact@v4
+       with:
+         name: espeak-ng-data
+         path: espeak-ng-data.zip
 
-  #     # Upload ZIP artifacts
-  #     - name: Upload espeak data folder
-  #       uses: actions/upload-artifact@v4
-  #       with:
-  #         name: espeak-ng-data
-  #         path: espeak-ng-data.zip
+  build-arm64:
+   name: Build Espeak NG for macOS (arm64)
+   runs-on: macos-latest
 
-  # build-arm64:
-  #   name: Build Espeak NG for macOS (arm64)
-  #   runs-on: macos-latest
+   steps:
+     - name: Checkout
+       uses: actions/checkout@v4
 
-  #   steps:
-  #     - name: Checkout
-  #       uses: actions/checkout@v4
+     - name: Clone forked eSpeak NG
+       run: git clone --depth 1 -b fix-windows-list-voices https://github.com/Charley3d/espeak-ng.git
 
-  #     - name: Clone eSpeak NG
-  #       run: git clone --depth 1 https://github.com/espeak-ng/espeak-ng.git
+     # Step 2: Install Build Dependencies
+     - name: Install dependencies on macOS
+       run: |
+         brew update
+         brew install make gcc autoconf automake libtool pkg-config portaudio
 
-  #     # Step 2: Install Build Dependencies
-  #     - name: Install dependencies on macOS
-  #       run: |
-  #         brew update
-  #         brew install make gcc autoconf automake libtool pkg-config portaudio
+     - name: Building arm64
+       working-directory: espeak-ng
+       run: |
+         ./autogen.sh
+         ./configure CFLAGS="-arch arm64" LDFLAGS="-arch arm64" --with-klatt=no --with-speechplayer=no --with-mbrola=no --with-sonic=no --with-async=no
+         make
+         cp src/.libs/libespeak-ng.dylib ../libespeak-ng-arm64.dylib
 
-  #     - name: Building arm64
-  #       working-directory: espeak-ng
-  #       run: |
-  #         ./autogen.sh
-  #         ./configure CFLAGS="-arch arm64" LDFLAGS="-arch arm64" --with-klatt=no --with-speechplayer=no --with-mbrola=no --with-sonic=no --with-async=no
-  #         make
-  #         cp src/.libs/libespeak-ng.dylib ../libespeak-ng-arm64.dylib
+     - name: Upload arm64 lib + data
+       uses: actions/upload-artifact@v4
+       with:
+         name: espeak-ng-arm64
+         path: libespeak-ng-arm64.dylib
 
-  #     - name: Upload arm64 lib + data
-  #       uses: actions/upload-artifact@v4
-  #       with:
-  #         name: espeak-ng-arm64
-  #         path: libespeak-ng-arm64.dylib
+  build-x86_64:
+   name: Build Espeak NG for macOS (x86_64)
+   runs-on: macos-13
 
+   steps:
+     - name: Checkout
+       uses: actions/checkout@v4
 
-  # build-x86_64:
-  #   name: Build Espeak NG for macOS (x86_64)
-  #   runs-on: macos-13
+     - name: Clone forked eSpeak NG
+       run: git clone --depth 1 -b fix-windows-list-voices https://github.com/Charley3d/espeak-ng.git
 
-  #   steps:
-  #     - name: Checkout
-  #       uses: actions/checkout@v4
+     # Step 2: Install Build Dependencies
+     - name: Install dependencies on macOS
+       run: |
+         brew update
+         brew install make gcc autoconf automake libtool pkg-config portaudio
 
-  #     - name: Clone eSpeak NG
-  #       run: git clone --depth 1 https://github.com/espeak-ng/espeak-ng.git
+     - name: Building x86_64
+       working-directory: espeak-ng
+       run: |
+         ./autogen.sh
+         ./configure CFLAGS="-arch x86_64" LDFLAGS="-arch x86_64" --with-klatt=no --with-speechplayer=no --with-mbrola=no --with-sonic=no --with-async=no
+         make
+         cp src/.libs/libespeak-ng.dylib ../libespeak-ng-x86_64.dylib
 
-  #     # Step 2: Install Build Dependencies
-  #     - name: Install dependencies on macOS
-  #       run: |
-  #         brew update
-  #         brew install make gcc autoconf automake libtool pkg-config portaudio
+     - name: Upload x86_64 lib
+       uses: actions/upload-artifact@v4
+       with:
+         name: espeak-ng-x86_64
+         path: libespeak-ng-x86_64.dylib
 
-  #     - name: Building x86_64
-  #       working-directory: espeak-ng
-  #       run: |
-  #         ./autogen.sh
-  #         ./configure CFLAGS="-arch x86_64" LDFLAGS="-arch x86_64" --with-klatt=no --with-speechplayer=no --with-mbrola=no --with-sonic=no --with-async=no
-  #         make
-  #         cp src/.libs/libespeak-ng.dylib ../libespeak-ng-x86_64.dylib
+  merge:
+   name: Create Universal macOS Build
+   runs-on: macos-latest
+   needs: [build-arm64, build-x86_64]
 
-  #     - name: Upload x86_64 lib
-  #       uses: actions/upload-artifact@v4
-  #       with:
-  #         name: espeak-ng-x86_64
-  #         path: libespeak-ng-x86_64.dylib
+   steps:
+     - name: Download arm64 lib + data
+       uses: actions/download-artifact@v4
+       with:
+         name: espeak-ng-arm64
 
-  # merge:
-  #   name: Create Universal macOS Build
-  #   runs-on: macos-latest
-  #   needs: [build-arm64, build-x86_64]
+     - name: Download x86_64 lib
+       uses: actions/download-artifact@v4
+       with:
+         name: espeak-ng-x86_64
 
-  #   steps:
-  #     - name: Download arm64 lib + data
-  #       uses: actions/download-artifact@v4
-  #       with:
-  #         name: espeak-ng-arm64
+     - name: Merge with lipo and prepare bundle
+       run: |
+         mkdir -p dist
+         lipo -create -output dist/libespeak-ng.dylib \
+           libespeak-ng-arm64.dylib \
+           libespeak-ng-x86_64.dylib
+         file dist/libespeak-ng.dylib
+         cd dist
+         zip -r ../espeak-ng-darwin.zip .
 
-  #     - name: Download x86_64 lib
-  #       uses: actions/download-artifact@v4
-  #       with:
-  #         name: espeak-ng-x86_64
+     - name: Upload Universal lib
+       uses: actions/upload-artifact@v4
+       with:
+         name: espeak-ng-darwin
+         path: espeak-ng-darwin.zip
 
-  #     - name: Merge with lipo and prepare bundle
-  #       run: |
-  #         mkdir -p dist
-  #         lipo -create -output dist/libespeak-ng.dylib \
-  #           libespeak-ng-arm64.dylib \
-  #           libespeak-ng-x86_64.dylib
-  #         file dist/libespeak-ng.dylib
-  #         cd dist
-  #         zip -r ../espeak-ng-darwin.zip .
+  collect-artifacts:
+   name: Make Blender Addon
+   runs-on: ubuntu-latest
+   needs: [ build-windows, merge, build-linux ]
 
-  #     - name: Upload Universal lib
-  #       uses: actions/upload-artifact@v4
-  #       with:
-  #         name: espeak-ng-darwin
-  #         path: espeak-ng-darwin.zip
+   steps:
+     - name: Checkout repo
+       uses: actions/checkout@v4
 
-  # collect-artifacts:
-  #   name: Make Blender Addon
-  #   runs-on: ubuntu-latest
-  #   needs: [ build-windows, merge, build-linux ]
+     - name: Install Blender via Snap
+       run: sudo snap install blender --classic
 
-  #   steps:
-  #     - name: Checkout repo
-  #       uses: actions/checkout@v4
+     - name: Download eSpeak Data Folder
+       uses: actions/download-artifact@v4
+       with:
+         name: espeak-ng-data
+         path: temp/espeak-ng-data
 
-  #     - name: Install Blender via Snap
-  #       run: sudo snap install blender --classic
+     # Download each platform’s build artifact
+     - name: Download Windows build
+       uses: actions/download-artifact@v4
+       with:
+         name: espeak-ng-windows
+         path: temp/windows
 
-  #     - name: Download eSpeak Data Folder
-  #       uses: actions/download-artifact@v4
-  #       with:
-  #         name: espeak-ng-data
-  #         path: temp/espeak-ng-data
+     - name: Download macOS build
+       uses: actions/download-artifact@v4
+       with:
+         name: espeak-ng-darwin
+         path: temp/macos
 
-  #     # Download each platform’s build artifact
-  #     - name: Download Windows build
-  #       uses: actions/download-artifact@v4
-  #       with:
-  #         name: espeak-ng-windows
-  #         path: temp/windows
+     - name: Download Linux build
+       uses: actions/download-artifact@v4
+       with:
+         name: espeak-ng-linux
+         path: temp/linux
 
-  #     - name: Download macOS build
-  #       uses: actions/download-artifact@v4
-  #       with:
-  #         name: espeak-ng-darwin
-  #         path: temp/macos
+     # Move them to Assets/{platform}
+     - name: Move artifacts to Assets
+       run: |
+         mkdir -p Assets/Archives/windows Assets/Archives/darwin Assets/Archives/linux
+         cp -r temp/windows/* Assets/Archives/windows/
+         cp -r temp/macos/* Assets/Archives/darwin/
+         cp -r temp/linux/* Assets/Archives/linux/
+         mkdir -p Assets/Archives/common && cp -r temp/espeak-ng-data/* Assets/Archives/common/
 
-  #     - name: Download Linux build
-  #       uses: actions/download-artifact@v4
-  #       with:
-  #         name: espeak-ng-linux
-  #         path: temp/linux
+     # Remove temp files and folders + unwanted files for release
+     - name: Clean up folder to zip Blender Addon
+       run: |
+         rm -rf temp || true
+         rm -rf dist || true
+         rm -f .gitignore || true
+         rm -f dev_tools.py || true
+         rm -rf .github || true
+         rm -rf .idea || true
 
-  #     # Move them to Assets/{platform}
-  #     - name: Move artifacts to Assets
-  #       run: |
-  #         mkdir -p Assets/Archives/windows Assets/Archives/darwin Assets/Archives/linux
-  #         cp -r temp/windows/* Assets/Archives/windows/
-  #         cp -r temp/macos/* Assets/Archives/darwin/
-  #         cp -r temp/linux/* Assets/Archives/linux/
-  #         mkdir -p Assets/Archives/common && cp -r temp/espeak-ng-data/* Assets/Archives/common/
+     - name: Build Extension with blender
+       run: blender --command extension build
 
-  #     # Remove temp files and folders + unwanted files for release
-  #     - name: Clean up folder to zip Blender Addon
-  #       run: |
-  #         rm -rf temp || true
-  #         rm -rf dist || true
-  #         rm -f .gitignore || true
-  #         rm -f dev_tools.py || true
-  #         rm -rf .github || true
-  #         rm -rf .idea || true
+     - name: Get generated zip filename
+       id: get-zip
+       run: echo "ZIP_NAME=$(basename $(ls ./*.zip))" >> $GITHUB_OUTPUT
 
-  #     - name: Build Extension with blender
-  #       run: blender --command extension build
-
-  #     - name: Get generated zip filename
-  #       id: get-zip
-  #       run: echo "ZIP_NAME=$(basename $(ls ./*.zip))" >> $GITHUB_OUTPUT
-
-  #     # Upload the full release of Blender Add-on
-  #     - name: Upload Blender Addon
-  #       uses: actions/upload-artifact@v4
-  #       with:
-  #         name: lipsync-addon
-  #         path: ${{ steps.get-zip.outputs.ZIP_NAME }}
+     # Upload the full release of Blender Add-on
+     - name: Upload Blender Addon
+       uses: actions/upload-artifact@v4
+       with:
+         name: lipsync-addon
+         path: ${{ steps.get-zip.outputs.ZIP_NAME }}
 
