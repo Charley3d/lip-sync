@@ -21,7 +21,9 @@ class LIPSYNC2D_OT_AnalyzeAudio(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
-        return context.scene is not None or context.active_object is not None
+        package_name = get_package_name()
+        prefs = context.preferences.addons[package_name].preferences  # type: ignore
+        return (context.scene is not None or context.active_object is not None) and prefs.is_downloading is False
 
     def execute(self, context: bpy.types.Context) -> set[Literal['RUNNING_MODAL', 'CANCELLED', 'FINISHED', 'PASS_THROUGH', 'INTERFACE']]:
         prefs = context.preferences.addons[get_package_name()].preferences # type: ignore
