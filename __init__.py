@@ -15,6 +15,7 @@ from .Properties.LIPSYNC2D_PG_CustomProperties import LIPSYNC2D_PG_CustomPropert
 def register():
     if not LIPSYNC2D_EspeakInspector.is_espeak_already_extracted():
         LIPSYNC2D_EspeakInspector.unzip_binaries()
+    LIPSYNC2D_EspeakInspector.set_espeak_backend()
     if bpy.app.online_access:
         LIPSYNC2D_VoskHelper.cache_online_langs_list()
     bpy.utils.register_class(LIPSYNC2D_AP_Preferences)

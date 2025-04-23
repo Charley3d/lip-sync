@@ -1,11 +1,11 @@
 import bpy
 
-from ..Core.phoneme_to_viseme import viseme_items_arkit_v2 as viseme_items_arkit
+from ..Core.phoneme_to_viseme import viseme_items_mpeg4_v2 as viseme_items
 from ..LIPSYNC2D_Utils import get_package_name
 
 
 class LIPSYNC2D_PT_Panel(bpy.types.Panel):
-    """Creates a Panel in the scene context of the properties editor"""
+    """Creates a Panel in the scene context of the property editor"""
     bl_label = "Lip Sync"
     bl_idname = "LIPSYNC2D_PT_Panel"
     bl_space_type = 'VIEW_3D'
@@ -94,10 +94,10 @@ class LIPSYNC2D_PT_Panel(bpy.types.Panel):
             panel_head.label(text="Viseme Settings")
             if panel_body is not None:
                 row = panel_body.row(align=True)
-                row.label(text=f"Viseme")
-                row.label(text=f"Image index")
+                row.label(text="Viseme")
+                row.label(text="Image index")
 
-                visemes = viseme_items_arkit(None, None)
+                visemes = viseme_items(None, None)
 
                 for i, viseme in enumerate(visemes):
                     lang_code = list(viseme)[0]

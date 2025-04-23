@@ -33,6 +33,10 @@ class LIPSYNC2D_EspeakInspector():
         except Exception as e:
             raise Exception(f"Error during archive extraction: {e}")
 
+    @staticmethod
+    def set_espeak_backend():
+        plat = str.lower(platform.system())
+        espeak_extraction_path = LIPSYNC2D_EspeakInspector.get_espeak_extraction_path()
         output_path = pathlib.Path(espeak_extraction_path)
         if plat == "windows":
             EspeakBackend.set_library(output_path / "libespeak-ng.dll")

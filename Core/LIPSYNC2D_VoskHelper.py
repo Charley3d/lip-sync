@@ -3,17 +3,22 @@ import os
 import pathlib
 import threading
 from typing import Callable, Literal, cast
-from vosk import MODEL_DIRS, MODEL_LIST_URL, Model
 
 import bpy
 import requests
-from vosk import MODEL_DIRS
+from vosk import MODEL_DIRS, MODEL_LIST_URL, Model
 
 from .LIPSYNC2D_BlenderThread import LIPSYNC2D_BlenderThread
-
 from ..LIPSYNC2D_Utils import get_package_name
 
+
 class LIPSYNC2D_VoskHelper():
+
+    # Langs in this list won't show up in Language Model selection
+    excluded_lang = [
+        "kz", # Unstable, throw ASSERTION_FAILED error
+        "ua" # Vosk uses ua to identify Ukrainian but store a model named **-uk-**.zip preventing efficient caching and force model to be downloaded each time
+        ]
 
     @staticmethod
     def setextensionpath(func):
@@ -84,7 +89,7 @@ class LIPSYNC2D_VoskHelper():
 
         if langs_list:
             all_langs = [(l["lang"], l["lang_text"]) for l in langs_list if
-                        l["lang"] != "all" and l["obsolete"] == "false" and l['type'] == 'small']
+                        l["lang"] != "all" and l["obsolete"] == "false" and l['type'] == 'small' and l["lang"] not in LIPSYNC2D_VoskHelper.excluded_lang]
             all_langs.sort(key=lambda x: x[1])
 
         all_langs = [('none', "-- None --", "No selection"), ] + all_langs
