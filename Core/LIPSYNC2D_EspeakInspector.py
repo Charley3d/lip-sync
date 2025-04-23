@@ -13,7 +13,6 @@ from ..LIPSYNC2D_Utils import get_package_name
 class LIPSYNC2D_EspeakInspector():
     @staticmethod
     def unzip_binaries() -> None:
-        plat = str.lower(platform.system())
         espeak_archive_path = LIPSYNC2D_EspeakInspector.get_espeak_archive_path()
         espeak_data_archive_path = LIPSYNC2D_EspeakInspector.get_espeak_data_archive_path()
         espeak_extraction_path = LIPSYNC2D_EspeakInspector.get_espeak_extraction_path()
