@@ -10,6 +10,10 @@ https://github.com/user-attachments/assets/57ea3912-2d50-4090-ba49-3035ab673a05
 ### Animation Making Of:
 https://github.com/user-attachments/assets/cb5fa9a6-6deb-4997-a5af-41c00d0cefee
 
+Animated Platformer Character by [Quaternius](https://poly.pizza/m/kKtL4zvS3n)
+
+Wall Art 06 by Jarlan Perez [CC-BY](https://creativecommons.org/licenses/by/3.0/) via [Poly Pizza](https://poly.pizza/m/1U5roiXQZAM)
+
 ---
 
 ## ✨ Features
