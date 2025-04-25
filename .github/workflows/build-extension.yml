@@ -28,8 +28,54 @@ jobs:
 #            echo "ZIP_NAMES=$ZIP_NAMES" >> $GITHUB_OUTPUT
 
         # Upload the full release of Blender Add-on
+        - name: Clean platform-specific archives
+          run: |
+            for zipfile in iocgpoly_lip_sync-*-*.zip; do
+              echo "Examining $zipfile"
+              unzip -l "$zipfile" | grep -i "archives"
+
+              # Extract platform from filename (between last - and _)
+              platform=$(echo $zipfile | sed 's/.*-\(.*\)_.*/\1/')
+
+              echo "Processing $zipfile (platform: $platform)"
+
+              # Create temp dir
+              temp_dir="${platform}_temp"
+              unzip -q "$zipfile" -d "$temp_dir"
+
+              # List the actual directory structure
+              echo "Directory structure in temp_dir:"
+              ls -la "$temp_dir/Assets/Archives/"
+
+              rm "$zipfile"
+              cd "$temp_dir"
+
+              # Remove irrelevant platform folders based on the platform
+              case $platform in
+                linux)
+                  rm -rf Assets/Archives/darwin Assets/Archives/windows
+                  ;;
+                macos)
+                  rm -rf Assets/Archives/linux Assets/Archives/windows
+                  ;;
+                windows)
+                  rm -rf Assets/Archives/darwin Assets/Archives/linux
+                  ;;
+              esac
+
+              # List what remains
+              echo "Remaining directories:"
+              ls -la Assets/Archives/
+
+              # Rezip with same name
+              zip -r "../$zipfile" .
+              cd ..
+              rm -rf "$temp_dir"
+            done
+
         - name: Upload Blender Addon
           uses: actions/upload-artifact@v4
           with:
             name: extension-builds
             path: ./*.zip
+        
