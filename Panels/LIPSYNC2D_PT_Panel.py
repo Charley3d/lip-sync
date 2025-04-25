@@ -85,7 +85,7 @@ class LIPSYNC2D_PT_Panel(bpy.types.Panel):
                 row.label(text="Select a Language Model before Analyzing audio")
 
             row = layout.row()
-            row.operator("audio.cgp_analyze_audio", text="Analyze audio")
+            row.operator("sound.cgp_analyze_audio", text="Analyze audio")
             row.enabled = is_model_installed
 
 

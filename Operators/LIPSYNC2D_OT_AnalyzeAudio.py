@@ -15,7 +15,7 @@ from ..Preferences.LIPSYNC2D_AP_Preferences import LIPSYNC2D_AP_Preferences
 
 
 class LIPSYNC2D_OT_AnalyzeAudio(bpy.types.Operator):
-    bl_idname = "audio.cgp_analyze_audio"
+    bl_idname = "sound.cgp_analyze_audio"
     bl_label = "Analyze audio"
     bl_options = {'REGISTER','UNDO'}
 
