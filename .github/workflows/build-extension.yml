@@ -18,15 +18,18 @@ jobs:
           run: sudo snap install blender --classic
 
         - name: Build Extension with blender
-          run: blender --command extension build
+          run: blender --command extension build --split-platforms
 
-        - name: Get generated zip filename
-          id: get-zip
-          run: echo "ZIP_NAME=$(basename $(ls ./*.zip))" >> $GITHUB_OUTPUT
+          # Not used for now but will be used when automating releases
+#        - name: Get generated zip filenames
+#          id: get-zips
+#          run: |
+#            ZIP_NAMES=$(ls ./*.zip | tr '\n' ' ')
+#            echo "ZIP_NAMES=$ZIP_NAMES" >> $GITHUB_OUTPUT
 
         # Upload the full release of Blender Add-on
         - name: Upload Blender Addon
           uses: actions/upload-artifact@v4
           with:
-            name: lipsync-addon
-            path: ${{ steps.get-zip.outputs.ZIP_NAME }}
+            name: extension-builds
+            path: ./*.zip
