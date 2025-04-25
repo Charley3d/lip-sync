@@ -79,7 +79,7 @@ class LIPSYNC2D_AP_Preferences(bpy.types.AddonPreferences):
     @staticmethod
     def draw_fetch_list_ops(layout: bpy.types.UILayout) -> None:
         row = layout.row()
-        row.operator("wm.lipsync_downloadlist", text="Reload Models List")
+        row.operator("wm.lipsync_download_list", text="Reload Models List")
         row.enabled = bpy.app.online_access
 
     @staticmethod
