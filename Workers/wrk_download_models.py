@@ -1,6 +1,7 @@
 import pathlib
 import sys
-from vosk import Model, MODEL_DIRS
+
+from vosk import MODEL_DIRS, Model
 
 
 def install_model(lang: str, vosk_cache: str) -> None:
@@ -21,9 +22,9 @@ def install_model(lang: str, vosk_cache: str) -> None:
 
     Model(lang=lang)
 
-if __name__ == "__main__":
-    args = sys.argv[1:]
-    lang = args[0]
-    vosk_cache = args[1]
 
-    install_model(args[0], args[1])
+args = sys.argv[1:]
+lang = args[0]
+vosk_cache = args[1]
+
+install_model(args[0], args[1])
