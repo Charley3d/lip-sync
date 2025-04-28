@@ -1,5 +1,7 @@
 import bpy
 
+from ..Core.phoneme_to_viseme import viseme_items_mpeg4_v2 as viseme_items
+
 
 def update_sprite_sheet(self: bpy.types.bpy_struct, context: bpy.types.Context):
     obj = context.active_object
@@ -37,6 +39,20 @@ def update_sprite_sheet_rows(self: bpy.types.bpy_struct, context: bpy.types.Cont
 
     if spritesheet_format == 0:
         self["lip_sync_2d_sprite_sheet_columns"] = self["lip_sync_2d_sprite_sheet_rows"]
+
+def shape_keys_list(self:bpy.types.bpy_struct, context: bpy.types.Context | None):
+        result = [("NONE", "None", "None")]
+        
+        if context is None or context.active_object is None: return result
+
+        active_obj = context.active_object
+
+        if not isinstance(active_obj.data, bpy.types.Mesh) or active_obj.data.shape_keys is None: return result
+        shape_keys = active_obj.data.shape_keys.key_blocks
+
+        result = result + [(s.name,s.name,s.name) for s in shape_keys]
+
+        return result
 
 class LIPSYNC2D_PG_CustomProperties(bpy.types.PropertyGroup):
     lip_sync_2d_sprite_sheet: bpy.props.PointerProperty(
@@ -89,20 +105,35 @@ class LIPSYNC2D_PG_CustomProperties(bpy.types.PropertyGroup):
         default=3
     )  # type: ignore
 
-    #TODO: Generate this from the phoneme dict
-    lip_sync_2d_viseme_sil: bpy.props.IntProperty(name="Viseme sil", description="Silence or mouth at rest (neutral position)", min=0, max=99, default=0) #type: ignore
-    lip_sync_2d_viseme_PP: bpy.props.IntProperty(name="Viseme PP", description="Closed lips as in \"pop\" or \"map\"", min=0, max=99, default=1) #type: ignore
-    lip_sync_2d_viseme_FF: bpy.props.IntProperty(name="Viseme FF", description="Top teeth over bottom lip, like \"fish\" or \"fifty\"", min=0, max=99, default=2) #type: ignore
-    lip_sync_2d_viseme_TH: bpy.props.IntProperty(name="Viseme TH", description="Tongue between teeth, like \"think\" or \"that\"", min=0, max=99, default=3) #type: ignore
-    lip_sync_2d_viseme_DD: bpy.props.IntProperty(name="Viseme DD", description="Tongue touches roof of mouth, as in \"dog\" or \"add\"", min=0, max=99, default=4) #type: ignore
-    lip_sync_2d_viseme_kk: bpy.props.IntProperty(name="Viseme kk", description="Back of the tongue against the soft palate, like \"cook\" or \"kick\"", min=0, max=99, default=5) #type: ignore
-    lip_sync_2d_viseme_CH: bpy.props.IntProperty(name="Viseme CH", description="Teeth clenched with lips slightly apart, like \"chew\" or \"church\"", min=0, max=99, default=6) #type: ignore
-    lip_sync_2d_viseme_SS: bpy.props.IntProperty(name="Viseme SS", description="Lips apart, teeth close together, for \"see\" or \"snake\"", min=0, max=99, default=7) #type: ignore
-    lip_sync_2d_viseme_nn: bpy.props.IntProperty(name="Viseme nn", description="Tongue on roof of mouth, nasal sound like \"no\" or \"none\"", min=0, max=99, default=8) #type: ignore
-    lip_sync_2d_viseme_RR: bpy.props.IntProperty(name="Viseme RR", description="Rounded lips and retracted tongue, as in \"red\" or \"arrow\"", min=0, max=99, default=9) #type: ignore
-    lip_sync_2d_viseme_aa: bpy.props.IntProperty(name="Viseme aa", description="Wide open mouth, like \"cat\" or \"flat\"", min=0, max=99, default=10) #type: ignore
-    lip_sync_2d_viseme_E: bpy.props.IntProperty(name="Viseme E", description="Slightly open mouth with spread lips, like \"bed\" or \"pen\"", min=0, max=99, default=11) #type: ignore
-    lip_sync_2d_viseme_ih: bpy.props.IntProperty(name="Viseme ih", description="Slightly open mouth, tongue high, like \"bit\" or \"hit\"", min=0, max=99, default=12) #type: ignore
-    lip_sync_2d_viseme_oh: bpy.props.IntProperty(name="Viseme oh", description="Rounded lips, mouth less open, like \"bought\" or \"saw\"", min=0, max=99, default=13) #type: ignore
-    lip_sync_2d_viseme_ou: bpy.props.IntProperty(name="Viseme ou", description="Tight rounded lips, like \"boot\" or \"you\"", min=0, max=99, default=14) #type: ignore
-    lip_sync_2d_viseme_UNK: bpy.props.IntProperty(name="Viseme UNK", description="Default lips if phoneme is unknown", min=0, max=99, default=0) #type: ignore
+    lip_sync_2d_lips_type: bpy.props.EnumProperty(
+        name="Lips type",
+        description="What kind of animation will you use.",
+        items=[
+            ("SPRITESHEET", "Sprite Sheet", "Use a Sprite Sheet containg all of your visemes"),
+            # ("SHAPEKEYS", "Shape Keys (BETA)", "Use your Shape Keys to animate mouth"),
+            # ("BONES", "Bones", "Use Bones position to animate mouth") Next release
+        ],
+        update=update_sprite_sheet_format,
+        default=0
+    )  # type: ignore
+
+    @classmethod
+    def register(cls):
+        visemes = viseme_items(None, None)
+
+        for v in visemes:
+            enum_id, name, desc = v
+            prop_name = f"lip_sync_2d_viseme_{enum_id}"
+            setattr(cls, prop_name,
+                    bpy.props.IntProperty(name=f"Viseme {name}", description=desc,
+                                          min=0, max=99, default=0)  # type: ignore
+                    )
+            
+            prop_name = f"lip_sync_2d_viseme_shape_keys_{enum_id}"
+            setattr(cls, prop_name,
+                    bpy.props.EnumProperty(name=f"Viseme {name}", 
+                                           description=desc,
+                                           items=shape_keys_list,
+                                           default=0)  # type: ignore
+                    )
+    
