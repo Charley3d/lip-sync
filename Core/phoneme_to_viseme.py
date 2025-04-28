@@ -126,5 +126,5 @@ def viseme_items_mpeg4_v2(self, context):
         ('ih', "ih", "I, Y (high front vowels)"),
         ('oh', "oh", "O, ɔ, ʌ (mid back vowels)"),
         ('ou', "ou", "U, W (high back vowels)"),
-        ('UNK', "unk", "Unknown phonem"),
+        ('UNK', "unk", "Unknown phoneme"),
     ]

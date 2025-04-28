@@ -4,130 +4,114 @@ import wave
 from typing import Literal, cast
 
 import bpy
-from phonemizer import phonemize
 from vosk import KaldiRecognizer, Model
 
-from ..Core.LIPSYNC2D_ISOLangConverter import LIPSYNC2D_ISOLangConverter
+from ..Core.Animator.LIPSYNC2D_ShapeKeysAnimator import LIPSYNC2D_ShapeKeysAnimator
+from ..Core.Animator.LIPSYNC_SpriteSheetAnimator import LIPSYNC_SpriteSheetAnimator
+from ..Core.Animator.protocols import LIPSYNC2D_LipSyncAnimator
+from ..Core.LIPSYNC2D_DialogInspector import LIPSYNC2D_DialogInspector
 from ..Core.LIPSYNC2D_VoskHelper import LIPSYNC2D_VoskHelper
-from ..Core.phoneme_to_viseme import phoneme_to_viseme_arkit_v2 as phoneme_to_viseme
 from ..LIPSYNC2D_Utils import get_package_name
-from ..Preferences.LIPSYNC2D_AP_Preferences import LIPSYNC2D_AP_Preferences
+from ..lipsync_types import BpyObject
 
 
 class LIPSYNC2D_OT_AnalyzeAudio(bpy.types.Operator):
     bl_idname = "sound.cgp_analyze_audio"
     bl_label = "Analyze audio"
-    bl_options = {'REGISTER','UNDO'}
+    bl_options = {'REGISTER', 'UNDO'}
+
+    animator: LIPSYNC2D_LipSyncAnimator
+
+    def __init__(self, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+        self.animator: LIPSYNC2D_LipSyncAnimator
 
     @classmethod
     def poll(cls, context):
-        package_name = get_package_name()
-        prefs = context.preferences.addons[package_name].preferences  # type: ignore
-        return (context.scene is not None or context.active_object is not None) and prefs.is_downloading is False
+        if context.active_object is None:
+            return False
 
-    def execute(self, context: bpy.types.Context) -> set[Literal['RUNNING_MODAL', 'CANCELLED', 'FINISHED', 'PASS_THROUGH', 'INTERFACE']]:
-        prefs = context.preferences.addons[get_package_name()].preferences # type: ignore
+        animator = LIPSYNC2D_OT_AnalyzeAudio.get_animator(context.active_object)
+        return animator.poll(cls, context)
+
+    def execute(self, context: bpy.types.Context) -> set[
+        Literal['RUNNING_MODAL', 'CANCELLED', 'FINISHED', 'PASS_THROUGH', 'INTERFACE']]:
+        prefs = context.preferences.addons[get_package_name()].preferences  # type: ignore
         obj = context.active_object
 
         if context.scene is None or obj is None or context.scene.sequence_editor is None:
             self.report(type={'ERROR'}, message="No Sequence Editor found")
             return {'CANCELLED'}
-        
+
         all_strips = context.scene.sequence_editor.strips_all
         has_sound = any(strip.type == 'SOUND' for strip in all_strips)
 
         if not has_sound:
             self.report(type={'ERROR'}, message="No sound detected in Sequence Editor")
             return {'CANCELLED'}
-        
+
         file_path = extract_audio()
 
         if not os.path.isfile(f"{file_path}"):
             self.report(type={'ERROR'}, message="Error while importing extracted audio WAV file from /tmp")
             return {'CANCELLED'}
-        
-        props = obj.lipsync2d_props # type: ignore
-        self.based_fps = context.scene.render.fps / context.scene.render.fps_base
 
         model = self.get_model(prefs)
         result = self.vosk_recognize_voice(file_path, model)
 
         if "result" not in result:
             return {'FINISHED'}
-        
-        words_timings = result['result']
 
-        os.remove(file_path) # Need to be removed AFTER vosk_recognize_voice
+        recognized_words = result['result']
 
-        self.clear_previous_keyframes(obj)
-        self.insert_keyframe_on_phoneme(words_timings, obj, props, context)
-        self.set_constant_interpolation(obj)
+        os.remove(file_path)  # Need to be removed AFTER vosk_recognize_voice
+
+        dialog_inspector = LIPSYNC2D_DialogInspector(context.scene.render)
+        words = [word['word'] for word in recognized_words]
+        total_words = len(words)
+        phonemes = LIPSYNC2D_DialogInspector.extract_phonemes(words, context)
+
+        auto_obj = self.get_animator(obj)
+        auto_obj.setup(obj)
+        auto_obj.clear_previous_keyframes(obj)
+
+        self.auto_insert_keyframes(auto_obj, obj, recognized_words, dialog_inspector, total_words, phonemes)
+
+        auto_obj.set_interpolation(obj)
+        auto_obj.cleanup(obj)
 
         return {'FINISHED'}
+
+    def auto_insert_keyframes(self, auto_obj: LIPSYNC2D_LipSyncAnimator, obj: BpyObject, recognized_words,
+                              dialog_inspector, total_words, phonemes):
+        props = obj.lipsync2d_props  # type: ignore
+        words = enumerate(recognized_words)
+
+        for index, recognized_word in words:
+            is_last_word = (index == total_words - 1)
+            word_timing = dialog_inspector.get_word_timing(recognized_word)
+            visemes_data = dialog_inspector.get_visemes(phonemes[index], word_timing["duration"])
+            next_word_timing = dialog_inspector.get_next_word_timing(recognized_words, index)
+            delay_until_next_word = next_word_timing["word_frame_start"] - word_timing["word_frame_end"]
+
+            auto_obj.insert_on_visemes(obj, props, visemes_data, word_timing, delay_until_next_word, is_last_word, recognized_words, index)
+
+    @staticmethod
+    def get_animator(obj: BpyObject) -> LIPSYNC2D_LipSyncAnimator:
+        props = obj.lipsync2d_props  # type: ignore
+        type = props.lip_sync_2d_lips_type
+
+        automations = {
+            "SPRITESHEET": LIPSYNC_SpriteSheetAnimator,
+            "SHAPEKEYS": LIPSYNC2D_ShapeKeysAnimator
+        }
+
+        return automations[type]()
 
     @LIPSYNC2D_VoskHelper.setextensionpath
     def get_model(self, prefs):
         model = Model(lang=prefs.current_lang)
         return model
-
-    def clear_previous_keyframes(self, obj):
-        action = obj.animation_data.action if obj.animation_data else None
-        if action:
-            for fcurve in action.fcurves:
-                if fcurve.data_path == "lipsync2d_props.lip_sync_2d_sprite_sheet_index": 
-                    fcurve.keyframe_points.clear()
-
-    def set_constant_interpolation(self, obj):
-        action = obj.animation_data.action if obj.animation_data else None
-
-        if action:
-            for fcurve in action.fcurves:
-                for keyframe in fcurve.keyframe_points:
-                    keyframe.interpolation = 'CONSTANT'
-
-    def insert_keyframe_on_phoneme(self, words_timings, obj, props, context: bpy.types.Context):
-        words = [word['word'] for word in words_timings]
-        total_words = len(words)
-        phonemes = self.extract_phonemes(words, context)
-        
-        for index, word_timing in enumerate(words_timings):
-            start = word_timing['start']
-            end = word_timing['end']
-
-            word_frame_start = self.time_to_frame(start)
-            word_frame_end = self.time_to_frame(end)
-
-            phoneme = phonemes[index].strip()
-            visemes = [ipaphoneme_to_viseme(p) for p in phoneme]
-            visemes_len = len(visemes)
-            duration = word_frame_end - word_frame_start
-            visemes_parts = duration / len(visemes)
-            next_start = words_timings[index + 1]['start'] if index < total_words - 1 else -1
-            delay_until_next_word = next_start - word_frame_end / self.based_fps
-
-            for viseme_index, v in enumerate(visemes):
-                add_sil_at_word_end = ((delay_until_next_word > .100) and (viseme_index + 1) == visemes_len) or (index == total_words -1)
-                viseme_frame_start = word_frame_start + round(viseme_index*visemes_parts)
-                
-                gindex = props[f"lip_sync_2d_viseme_{v}"]
-
-                if gindex > 9:
-                    gindex = 1
-
-                props["lip_sync_2d_sprite_sheet_index"] = gindex
-                obj.keyframe_insert("lipsync2d_props.lip_sync_2d_sprite_sheet_index", frame=viseme_frame_start)
-                if add_sil_at_word_end:
-                    props["lip_sync_2d_sprite_sheet_index"] = props[f"lip_sync_2d_viseme_sil"]
-                    obj.keyframe_insert("lipsync2d_props.lip_sync_2d_sprite_sheet_index", frame=word_frame_end)
-
-    def extract_phonemes(self, words, context: bpy.types.Context):
-        lang_code = LIPSYNC2D_AP_Preferences.get_current_lang_code(context)
-        iso_639_3 = LIPSYNC2D_ISOLangConverter.convert_iso6391_to_iso6393(lang_code)
-        phonemes = cast(list[str],phonemize(words, language=iso_639_3, backend='espeak'))
-        return phonemes
-
-    def time_to_frame(self, time):
-        return round(time * self.based_fps)
 
     def vosk_recognize_voice(self, file_path: str, model: Model):
         with wave.open(file_path, "rb") as wf:
@@ -149,25 +133,20 @@ class LIPSYNC2D_OT_AnalyzeAudio(bpy.types.Operator):
             result = json.loads(rec.FinalResult())
         return result
 
+
 def extract_audio():
     package_name = cast(str, get_package_name())
-    output_path = bpy.utils.extension_path_user(package_name, path="tmp", create=True) 
+    output_path = bpy.utils.extension_path_user(package_name, path="tmp", create=True)
     filepath = os.path.join(output_path, "cgp_lipsync_extracted_audio.wav")
-    
+
     bpy.ops.sound.mixdown(
         filepath=filepath,
         check_existing=False,
         container='WAV',
         codec='PCM',
         format='S16',
-        mixrate=16000,    # Sample rate for Vosk
-        channels='MONO'   # Vosk prefers mono
+        mixrate=16000,  # Sample rate for Vosk
+        channels='MONO'  # Vosk prefers mono
     )
 
     return filepath
-
-
-def ipaphoneme_to_viseme(ipa_phoneme):
-    clean = ipa_phoneme.strip("ː̥̬̃012")  # remove length, nasal, stress etc
-    return phoneme_to_viseme.get(clean, "UNK")
-    
