@@ -46,6 +46,8 @@ def create_custom_prop(obj: bpy.types.Object):
     obj.lipsync2d_props.lip_sync_2d_sprite_sheet_main_scale = 1 # type: ignore
     obj.lipsync2d_props.lip_sync_2d_sprite_sheet_index = 0 # type: ignore
     obj.lipsync2d_props.lip_sync_2d_sprite_sheet_format = "VLINE" # type: ignore
+    obj.lipsync2d_props.lip_sync_2d_lips_type = "SPRITESHEET" # type: ignore
+    obj.lipsync2d_props["lip_sync_2d_viseme_shape_keys"] = 0 # type: ignore
 
     #TODO: Generate this from the phoneme dict
     obj.lipsync2d_props.lip_sync_2d_viseme_sil = 0 # type: ignore
