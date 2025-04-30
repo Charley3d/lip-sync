@@ -84,6 +84,12 @@ class LIPSYNC2D_PT_Panel(bpy.types.Panel):
                 row = panel_body.row(align=True)
                 row.prop(props, "lip_sync_2d_sprite_sheet_sprite_scale")
                 row.prop(props, "lip_sync_2d_sprite_sheet_main_scale", text="Main")
+        
+        elif props.lip_sync_2d_lips_type == "SHAPEKEYS":
+            row = layout.row()
+            row.prop(props,"lip_sync_2d_in_between_threshold")
+            row.prop(props,"lip_sync_2d_sil_threshold")
+
 
         panel_header, panel_body = layout.panel("cgp_lipsync_sprite_audio_dropdown", default_closed=False)
         panel_header.label(text="Audio Analysis")
