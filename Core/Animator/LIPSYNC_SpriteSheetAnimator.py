@@ -44,7 +44,7 @@ class LIPSYNC_SpriteSheetAnimator:
 
     def insert_on_visemes(self, obj: BpyObject, props: BpyPropertyGroup, visemes_data: VisemeData,
                           word_timing: WordTiming,
-                          delay_until_next_word, is_last_word, words, index: int):
+                          delay_until_next_word, is_last_word, index: int):
         """
         Inserts keyframes for viseme animations based on viseme data and timing information for lip-syncing.
         This function computes the required frame indices for animating visemes in a sprite sheet and handles

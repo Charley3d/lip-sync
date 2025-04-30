@@ -1,3 +1,4 @@
+import hashlib
 import json
 import os
 import wave
@@ -73,7 +74,7 @@ class LIPSYNC2D_OT_AnalyzeAudio(bpy.types.Operator):
 
         auto_obj = self.get_animator(obj)
         auto_obj.setup(obj)
-        auto_obj.clear_previous_keyframes(obj)
+        # auto_obj.clear_previous_keyframes(obj)
 
         self.auto_insert_keyframes(auto_obj, obj, recognized_words, dialog_inspector, total_words, phonemes)
 
@@ -83,7 +84,7 @@ class LIPSYNC2D_OT_AnalyzeAudio(bpy.types.Operator):
         return {'FINISHED'}
 
     def auto_insert_keyframes(self, auto_obj: LIPSYNC2D_LipSyncAnimator, obj: BpyObject, recognized_words,
-                              dialog_inspector, total_words, phonemes):
+                              dialog_inspector: LIPSYNC2D_DialogInspector, total_words, phonemes):
         props = obj.lipsync2d_props  # type: ignore
         words = enumerate(recognized_words)
 
@@ -94,7 +95,7 @@ class LIPSYNC2D_OT_AnalyzeAudio(bpy.types.Operator):
             next_word_timing = dialog_inspector.get_next_word_timing(recognized_words, index)
             delay_until_next_word = next_word_timing["word_frame_start"] - word_timing["word_frame_end"]
 
-            auto_obj.insert_on_visemes(obj, props, visemes_data, word_timing, delay_until_next_word, is_last_word, recognized_words, index)
+            auto_obj.insert_on_visemes(obj, props, visemes_data, word_timing, delay_until_next_word, is_last_word, index)
 
     @staticmethod
     def get_animator(obj: BpyObject) -> LIPSYNC2D_LipSyncAnimator:
