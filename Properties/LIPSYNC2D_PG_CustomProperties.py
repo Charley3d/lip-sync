@@ -89,7 +89,7 @@ class LIPSYNC2D_PG_CustomProperties(bpy.types.PropertyGroup):
     ) # type: ignore
     lip_sync_2d_sprite_sheet_index: bpy.props.IntProperty(
         name="Sprite Index",
-        description="Sprite Index. Start at 0, from Bottom Left to Top Right)",
+        description="Sprite Index. Start at 0, from Bottom Left to Top Right",
         default=1
     ) # type: ignore
     lip_sync_2d_sprite_sheet_format: bpy.props.EnumProperty(
@@ -110,12 +110,28 @@ class LIPSYNC2D_PG_CustomProperties(bpy.types.PropertyGroup):
         description="What kind of animation will you use.",
         items=[
             ("SPRITESHEET", "Sprite Sheet", "Use a Sprite Sheet containg all of your visemes"),
-            # ("SHAPEKEYS", "Shape Keys (BETA)", "Use your Shape Keys to animate mouth"),
+            ("SHAPEKEYS", "Shape Keys (BETA)", "Use your Shape Keys to animate mouth"),
             # ("BONES", "Bones", "Use Bones position to animate mouth") Next release
         ],
         update=update_sprite_sheet_format,
         default=0
     )  # type: ignore
+
+    lip_sync_2d_in_between_threshold: bpy.props.FloatProperty(
+        name="In between Threshold",
+        description="Minimum time to have between 2 Keyframes. Keyframe being added before this threshold will be removed",
+        default=.0417,
+        subtype="TIME",
+        unit="TIME"
+    ) # type: ignore
+
+    lip_sync_2d_sil_threshold: bpy.props.FloatProperty(
+        name="Silence Threshold",
+        description="Minimum time to have between 2 Keyframes to consider having a \"Silence\"",
+        default=.1,
+        subtype="TIME",
+        unit="TIME"
+    ) # type: ignore
 
     @classmethod
     def register(cls):

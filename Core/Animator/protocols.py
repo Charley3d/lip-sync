@@ -33,7 +33,7 @@ class LIPSYNC2D_LipSyncAnimator(Protocol):
         pass
 
     def insert_on_visemes(self, obj: BpyObject, props: BpyPropertyGroup, visemes_data: VisemeData, word_timing: WordTiming,
-                          delay_until_next_word: int, is_last_word: bool, words: list[Any], index: int):
+                          delay_until_next_word: int, is_last_word: bool, index: int):
         pass
 
     def set_interpolation(self, obj: BpyObject):

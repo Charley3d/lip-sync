@@ -29,6 +29,7 @@ class LIPSYNC2D_ShapeKeysAnimator:
     def __init__(self) -> None:
         self._slot: BpyActionSlot
         self._key_blocks: Any
+        self.active_keyframes: list[dict[str, Any]] = []
 
     @staticmethod
     def get_shape_key_action(obj):
@@ -79,13 +80,14 @@ class LIPSYNC2D_ShapeKeysAnimator:
 
     def insert_on_visemes(self, obj: BpyObject, props: BpyPropertyGroup, visemes_data: VisemeData,
                           word_timing: WordTiming,
-                          delay_until_next_word: int, is_last_word: bool, words: list[Any], word_index: int):
+                          delay_until_next_word: int, is_last_word: bool, word_index: int):
         """
         Insert viseme animations based on given viseme data, word timing, and properties. This function ensures
         that the shape keys for lip-sync animations are manipulated and keyframed correctly for smooth transitions
         between viseme states. It also optionally adds a silence (SIL) shape key at the end of a word depending
         on specific conditions.
 
+        :param word_index: Word index
         :param obj: The Blender object to insert visemes into.
         :param props: Properties related to lipsync and shape key data.
         :param visemes_data: Data about visemes, including their order and division details.
@@ -96,60 +98,55 @@ class LIPSYNC2D_ShapeKeysAnimator:
         """
 
         if not isinstance(obj.data, bpy.types.Mesh) or obj.data.shape_keys is None:
-            return
+            return None
 
         key_blocks = self._key_blocks
         visemes = enumerate(visemes_data["visemes"])
-        vis_len = len(visemes_data["visemes"])
-        # If there is more visemes than this threshold, shape key will be proportionally decreased
-        viseme_threshold = 3
-        # Before inserting new Keyframe, go back this number of frame and set all Shapes Keys to 0
-        before_frame = 2
+        in_between_threshold = props.lip_sync_2d_in_between_threshold # type: ignore
+
+        previous_start = -1
 
         for viseme_index, v in visemes:
+            if v == "sil":
+                continue
             
-
-            add_sil_at_word_end = ((delay_until_next_word > self.time_conversion.time_to_frame(.1)) and (viseme_index + 1) == visemes_data[
+            sil_threshold = props.lip_sync_2d_sil_threshold # type: ignore
+            add_sil_at_word_end = ((delay_until_next_word > self.time_conversion.time_to_frame(sil_threshold)) and (viseme_index + 1) == visemes_data[
                 "visemes_len"]) or is_last_word
             viseme_frame_start = word_timing["word_frame_start"] + round(viseme_index * visemes_data["visemes_parts"])
+            
+            # Do not insert a keyframe on a frame that alread contains a keyframed shapekey
+            if viseme_frame_start == previous_start: continue
 
-            LIPSYNC2D_ShapeKeysAnimator.reset_shape_keys(key_blocks, viseme_frame_start)
             shape_key_prop = getattr(props, f"lip_sync_2d_viseme_shape_keys_{v}")
             shape_key = key_blocks.get(shape_key_prop)
 
+            
             if shape_key is not None:
                 delay = max(0,delay_until_next_word)
-                shape_key.value = viseme_threshold / vis_len
-                shape_key.keyframe_insert("value", frame=viseme_frame_start)
-            
+                shape_key.value = 1
+                shape_key.keyframe_insert("value", frame=max(self.get_frame_start(), viseme_frame_start))
+                
+                self.active_keyframes.append({"keyframe": viseme_frame_start, "viseme": v})
+
+                previous_start = viseme_frame_start
+                
                 if add_sil_at_word_end:
-                    # Force Current Shape Key value to 0 at the end of word, with a delay to prevent snap effect
-                    shape_key.value = 0
-                    shape_key.keyframe_insert("value", frame=word_timing["word_frame_end"] + min(delay, self.last_word_motion_duration_frame))
-
-                    # To prevent lips sliping, ensure that previous shape key is set to 0, set all of Shapes Keys to 0 too
-                    for s in key_blocks:
-                        s.value = 0
-                        s.keyframe_insert("value", frame=word_timing["word_frame_end"] + delay - before_frame)
-
                     # Force the SIL shape key to 1
                     shape_key_prop = getattr(props, f"lip_sync_2d_viseme_shape_keys_sil")
                     shape_key = key_blocks.get(shape_key_prop)
 
-                    if shape_key is not None:
-                        shape_key.value = 1
-                        shape_key.keyframe_insert("value", frame=word_timing["word_frame_end"] + min(delay, self.last_word_motion_duration_frame))
+                    # Add sil right after viseme, respecting the last_word_motion_duration_frame duration. If last_word_motion_duration_frame is longer than delay, falloff to delay
+                    self.active_keyframes.append({"keyframe": word_timing["word_frame_end"] + min(delay - self.time_conversion.time_to_frame(in_between_threshold), self.last_word_motion_duration_frame), "viseme": "sil"})
+                    # Add sil just before the next viseme
+                    self.active_keyframes.append({"keyframe": word_timing["word_frame_end"] + delay - max(1,self.time_conversion.time_to_frame(in_between_threshold)), "viseme": "sil"})
                 
                 # Force SIL before very first word of dialog
                 if word_index == 0 and viseme_index == 0:
-                    shape_key.value = 0
-                    shape_key.keyframe_insert("value", frame=viseme_frame_start - 1)
+                    self.active_keyframes.append({"keyframe": max(1, viseme_frame_start - self.time_conversion.time_to_frame(in_between_threshold)), "viseme": "sil"})
 
-                    shape_key_prop = getattr(props, f"lip_sync_2d_viseme_shape_keys_sil")
-                    shape_key = key_blocks.get(shape_key_prop)
+        return None
 
-                    shape_key.value = 1
-                    shape_key.keyframe_insert("value", frame=viseme_frame_start - 1)
 
 
     def set_interpolation(self, obj: BpyObject):
@@ -163,15 +160,20 @@ class LIPSYNC2D_ShapeKeysAnimator:
         :type obj: BpyObject
         :return: None
         """
-        action = obj.animation_data.action if obj.animation_data else None
+        if (action := self.get_shape_key_action(obj)) is None:
+            return
 
-        if action:
-            for fcurve in action.fcurves:
+
+        strip = action.layers[0].strips[0]
+        channelbag = strip.channelbag(self._slot, ensure=True)
+
+        for fcurve in channelbag.fcurves:
+            for fcurve in action.layers[0].strips[0].channelbag(action.slots.get("KELipSync")).fcurves:
                 for keyframe in fcurve.keyframe_points:
                     keyframe.interpolation = 'LINEAR'
 
     @staticmethod
-    def reset_shape_keys(key_blocks: Any, viseme_frame_start: float):
+    def reset_shape_keys(key_blocks: Any, viseme_frame_start: float | None = None):
         """
         Resets the values of all shape keys in the provided key blocks to 0 and inserts
         keyframes for those values at the specified frame.
@@ -186,8 +188,10 @@ class LIPSYNC2D_ShapeKeysAnimator:
         """
         for s in key_blocks:
             s: BpyShapeKey
+            if s.name == "Basis": continue
             s.value = 0
-            s.keyframe_insert("value", frame=viseme_frame_start)
+            if viseme_frame_start is not None:
+                s.keyframe_insert("value", frame=viseme_frame_start)
 
     def setup(self, obj: BpyObject):
         """
@@ -227,9 +231,80 @@ class LIPSYNC2D_ShapeKeysAnimator:
             self.time_conversion = LIPSYNC2D_TimeConversion(bpy.context.scene.render)
 
             self.last_word_motion_duration_frame = self.time_conversion.time_to_frame(self.last_word_motion_duration)
+        
+        fps_range = self.get_fps_range()
+
+        for i in range(fps_range + 1):
+            self.reset_shape_keys(self._key_blocks, i + 1)
 
     def cleanup(self, obj: BpyObject):
-        pass
+        self.reset_shape_keys(self._key_blocks)
+
+        # Ensure keyframes are well sorted
+        self.active_keyframes.sort(key=lambda x: x["keyframe"])
+        
+        # Get placeholder keyframes
+        keyframe_to_remove = self.get_keyframes_to_remove()
+        # Get Keyframes to close to each other
+        to_clean = self.get_inbetween_to_remove(obj)
+        # Redundancy
+        redundant = self.get_redundant_to_remove(obj, to_clean)
+
+
+        keyframe_to_remove += to_clean + redundant
+
+        # Simply delete undesired keyframes
+        for i in keyframe_to_remove:
+            for s in self._key_blocks:
+                s: BpyShapeKey 
+                s.keyframe_delete("value", frame=i)
+
+        self.active_keyframes = []
+
+    def get_inbetween_to_remove(self, obj: BpyObject) -> list[int]:
+        to_clean = []
+        total = len(self.active_keyframes)
+        props = obj.lipsync2d_props #type: ignore
+
+        min_threshold = self.time_conversion.time_to_frame(props.lip_sync_2d_in_between_threshold)
+        
+        for i, _ in enumerate(self.active_keyframes):
+            if i + 1 >= total: break
+
+            current_keyframe = self.active_keyframes[i]["keyframe"]
+            next_keyframe = self.active_keyframes[i + 1]["keyframe"]
+
+            if ((current_keyframe not in to_clean)
+                    and (current_keyframe + min_threshold == next_keyframe)):
+                to_clean.append(next_keyframe)
+            
+        return to_clean
+    
+    def get_redundant_to_remove(self, obj: BpyObject, tmp: list[int]) -> list[int]:
+        to_clean = []
+        n = [k for k in self.active_keyframes if k["keyframe"] not in tmp]
+        total = len(n)
+        props = obj.lipsync2d_props #type: ignore
+        
+        for i, _ in enumerate(n):
+            if i + 1 >= total: break
+
+            current_keyframe = n[i]
+            next_keyframe = n[i + 1]
+
+            if (current_keyframe["viseme"] != "sil"
+                and (getattr(props, f'lip_sync_2d_viseme_shape_keys_{current_keyframe["viseme"]}') == getattr(props, f'lip_sync_2d_viseme_shape_keys_{next_keyframe["viseme"]}'))):
+                to_clean.append(next_keyframe["keyframe"])
+
+        return list(set(to_clean))
+
+    def get_keyframes_to_remove(self) -> list[int]:
+        fps_range = self.get_fps_range()
+        all_frames = list(range(1, fps_range + 1))
+        only_active_frame = [f["keyframe"] for f in self.active_keyframes]
+        keyframe_to_remove = list(set(all_frames) - set(only_active_frame))
+
+        return keyframe_to_remove
 
     def poll(self, cls, context: BpyContext):
         obj = context.active_object
@@ -243,3 +318,17 @@ class LIPSYNC2D_ShapeKeysAnimator:
         package_name = get_package_name()
         prefs = context.preferences.addons[package_name].preferences  # type: ignore
         return (context.scene is not None or context.active_object is not None) and prefs.is_downloading is False
+    
+    @staticmethod
+    def get_fps_range() -> int:
+        if bpy.context.scene is None:
+            return -1
+        
+        return bpy.context.scene.frame_end - bpy.context.scene.frame_start
+    
+    @staticmethod
+    def get_frame_start():
+        if bpy.context.scene is None:
+            return -1
+        
+        return bpy.context.scene.frame_start
