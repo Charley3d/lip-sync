@@ -19,7 +19,7 @@ from ..lipsync_types import BpyObject, BpyShapeKey
 
 class LIPSYNC2D_OT_AnalyzeAudio(bpy.types.Operator):
     bl_idname = "sound.cgp_analyze_audio"
-    bl_label = "Analyze audio"
+    bl_label = "Bake audio"
     bl_options = {'REGISTER', 'UNDO'}
 
     animator: LIPSYNC2D_LipSyncAnimator
@@ -34,7 +34,7 @@ class LIPSYNC2D_OT_AnalyzeAudio(bpy.types.Operator):
             return False
 
         animator = LIPSYNC2D_OT_AnalyzeAudio.get_animator(context.active_object)
-        return True # animator.poll(cls, context)
+        return animator.poll(cls, context)
 
     def execute(self, context: bpy.types.Context) -> set[
         Literal['RUNNING_MODAL', 'CANCELLED', 'FINISHED', 'PASS_THROUGH', 'INTERFACE']]:

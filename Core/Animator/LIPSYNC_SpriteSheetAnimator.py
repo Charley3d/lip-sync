@@ -1,3 +1,4 @@
+from ...Preferences.LIPSYNC2D_AP_Preferences import LIPSYNC2D_AP_Preferences
 from ...LIPSYNC2D_Utils import get_package_name
 from ...Core.types import VisemeData, WordTiming
 from ...lipsync_types import BpyContext, BpyObject, BpyPropertyGroup
@@ -107,4 +108,6 @@ class LIPSYNC_SpriteSheetAnimator:
     def poll(self, cls, context: BpyContext):
         package_name = get_package_name()
         prefs = context.preferences.addons[package_name].preferences  # type: ignore
-        return (context.scene is not None or context.active_object is not None) and prefs.is_downloading is False
+        model_state = LIPSYNC2D_AP_Preferences.get_model_state()
+
+        return (context.scene is not None or context.active_object is not None) and model_state != "DOWNLOADING"

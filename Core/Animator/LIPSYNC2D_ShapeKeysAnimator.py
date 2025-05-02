@@ -2,6 +2,8 @@ from typing import Any, Iterator, cast
 
 import bpy
 
+from ...Preferences.LIPSYNC2D_AP_Preferences import LIPSYNC2D_AP_Preferences
+
 from ..Timeline.LIPSYNC2D_TimeConversion import LIPSYNC2D_TimeConversion
 from ...Core.types import VisemeData, VisemeSKeyAnimationData, WordTiming
 from ...LIPSYNC2D_Utils import get_package_name
@@ -376,9 +378,9 @@ class LIPSYNC2D_ShapeKeysAnimator:
         if obj.data.shape_keys is None:
             return False
 
-        package_name = get_package_name()
-        prefs = context.preferences.addons[package_name].preferences  # type: ignore
-        return (context.scene is not None or context.active_object is not None) and prefs.is_downloading is False
+        model_state = LIPSYNC2D_AP_Preferences.get_model_state()
+
+        return (context.scene is not None or context.active_object is not None) and model_state != "DOWNLOADING"
 
     @staticmethod
     def get_fps_range() -> int:
