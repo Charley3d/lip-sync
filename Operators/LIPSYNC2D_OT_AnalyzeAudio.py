@@ -1,6 +1,7 @@
-import hashlib
+import time
 import json
 import os
+import tracemalloc
 import wave
 from typing import Literal, cast
 
@@ -13,7 +14,7 @@ from ..Core.Animator.protocols import LIPSYNC2D_LipSyncAnimator
 from ..Core.LIPSYNC2D_DialogInspector import LIPSYNC2D_DialogInspector
 from ..Core.LIPSYNC2D_VoskHelper import LIPSYNC2D_VoskHelper
 from ..LIPSYNC2D_Utils import get_package_name
-from ..lipsync_types import BpyObject
+from ..lipsync_types import BpyObject, BpyShapeKey
 
 
 class LIPSYNC2D_OT_AnalyzeAudio(bpy.types.Operator):
@@ -33,7 +34,7 @@ class LIPSYNC2D_OT_AnalyzeAudio(bpy.types.Operator):
             return False
 
         animator = LIPSYNC2D_OT_AnalyzeAudio.get_animator(context.active_object)
-        return animator.poll(cls, context)
+        return True # animator.poll(cls, context)
 
     def execute(self, context: bpy.types.Context) -> set[
         Literal['RUNNING_MODAL', 'CANCELLED', 'FINISHED', 'PASS_THROUGH', 'INTERFACE']]:
@@ -72,14 +73,43 @@ class LIPSYNC2D_OT_AnalyzeAudio(bpy.types.Operator):
         total_words = len(words)
         phonemes = LIPSYNC2D_DialogInspector.extract_phonemes(words, context)
 
+
         auto_obj = self.get_animator(obj)
+        start_total = time.time()
+        
+        start = time.time()
         auto_obj.setup(obj)
+        end = time.time()
+        print(f"Setup: {end - start:.9f}seconds")
         # auto_obj.clear_previous_keyframes(obj)
 
+        tracemalloc.start()
+        start = time.time()
         self.auto_insert_keyframes(auto_obj, obj, recognized_words, dialog_inspector, total_words, phonemes)
+        end = time.time()
+        print(f"auto_insert_keyframes: {end - start:.9f}seconds")
+        # Show memory stats
+        current, peak = tracemalloc.get_traced_memory()
+        tracemalloc.stop()
 
+        print(f"Current memory usage: {current / 1024:.2f} KB")
+        print(f"Peak memory usage: {peak / 1024:.2f} KB")
+
+        start = time.time()
         auto_obj.set_interpolation(obj)
-        auto_obj.cleanup(obj)
+        end = time.time()
+        print(f"set_interpolation: {end - start:.9f}seconds")
+
+        start = time.time()
+        # auto_obj.cleanup(obj)
+        end = time.time()
+        print(f"cleanup: {end - start:.9f}seconds")
+
+        end = time.time()
+        print(f"Total: {end - start_total:.9f}seconds")
+
+        print(auto_obj.inserted_keyframes)
+        self.report({"INFO"}, message=f"{auto_obj.inserted_keyframes} keyframes inserted")
 
         return {'FINISHED'}
 
@@ -87,6 +117,19 @@ class LIPSYNC2D_OT_AnalyzeAudio(bpy.types.Operator):
                               dialog_inspector: LIPSYNC2D_DialogInspector, total_words, phonemes):
         props = obj.lipsync2d_props  # type: ignore
         words = enumerate(recognized_words)
+        #TODO: REMOVE TYPE IGNORE
+        # key_blocks = obj.data.shape_keys.key_blocks # type: ignore
+        # action = obj.data.shape_keys.animation_data.action # type: ignore
+        # strip = action.layers[0].strips[0] # type: ignore
+        # channelbag = strip.channelbag(action.slots.get("KELipSync"), ensure=True) # type: ignore
+
+        # for shape_key in key_blocks:
+        #     fcurves: bpy.types.ActionChannelbagFCurves
+        #     fcurves = channelbag.fcurves
+        #     shape_key_data_path = f'key_blocks["{shape_key.name}"].value'
+            
+        #     if fcurves.find(shape_key_data_path) == None:
+        #         fcurves.new(shape_key_data_path)
 
         for index, recognized_word in words:
             is_last_word = (index == total_words - 1)
@@ -94,8 +137,17 @@ class LIPSYNC2D_OT_AnalyzeAudio(bpy.types.Operator):
             visemes_data = dialog_inspector.get_visemes(phonemes[index], word_timing["duration"])
             next_word_timing = dialog_inspector.get_next_word_timing(recognized_words, index)
             delay_until_next_word = next_word_timing["word_frame_start"] - word_timing["word_frame_end"]
-
             auto_obj.insert_on_visemes(obj, props, visemes_data, word_timing, delay_until_next_word, is_last_word, index)
+
+            # for t in auto_obj.insert_on_visemes(obj, props, visemes_data, word_timing, delay_until_next_word, is_last_word, index):
+
+            #     for fcurve in channelbag.fcurves:
+            #         fcurve:bpy.types.FCurve
+            #         shape_key_name = t['shape_key']
+            #         shape_key_data_path = f'key_blocks["{shape_key_name}"].value'
+            #         value = t["value"] if shape_key_data_path == fcurve.data_path else 0
+            #         fcurve.keyframe_points.insert(t["keyframe"], value=value, options={"FAST"})
+                    # auto_obj.get_silences()
 
     @staticmethod
     def get_animator(obj: BpyObject) -> LIPSYNC2D_LipSyncAnimator:
@@ -112,7 +164,7 @@ class LIPSYNC2D_OT_AnalyzeAudio(bpy.types.Operator):
     @LIPSYNC2D_VoskHelper.setextensionpath
     def get_model(self, prefs):
         model = Model(lang=prefs.current_lang)
-        return model
+        return model 
 
     def vosk_recognize_voice(self, file_path: str, model: Model):
         with wave.open(file_path, "rb") as wf:
