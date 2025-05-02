@@ -2,7 +2,8 @@
 from typing import TYPE_CHECKING, TypeAlias
 
 if TYPE_CHECKING:
-    from bpy.types import Context, RenderSettings, Object, PropertyGroup, Operator, ShapeKey, ActionSlot, Mesh
+    from bpy.types import Action, ActionKeyframeStrip, Context, RenderSettings, Object, PropertyGroup, Operator, \
+        ShapeKey, ActionSlot, Mesh
 
 # Export commonly used types
 BpyContext: TypeAlias = 'Context'
@@ -13,3 +14,5 @@ BpyOperator: TypeAlias = 'Operator'
 BpyShapeKey: TypeAlias = 'ShapeKey'
 BpyActionSlot: TypeAlias = 'ActionSlot'
 BpyMesh: TypeAlias = 'Mesh'
+BpyAction: TypeAlias = 'Action'
+BpyActionKeyframeStrip: TypeAlias = 'ActionKeyframeStrip'

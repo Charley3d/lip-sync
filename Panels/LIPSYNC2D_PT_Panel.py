@@ -45,7 +45,7 @@ class LIPSYNC2D_PT_Panel(bpy.types.Panel):
 
         row = layout.row(align=True)
         row.prop(props, "lip_sync_2d_lips_type")
-        layout.separator(factor=3)
+        layout.separator(factor=1)
 
         if props.lip_sync_2d_lips_type == "SPRITESHEET":
         
@@ -86,6 +86,13 @@ class LIPSYNC2D_PT_Panel(bpy.types.Panel):
                 row.prop(props, "lip_sync_2d_sprite_sheet_main_scale", text="Main")
         
         elif props.lip_sync_2d_lips_type == "SHAPEKEYS":
+            row = layout.row()
+            row.label(text="Motion:")
+            row = layout.row()
+            row.prop(props,"lip_sync_2d_close_motion_duration")
+
+            row = layout.row()
+            row.label(text="Thresholds:")
             row = layout.row()
             row.prop(props,"lip_sync_2d_in_between_threshold")
             row.prop(props,"lip_sync_2d_sil_threshold")
