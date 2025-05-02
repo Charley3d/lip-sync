@@ -117,37 +117,20 @@ class LIPSYNC2D_OT_AnalyzeAudio(bpy.types.Operator):
                               dialog_inspector: LIPSYNC2D_DialogInspector, total_words, phonemes):
         props = obj.lipsync2d_props  # type: ignore
         words = enumerate(recognized_words)
-        #TODO: REMOVE TYPE IGNORE
-        # key_blocks = obj.data.shape_keys.key_blocks # type: ignore
-        # action = obj.data.shape_keys.animation_data.action # type: ignore
-        # strip = action.layers[0].strips[0] # type: ignore
-        # channelbag = strip.channelbag(action.slots.get("KELipSync"), ensure=True) # type: ignore
-
-        # for shape_key in key_blocks:
-        #     fcurves: bpy.types.ActionChannelbagFCurves
-        #     fcurves = channelbag.fcurves
-        #     shape_key_data_path = f'key_blocks["{shape_key.name}"].value'
-            
-        #     if fcurves.find(shape_key_data_path) == None:
-        #         fcurves.new(shape_key_data_path)
 
         for index, recognized_word in words:
             is_last_word = (index == total_words - 1)
             word_timing = dialog_inspector.get_word_timing(recognized_word)
             visemes_data = dialog_inspector.get_visemes(phonemes[index], word_timing["duration"])
             next_word_timing = dialog_inspector.get_next_word_timing(recognized_words, index)
-            delay_until_next_word = next_word_timing["word_frame_start"] - word_timing["word_frame_end"]
-            auto_obj.insert_on_visemes(obj, props, visemes_data, word_timing, delay_until_next_word, is_last_word, index)
 
-            # for t in auto_obj.insert_on_visemes(obj, props, visemes_data, word_timing, delay_until_next_word, is_last_word, index):
+            # Last viseme is inserted a bit before end of word. 
+            # This ensures that delay_until_next_word uses correct timing
+            corrected_word_end_frame = LIPSYNC2D_ShapeKeysAnimator.get_corrected_end_frame(word_timing["word_frame_start"], visemes_data)
+            delay_until_next_word = next_word_timing["word_frame_start"] - corrected_word_end_frame
 
-            #     for fcurve in channelbag.fcurves:
-            #         fcurve:bpy.types.FCurve
-            #         shape_key_name = t['shape_key']
-            #         shape_key_data_path = f'key_blocks["{shape_key_name}"].value'
-            #         value = t["value"] if shape_key_data_path == fcurve.data_path else 0
-            #         fcurve.keyframe_points.insert(t["keyframe"], value=value, options={"FAST"})
-                    # auto_obj.get_silences()
+            auto_obj.insert_keyframes(obj, props, visemes_data, word_timing, delay_until_next_word, is_last_word, index)
+
 
     @staticmethod
     def get_animator(obj: BpyObject) -> LIPSYNC2D_LipSyncAnimator:

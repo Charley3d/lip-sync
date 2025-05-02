@@ -13,7 +13,7 @@ class VisemeData(TypedDict):
     visemes_parts: float
 
 class VisemeSKeyAnimationData(TypedDict):
-    keyframe: int
+    frame: int
     viseme: str
     viseme_index: int
     value: float
