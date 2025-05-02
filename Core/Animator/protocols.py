@@ -26,15 +26,18 @@ class LIPSYNC2D_LipSyncAnimator(Protocol):
     :ivar cleanup: Finalizes animation and removes temporary data from the object.
     :type cleanup: Callable[[BpyObject], None]
     """
+
+    inserted_keyframes: int
+    
     def setup(self, obj: BpyObject):
         pass
 
     def clear_previous_keyframes(self, obj: BpyObject):
         pass
 
-    def insert_on_visemes(self, obj: BpyObject, props: BpyPropertyGroup, visemes_data: VisemeData, word_timing: WordTiming,
-                          delay_until_next_word: int, is_last_word: bool, index: int) -> Iterator[VisemeSKeyAnimationData]:
-        yield {"keyframe": -1, "viseme": "", "value": -1, "shape_key": "", "viseme_index": -1}
+    def insert_keyframes(self, obj: BpyObject, props: BpyPropertyGroup, visemes_data: VisemeData, word_timing: WordTiming,
+                         delay_until_next_word: int, is_last_word: bool, index: int):
+        pass
 
     def set_interpolation(self, obj: BpyObject):
         pass
@@ -44,3 +47,4 @@ class LIPSYNC2D_LipSyncAnimator(Protocol):
 
     def poll(self, cls, context: BpyContext) -> bool:
         return False
+    
