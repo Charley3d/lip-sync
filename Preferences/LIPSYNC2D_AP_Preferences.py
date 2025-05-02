@@ -1,9 +1,12 @@
 import os
 from pathlib import Path
 from re import match
+from typing import Literal
 
 import bpy
 from vosk import MODEL_DIRS
+
+from ..lipsync_types import BpyContext
 
 from ..Core.LIPSYNC2D_VoskHelper import LIPSYNC2D_VoskHelper
 from ..LIPSYNC2D_Utils import get_package_name
@@ -24,12 +27,12 @@ class LIPSYNC2D_AP_Preferences(bpy.types.AddonPreferences):
         row.label(text="Language Model")
         row.prop(self, "current_lang", text="") 
         
-        LIPSYNC2D_AP_Preferences.draw_model_state(row, self.current_lang)
+        LIPSYNC2D_AP_Preferences.draw_model_state(row)
         LIPSYNC2D_AP_Preferences.draw_fetch_list_ops(layout)
 
     @staticmethod
     @LIPSYNC2D_VoskHelper.setextensionpath
-    def draw_model_state(row: bpy.types.UILayout, current_lang: str) -> None:
+    def draw_model_state(row: bpy.types.UILayout) -> None:
         """
         Updates the UI to display the current status of the selected language model.
 
@@ -39,30 +42,47 @@ class LIPSYNC2D_AP_Preferences(bpy.types.AddonPreferences):
             The currently selected language code for the model.
         :return: None
         """
+        
+
+        installed = ""
+        model_status = LIPSYNC2D_AP_Preferences.get_model_state()
+
+        if model_status == "INSTALLED":
+            installed = " Installed"
+            row.enabled = True
+        elif model_status == "DOWNLOADING":
+            installed = " Downloading..."
+            row.enabled = False
+
+
+        row.label(text=installed)
+
+    @staticmethod
+    @LIPSYNC2D_VoskHelper.setextensionpath
+    def get_model_state() -> Literal["INSTALLED", "DOWNLOADING", ""]:
+        directory = MODEL_DIRS[3] if len(MODEL_DIRS) >= 4 else None
+        result = ""
+
         prefs = bpy.context.preferences.addons[get_package_name()].preferences # type: ignore
 
         if prefs is None:
-            return
+            return result
+        
+        current_lang = LIPSYNC2D_AP_Preferences.get_current_lang_code()
 
-        installed = ""
         if current_lang != "none":
-            directory = MODEL_DIRS[3] if len(MODEL_DIRS) >= 4 else None
-
             if directory is not None and Path(directory).exists():
                 model_file_list = os.listdir(directory)
                 model_file = [model for model in model_file_list if match(f"vosk-model(-small)?-{current_lang}", model) and os.path.isdir(os.path.join(directory, model))]
                 if model_file:
-                    installed = " Installed"
-                    row.enabled = True
+                    result = "INSTALLED"
                 elif prefs.is_downloading: #type: ignore
-                    installed = " Downloading..."
-                    row.enabled = False
+                    result = "DOWNLOADING"
             elif prefs.is_downloading: #type: ignore
-                    installed = " Downloading..."
-                    row.enabled = False
+                    result = "DOWNLOADING"
+        
+        return result
 
-
-        row.label(text=installed)
 
     @staticmethod
     def draw_online_access_warning(layout: bpy.types.UILayout) -> None:
@@ -83,7 +103,7 @@ class LIPSYNC2D_AP_Preferences(bpy.types.AddonPreferences):
         row.enabled = bpy.app.online_access
 
     @staticmethod
-    def get_current_lang_code(context: bpy.types.Context) -> str:
+    def get_current_lang_code() -> str:
         prefs = bpy.context.preferences.addons[get_package_name()].preferences # type: ignore
         return prefs.current_lang
 

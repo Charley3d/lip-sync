@@ -106,7 +106,7 @@ class LIPSYNC2D_PG_CustomProperties(bpy.types.PropertyGroup):
     )  # type: ignore
 
     lip_sync_2d_lips_type: bpy.props.EnumProperty(
-        name="Lips type",
+        name="Animation type",
         description="What kind of animation will you use.",
         items=[
             ("SPRITESHEET", "Sprite Sheet", "Use a Sprite Sheet containg all of your visemes"),
