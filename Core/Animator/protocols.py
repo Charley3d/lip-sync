@@ -1,6 +1,6 @@
-from typing import Any, Protocol
+from typing import Any, Iterator, Protocol
 
-from ...Core.types import VisemeData, WordTiming
+from ...Core.types import VisemeData, VisemeSKeyAnimationData, WordTiming
 from ...lipsync_types import BpyContext, BpyObject, BpyPropertyGroup
 
 
@@ -33,8 +33,8 @@ class LIPSYNC2D_LipSyncAnimator(Protocol):
         pass
 
     def insert_on_visemes(self, obj: BpyObject, props: BpyPropertyGroup, visemes_data: VisemeData, word_timing: WordTiming,
-                          delay_until_next_word: int, is_last_word: bool, index: int):
-        pass
+                          delay_until_next_word: int, is_last_word: bool, index: int) -> Iterator[VisemeSKeyAnimationData]:
+        yield {"keyframe": -1, "viseme": "", "value": -1, "shape_key": "", "viseme_index": -1}
 
     def set_interpolation(self, obj: BpyObject):
         pass
