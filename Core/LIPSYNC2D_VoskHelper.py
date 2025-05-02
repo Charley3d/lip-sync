@@ -280,7 +280,7 @@ class LIPSYNC2D_VoskHelper():
         return
 
     @staticmethod
-    def check_worker_finished() -> int | None:
+    def check_worker_finished() -> float | None:
         """
         Checks the state of the worker process for LIPSYNC2D_VoskHelper and updates
         related addon preferences if necessary.

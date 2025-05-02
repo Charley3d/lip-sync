@@ -44,7 +44,8 @@ class LIPSYNC2D_PT_Panel(bpy.types.Panel):
         is_model_installed = True if prefs.current_lang not in ["", "none"] else False
 
         row = layout.row(align=True)
-        row.prop(props, "lip_sync_2d_lips_type")
+        row.label(text="Animation type")
+        row.prop(props, "lip_sync_2d_lips_type", text="")
         layout.separator(factor=1)
 
         if props.lip_sync_2d_lips_type == "SPRITESHEET":
@@ -106,7 +107,7 @@ class LIPSYNC2D_PT_Panel(bpy.types.Panel):
                 row.label(text="Select a Language Model before Analyzing audio")
 
             row = layout.row()
-            row.operator("sound.cgp_analyze_audio", text="Analyze audio")
+            row.operator("sound.cgp_analyze_audio", text="Bake audio")
             row.enabled = is_model_installed
 
 

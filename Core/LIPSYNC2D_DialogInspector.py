@@ -18,7 +18,7 @@ class LIPSYNC2D_DialogInspector:
 
     @staticmethod
     def extract_phonemes(words: list[str], context: BpyContext) -> list[str]:
-        lang_code = LIPSYNC2D_AP_Preferences.get_current_lang_code(context)
+        lang_code = LIPSYNC2D_AP_Preferences.get_current_lang_code()
         iso_639_3 = LIPSYNC2D_ISOLangConverter.convert_iso6391_to_iso6393(lang_code)
         phonemes = cast(list[str], phonemize(words, language=iso_639_3, backend='espeak'))
         return phonemes
