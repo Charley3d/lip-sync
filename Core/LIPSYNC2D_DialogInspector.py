@@ -43,11 +43,12 @@ class LIPSYNC2D_DialogInspector:
     def get_visemes(phoneme, duration: float) -> VisemeData:
         phoneme = phoneme.strip()
         visemes = [LIPSYNC2D_DialogInspector.ipaphoneme_to_viseme(p) for p in phoneme]
-        visemes_len = len(visemes)
-        visemes_parts = duration / len(visemes)
+        visemes_no_sil = [v for v in visemes if v != "sil"]
+        visemes_len = len(visemes_no_sil)
+        visemes_parts = duration / len(visemes_no_sil)
 
         return {
-            "visemes": visemes,
+            "visemes": visemes_no_sil,
             "visemes_len": visemes_len,
             "visemes_parts": visemes_parts,
         }
