@@ -144,6 +144,22 @@ class LIPSYNC2D_PG_CustomProperties(bpy.types.PropertyGroup):
         unit="TIME_ABSOLUTE"
     )  # type: ignore
 
+    lip_sync_2d_sps_in_between_threshold: bpy.props.FloatProperty(
+        name="In between",
+        description="Minimum time gap required between two keyframes. Keyframes added closer than this will be removed.",
+        default=.0417,
+        subtype="TIME",
+        unit="TIME_ABSOLUTE"
+    )  # type: ignore
+
+    lip_sync_2d_sps_sil_threshold: bpy.props.FloatProperty(
+        name="Silence",
+        description="Minimum time gap between keyframes required to insert a silent interval.",
+        default=.22,
+        subtype="TIME",
+        unit="TIME_ABSOLUTE"
+    )  # type: ignore
+
     lip_sync_2d_close_motion_duration: bpy.props.FloatProperty(
         name="Lip Close Duration",
         description="Duration of lip-closing animation during silent intervals",
