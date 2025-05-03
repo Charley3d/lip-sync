@@ -72,7 +72,7 @@ class LIPSYNC2D_EspeakInspector():
             user_extension_bin_dir = bpy.utils.extension_path_user(package_name, path=f"bin/{plat}", create=True)
             user_extension_bin_path = pathlib.Path(user_extension_bin_dir)
         except Exception as e:
-            raise Exception("Error while trying to get User Extension Path")
+            raise Exception("Error while trying to get User Extension Path", e)
 
         return user_extension_bin_path
     
