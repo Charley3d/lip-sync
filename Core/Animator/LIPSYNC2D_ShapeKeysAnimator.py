@@ -257,7 +257,7 @@ class LIPSYNC2D_ShapeKeysAnimator:
 
         for fcurve in channelbag.fcurves:
             for fcurve in cast(BpyActionKeyframeStrip, action.layers[0].strips[0]).channelbag(
-                    action.slots.get("KELipSync")).fcurves:
+                    action.slots.get("KELipSync-ShapeKeys")).fcurves:
                 for keyframe in fcurve.keyframe_points:
                     keyframe.interpolation = 'LINEAR'
 
@@ -345,7 +345,14 @@ class LIPSYNC2D_ShapeKeysAnimator:
         if not isinstance(obj.data, bpy.types.Mesh):
             return (None, None)
 
-        if obj.animation_data is None or obj.data.shape_keys is None or obj.data.shape_keys.animation_data is None:
+        # Safety check but should never occur because of Operator's poll method
+        if obj.data.shape_keys is None:
+            return (None, None)
+        
+        if obj.data.shape_keys.animation_data is None:
+            obj.data.shape_keys.animation_data_create()
+
+        if not isinstance(obj.data.shape_keys.animation_data, bpy.types.AnimData):
             return (None, None)
 
         obj_name = obj.name
@@ -356,10 +363,11 @@ class LIPSYNC2D_ShapeKeysAnimator:
             strip = cast(bpy.types.ActionKeyframeStrip, layer.strips.new(type='KEYFRAME'))
             obj.data.shape_keys.animation_data.action = action
         else:
+            obj.data.shape_keys.animation_data.action = action
             layer = action.layers[0]
             strip = cast(bpy.types.ActionKeyframeStrip, layer.strips[0])
 
-        self._slot = action.slots.get("KELipSync") or action.slots.new(id_type='KEY', name="LipSync")
+        self._slot = action.slots.get("KELipSync-ShapeKeys") or action.slots.new(id_type='KEY', name="LipSync-ShapeKeys")
 
         obj.data.shape_keys.animation_data.action = action
         obj.data.shape_keys.animation_data.action_slot = self._slot

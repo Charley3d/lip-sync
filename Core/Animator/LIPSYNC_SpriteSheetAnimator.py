@@ -1,7 +1,10 @@
+import bpy
+from typing import cast
+
 from ...Preferences.LIPSYNC2D_AP_Preferences import LIPSYNC2D_AP_Preferences
 from ...LIPSYNC2D_Utils import get_package_name
 from ...Core.types import VisemeData, WordTiming
-from ...lipsync_types import BpyContext, BpyObject, BpyPropertyGroup
+from ...lipsync_types import BpyAction, BpyActionKeyframeStrip, BpyContext, BpyObject, BpyPropertyGroup
 
 
 class LIPSYNC_SpriteSheetAnimator:
@@ -100,14 +103,66 @@ class LIPSYNC_SpriteSheetAnimator:
                     keyframe.interpolation = 'CONSTANT'
 
     def setup(self, obj: BpyObject):
-        pass
+        self.setup_animation_properties(obj)
+
+    def setup_animation_properties(self, obj: BpyObject):
+        _, strip = self.set_up_action(obj)
+
+        if strip is None:
+            return
+
+        self.setup_fcurves(obj, strip)
+
+
+    def setup_fcurves(self, obj: BpyObject, strip: BpyActionKeyframeStrip):
+        if not isinstance(obj.data, bpy.types.Mesh) or obj.data.shape_keys is None:
+            return
+
+        
+        self.channelbag = strip.channelbag(self._slot, ensure=True)
+
+        data_path = 'lipsync2d_props.lip_sync_2d_sprite_sheet_index'
+        fcurves = self.channelbag.fcurves
+
+        if (fcurve := fcurves.find(data_path)) is not None:
+            fcurves.remove(fcurve)
+        
+        fcurves.new(data_path)
+
+
+    def set_up_action(self, obj: BpyObject) -> tuple[BpyAction, BpyActionKeyframeStrip] | tuple[None, None]:
+        if not isinstance(obj.data, bpy.types.Mesh):
+            return (None, None)
+
+        
+        if obj.animation_data is None:
+            obj.animation_data_create()
+
+        if not isinstance(obj.animation_data, bpy.types.AnimData):
+            return (None, None)
+
+        obj_name = obj.name
+        action = bpy.data.actions.get(f"{obj_name}-LipSyncAction")
+        if action is None:
+            action = bpy.data.actions.new(f"{obj_name}-LipSyncAction")
+            layer = action.layers.new("Layer")
+            strip = cast(bpy.types.ActionKeyframeStrip, layer.strips.new(type='KEYFRAME'))
+            obj.animation_data.action = action
+        else:
+            layer = action.layers[0]
+            strip = cast(bpy.types.ActionKeyframeStrip, layer.strips[0])
+
+        self._slot = action.slots.get("OBLipSync-SpriteSheet") or action.slots.new(id_type='OBJECT', name="LipSync-SpriteSheet")
+
+        obj.animation_data.action = action
+        obj.animation_data.action_slot = self._slot
+
+        return action, strip
 
     def cleanup(self, obj: BpyObject):
         pass
 
     def poll(self, cls, context: BpyContext):
-        package_name = get_package_name()
-        prefs = context.preferences.addons[package_name].preferences  # type: ignore
         model_state = LIPSYNC2D_AP_Preferences.get_model_state()
 
         return (context.scene is not None or context.active_object is not None) and model_state != "DOWNLOADING"
