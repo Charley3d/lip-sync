@@ -157,6 +157,7 @@ class LIPSYNC2D_ShapeKeysAnimator:
 
                 # Add silence just before the next word.
                 # This prevents the lips from sliding unnaturally.
+                #TODO previous_start is not updated although new keyframe is inserted. see how to update it
                 frame = corrected_word_end_frame + self.delay_until_next_word - max(1, self.in_between_frame_threshold)
                 fcurve.keyframe_points.insert(frame, value=value, options={"FAST"})
                 self.inserted_keyframes += 1
