@@ -93,20 +93,19 @@ class LIPSYNC2D_PT_Panel(bpy.types.Panel):
             row = layout.row()
             row.prop(props, "lip_sync_2d_close_motion_duration")
 
-            row = layout.row()
-            row.label(text="Thresholds:")
-            row = layout.row()
-            row.prop(props, "lip_sync_2d_in_between_threshold")
-            row.prop(props, "lip_sync_2d_sil_threshold")
-
         panel_header, panel_body = layout.panel("cgp_lipsync_sprite_audio_dropdown", default_closed=False)
         panel_header.label(text="Audio Analysis")
         if panel_body is not None:
+            if props.lip_sync_2d_lips_type == "SHAPEKEYS":
+                self.draw_thresholds(props, panel_body, ["lip_sync_2d_in_between_threshold","lip_sync_2d_sil_threshold"])
+            elif props.lip_sync_2d_lips_type == "SPRITESHEET":
+                self.draw_thresholds(props, panel_body, ["lip_sync_2d_sps_in_between_threshold","lip_sync_2d_sps_sil_threshold"])
+
             if not is_model_installed:
                 row = layout.row()
                 row.label(text="Select a Language Model before Analyzing audio")
 
-            row = layout.row()
+            row = panel_body.row()
             row.operator("sound.cgp_analyze_audio", text="Bake audio")
             row.enabled = is_model_installed
 
@@ -158,3 +157,10 @@ class LIPSYNC2D_PT_Panel(bpy.types.Panel):
             row = box.row()
             row.alert = True
             row.operator("object.remove_lip_sync_from_selection")
+
+    def draw_thresholds(self, props, layout, data_list: list[str]):
+        row = layout.row()
+        row.label(text="Thresholds:")
+        row = layout.row()
+        for data in data_list:
+            row.prop(props, data)
