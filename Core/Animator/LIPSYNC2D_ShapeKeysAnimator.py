@@ -3,6 +3,7 @@ from typing import Any, Iterator, cast
 import bpy
 
 from ..Timeline.LIPSYNC2D_TimeConversion import LIPSYNC2D_TimeConversion
+from ...Core.constants import ACTION_SUFFIX_NAME, SLOT_SHAPE_KEY_NAME
 from ...Core.types import VisemeData, VisemeSKeyAnimationData, WordTiming
 from ...Preferences.LIPSYNC2D_AP_Preferences import LIPSYNC2D_AP_Preferences
 from ...lipsync_types import BpyAction, BpyActionKeyframeStrip, BpyActionSlot, BpyContext, BpyObject, \
@@ -257,7 +258,7 @@ class LIPSYNC2D_ShapeKeysAnimator:
 
         for fcurve in channelbag.fcurves:
             for fcurve in cast(BpyActionKeyframeStrip, action.layers[0].strips[0]).channelbag(
-                    action.slots.get("KELipSync-ShapeKeys")).fcurves:
+                    action.slots.get(f"KE{SLOT_SHAPE_KEY_NAME}")).fcurves:
                 for keyframe in fcurve.keyframe_points:
                     keyframe.interpolation = 'LINEAR'
 
@@ -356,9 +357,9 @@ class LIPSYNC2D_ShapeKeysAnimator:
             return (None, None)
 
         obj_name = obj.name
-        action = bpy.data.actions.get(f"{obj_name}-LipSyncAction")
+        action = bpy.data.actions.get(f"{obj_name}-{ACTION_SUFFIX_NAME}")
         if action is None:
-            action = bpy.data.actions.new(f"{obj_name}-LipSyncAction")
+            action = bpy.data.actions.new(f"{obj_name}-{ACTION_SUFFIX_NAME}")
             layer = action.layers.new("Layer")
             strip = cast(bpy.types.ActionKeyframeStrip, layer.strips.new(type='KEYFRAME'))
             obj.data.shape_keys.animation_data.action = action
@@ -367,7 +368,7 @@ class LIPSYNC2D_ShapeKeysAnimator:
             layer = action.layers[0]
             strip = cast(bpy.types.ActionKeyframeStrip, layer.strips[0])
 
-        self._slot = action.slots.get("KELipSync-ShapeKeys") or action.slots.new(id_type='KEY', name="LipSync-ShapeKeys")
+        self._slot = action.slots.get(f"KE{SLOT_SHAPE_KEY_NAME}") or action.slots.new(id_type='KEY', name=f"{SLOT_SHAPE_KEY_NAME}")
 
         obj.data.shape_keys.animation_data.action = action
         obj.data.shape_keys.animation_data.action_slot = self._slot

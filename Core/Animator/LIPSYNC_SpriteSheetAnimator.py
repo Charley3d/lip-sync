@@ -2,7 +2,7 @@ import bpy
 from typing import cast
 
 from ...Preferences.LIPSYNC2D_AP_Preferences import LIPSYNC2D_AP_Preferences
-from ...LIPSYNC2D_Utils import get_package_name
+from ...Core.constants import ACTION_SUFFIX_NAME, SLOT_SPRITE_SHEET_NAME
 from ...Core.types import VisemeData, WordTiming
 from ...lipsync_types import BpyAction, BpyActionKeyframeStrip, BpyContext, BpyObject, BpyPropertyGroup
 
@@ -142,9 +142,9 @@ class LIPSYNC_SpriteSheetAnimator:
             return (None, None)
 
         obj_name = obj.name
-        action = bpy.data.actions.get(f"{obj_name}-LipSyncAction")
+        action = bpy.data.actions.get(f"{obj_name}-{ACTION_SUFFIX_NAME}")
         if action is None:
-            action = bpy.data.actions.new(f"{obj_name}-LipSyncAction")
+            action = bpy.data.actions.new(f"{obj_name}-{ACTION_SUFFIX_NAME}")
             layer = action.layers.new("Layer")
             strip = cast(bpy.types.ActionKeyframeStrip, layer.strips.new(type='KEYFRAME'))
             obj.animation_data.action = action
@@ -152,7 +152,7 @@ class LIPSYNC_SpriteSheetAnimator:
             layer = action.layers[0]
             strip = cast(bpy.types.ActionKeyframeStrip, layer.strips[0])
 
-        self._slot = action.slots.get("OBLipSync-SpriteSheet") or action.slots.new(id_type='OBJECT', name="LipSync-SpriteSheet")
+        self._slot = action.slots.get(f"OB{SLOT_SPRITE_SHEET_NAME}") or action.slots.new(id_type='OBJECT', name=SLOT_SPRITE_SHEET_NAME)
 
         obj.animation_data.action = action
         obj.animation_data.action_slot = self._slot
