@@ -1,30 +1,50 @@
 import bpy
 
+from .protocols import LIPSYNC2D_AnimatorPanel
+
+from .AnimatorPanelSpriteSheetStrategy import AnimatorPanelSpriteSheetStrategy
+
+from .AnimatorPanelShapeKeysStrategy import AnimatorPanelShapeKeysStrategy
+
 from ..Core.phoneme_to_viseme import viseme_items_mpeg4_v2 as viseme_items
 from ..LIPSYNC2D_Utils import get_package_name
 
 
 class LIPSYNC2D_PT_Panel(bpy.types.Panel):
     """Creates a Panel in the scene context of the property editor"""
+
     bl_label = "Lip Sync"
     bl_idname = "LIPSYNC2D_PT_Panel"
-    bl_space_type = 'VIEW_3D'
-    bl_region_type = 'UI'
-    bl_category = 'Lip Sync'
+    bl_space_type = "VIEW_3D"
+    bl_region_type = "UI"
+    bl_category = "Lip Sync"
+
+    def __init__(self, *args, **kargs) -> None:
+        super().__init__(*args, **kargs)
+
+        self.animator_panel: LIPSYNC2D_AnimatorPanel | None = None
 
     def draw(self, context: bpy.types.Context):
-        if self.layout is None: return
-        if context.scene is None: return
-        if context.preferences is None: return
+        if self.layout is None:
+            return
+        if context.scene is None:
+            return
+        if context.preferences is None:
+            return
 
-        package_name = get_package_name()
-        prefs = context.preferences.addons[package_name].preferences  # type: ignore
         active_obj = context.active_object
 
-        if active_obj is None:
+        if active_obj is None or active_obj.type != "MESH":
+            self.layout.label(
+                text="Please, select an Object with Mesh Data", icon="INFO_LARGE"
+            )
             return
 
         if not hasattr(active_obj, "lipsync2d_props"):
+            self.layout.label(
+                text="Something wrong happened. Try uninstall / reinstall Lip Sync Addon",
+                icon="WARNING_LARGE",
+            )
             return
 
         props = active_obj.lipsync2d_props  # type: ignore
@@ -32,135 +52,46 @@ class LIPSYNC2D_PT_Panel(bpy.types.Panel):
         if props is None:
             return
 
+        if props.lip_sync_2d_lips_type == "SHAPEKEYS":
+            self.animator_panel = AnimatorPanelShapeKeysStrategy(active_obj)
+        elif props.lip_sync_2d_lips_type == "SPRITESHEET":
+            self.animator_panel = AnimatorPanelSpriteSheetStrategy(active_obj)
+
+        if self.animator_panel is None:
+            return
+
         layout = self.layout
 
         if "lip_sync_2d_sprite_sheet" not in context.active_object.lipsync2d_props:  # type: ignore
             row = layout.row(align=True)
-            row.operator('object.set_lipsync_custom_properties', text="Add Lip Sync on Selection")
+            row.operator(
+                "object.set_lipsync_custom_properties", text="Add Lip Sync on Selection"
+            )
 
-        if context.active_object is None or not hasattr(context.active_object,
-                                                        "lipsync2d_props") or "lip_sync_2d_sprite_sheet" not in \
-                context.active_object["lipsync2d_props"]: return
-
-        is_model_installed = True if prefs.current_lang not in ["", "none"] else False
+        if (
+            context.active_object is None
+            or not hasattr(context.active_object, "lipsync2d_props")
+            or "lip_sync_2d_sprite_sheet"
+            not in context.active_object["lipsync2d_props"]
+        ):
+            return
 
         row = layout.row(align=True)
         row.label(text="Animation type")
         row.prop(props, "lip_sync_2d_lips_type", text="")
-        layout.separator(factor=1)
 
-        if props.lip_sync_2d_lips_type == "SPRITESHEET":
+        layout.separator()
+        self.animator_panel.draw_visemes_section(context, layout)
+        self.animator_panel.draw_animation_section(context, layout)
+        layout.separator()
+        self.animator_panel.draw_baking_section(context, layout)
+        layout.separator()
 
-            row = layout.row()
-            row.label(text="Select your Sprite sheet")
-            layout.template_ID_preview(props, "lip_sync_2d_sprite_sheet", rows=2, cols=6, open="image.open")
-
-            row = layout.row()
-            row.label(text="Area - Edit Mode Only")
-            row = layout.row()
-            row.operator('mesh.set_lips_area', text="Set Mouth Area")
-            row = layout.row()
-            row.prop(props, "lip_sync_2d_sprite_sheet_index")
-
-            panel_header, panel_body = layout.panel("cgp_lipsync_sprite_settings_dropdown", default_closed=True)
-            panel_header.label(text="Spritesheet Settings")
-            if panel_body is not None:
-                row = panel_body.row()
-                row.label(text="Spritesheet Format")
-                row = panel_body.row(align=True)
-                row.prop(props, "lip_sync_2d_sprite_sheet_format")
-                row = panel_body.row(align=True)
-
-                if props["lip_sync_2d_sprite_sheet_format"] == 3:
-                    row.prop(props, "lip_sync_2d_sprite_sheet_rows")
-                elif props["lip_sync_2d_sprite_sheet_format"] == 2:
-                    row.prop(props, "lip_sync_2d_sprite_sheet_columns")
-                elif props["lip_sync_2d_sprite_sheet_format"] == 0:
-                    row.prop(props, "lip_sync_2d_sprite_sheet_rows")
-                elif props["lip_sync_2d_sprite_sheet_format"] == 1:
-                    row.prop(props, "lip_sync_2d_sprite_sheet_columns")
-                    row.prop(props, "lip_sync_2d_sprite_sheet_rows")
-
-                row = panel_body.row()
-                row.label(text="Scale")
-                row = panel_body.row(align=True)
-                row.prop(props, "lip_sync_2d_sprite_sheet_sprite_scale")
-                row.prop(props, "lip_sync_2d_sprite_sheet_main_scale", text="Main")
-
-        elif props.lip_sync_2d_lips_type == "SHAPEKEYS":
-            row = layout.row()
-            row.label(text="Motion:")
-            row = layout.row()
-            row.prop(props, "lip_sync_2d_close_motion_duration")
-
-        panel_header, panel_body = layout.panel("cgp_lipsync_sprite_audio_dropdown", default_closed=False)
-        panel_header.label(text="Audio Analysis")
-        if panel_body is not None:
-            if props.lip_sync_2d_lips_type == "SHAPEKEYS":
-                self.draw_thresholds(props, panel_body, ["lip_sync_2d_in_between_threshold","lip_sync_2d_sil_threshold"])
-            elif props.lip_sync_2d_lips_type == "SPRITESHEET":
-                self.draw_thresholds(props, panel_body, ["lip_sync_2d_sps_in_between_threshold","lip_sync_2d_sps_sil_threshold"])
-
-            if not is_model_installed:
-                row = layout.row()
-                row.label(text="Select a Language Model before Analyzing audio")
-
-            row = panel_body.row()
-            row.operator("sound.cgp_analyze_audio", text="Bake audio")
-            row.enabled = is_model_installed
-
-        if props.lip_sync_2d_sprite_sheet is not None and props.lip_sync_2d_lips_type == "SPRITESHEET":
-            panel_head, panel_body = layout.panel("cgp_lipsync_viseme_dropdown", default_closed=True)
-            panel_head.label(text="Viseme Settings")
-            if panel_body is not None:
-                row = panel_body.row(align=True)
-                row.label(text="Viseme")
-                row.label(text="Image index")
-
-                visemes = viseme_items(None, None)
-
-                for i, viseme in enumerate(visemes):
-                    lang_code = list(viseme)[0]
-                    row = panel_body.row(align=True)
-                    row.label(text=f"{lang_code}")
-                    row.prop(props, f"lip_sync_2d_viseme_{lang_code}", text="")
-
-        if props.lip_sync_2d_lips_type == "SHAPEKEYS":
-            panel_head, panel_body = layout.panel("cgp_lipsync_viseme_dropdown", default_closed=True)
-            panel_head.label(text="Viseme Settings")
-            if panel_body is not None:
-                row = panel_body.row(align=True)
-                row.label(text="Viseme")
-                row.label(text="Shape Key")
-
-                visemes = viseme_items(None, None)
-
-                for i, viseme in enumerate(visemes):
-                    lang_code = list(viseme)[0]
-                    row = panel_body.row(align=True)
-                    row.label(text=f"{lang_code}")
-                    row.prop(props, f"lip_sync_2d_viseme_shape_keys_{lang_code}", text="")
-
-        panel_head, panel_body = layout.panel("cgp_lipsync_edit_dropdown", default_closed=True)
-        panel_head.label(text="Edit")
-
-        if panel_body is not None:
-            box = layout.box()
-            row = box.row()
-            row.operator("object.remove_lip_sync_node_groups")
-
-            box = layout.box()
-            row = box.row()
-            row.alert = True
-            row.prop(props, "lip_sync_2d_remove_animation_data")
-            row.prop(props, "lip_sync_2d_remove_cgp_node_group")
-            row = box.row()
-            row.alert = True
-            row.operator("object.remove_lip_sync_from_selection")
+        self.animator_panel.draw_edit_section(context, layout)
 
     def draw_thresholds(self, props, layout, data_list: list[str]):
-        row = layout.row()
-        row.label(text="Thresholds:")
-        row = layout.row()
+        box = layout.box()
+        box.label(text="Thresholds:")
+        row = box.row()
         for data in data_list:
             row.prop(props, data)

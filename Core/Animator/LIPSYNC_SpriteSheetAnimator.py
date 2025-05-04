@@ -39,7 +39,7 @@ class LIPSYNC_SpriteSheetAnimator:
         self.delay_until_next_word = -1
         self.is_last_word = False
         self.is_first_word = False
-        self.time_conversion: LIPSYNC2D_TimeConversion = None
+        self.time_conversion: LIPSYNC2D_TimeConversion | None = None
 
     def clear_previous_keyframes(self, obj: BpyObject):
         """
