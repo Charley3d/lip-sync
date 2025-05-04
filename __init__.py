@@ -31,7 +31,8 @@ def register():
     bpy.utils.register_class(LIPSYNC2D_OT_DownloadModelsList)
     bpy.utils.register_class(LIPSYNC2D_OT_RemoveLipSync)
     bpy.utils.register_class(LIPSYNC2D_OT_RemoveNodeGroups)
-    bpy.types.Object.lipsync2d_props = bpy.props.PointerProperty(type=LIPSYNC2D_PG_CustomProperties) # type: ignore
+    bpy.types.Object.lipsync2d_props = bpy.props.PointerProperty(type=LIPSYNC2D_PG_CustomProperties)  # type: ignore
+
 
 def unregister():
     bpy.utils.unregister_class(LIPSYNC2D_PG_CustomProperties)
@@ -44,7 +45,7 @@ def unregister():
     bpy.utils.unregister_class(LIPSYNC2D_OT_DownloadModelsList)
     bpy.utils.unregister_class(LIPSYNC2D_OT_RemoveLipSync)
     bpy.utils.unregister_class(LIPSYNC2D_OT_RemoveNodeGroups)
-    del bpy.types.Object.lipsync2d_props # type: ignore
+    del bpy.types.Object.lipsync2d_props  # type: ignore
 
 
 if __name__ == "__main__":
