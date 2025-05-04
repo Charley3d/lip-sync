@@ -1,5 +1,6 @@
 import bpy
 
+from .protocols import LIPSYNC2D_AnimatorPanel
 from ..Panels.AnimatorPanelShapeKeysStrategy import AnimatorPanelShapeKeysStrategy
 from ..Panels.AnimatorPanelSpriteSheetStrategy import AnimatorPanelSpriteSheetStrategy
 
@@ -11,6 +12,11 @@ class LIPSYNC2D_PT_Edit(bpy.types.Panel):
     bl_region_type = "UI"
     bl_category = "Lip Sync"
     bl_options = {"DEFAULT_CLOSED"}
+
+    def __init__(self, *args, **kargs):
+        super().__init__(*args, **kargs)
+
+        self.animator_panel: LIPSYNC2D_AnimatorPanel | None = None
 
     def draw(self, context: bpy.types.Context):
         if self.layout is None:
