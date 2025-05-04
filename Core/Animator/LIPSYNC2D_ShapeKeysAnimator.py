@@ -415,15 +415,12 @@ class LIPSYNC2D_ShapeKeysAnimator:
             if shape_key.name in available_shape_keys
         ]
         self.channelbag = strip.channelbag(self._slot, ensure=True)
+        fcurves = self.channelbag.fcurves
+        fcurves: bpy.types.ActionChannelbagFCurves
+        fcurves.clear()
 
         for shape_key in self._key_blocks:
-            fcurves: bpy.types.ActionChannelbagFCurves
-            fcurves = self.channelbag.fcurves
             shape_key_data_path = f'key_blocks["{shape_key.name}"].value'
-
-            if (fcurve := fcurves.find(shape_key_data_path)) is not None:
-                fcurves.remove(fcurve)
-
             fcurves.new(shape_key_data_path)
 
     def set_up_action(

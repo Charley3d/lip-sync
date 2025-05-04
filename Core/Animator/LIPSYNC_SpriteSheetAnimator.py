@@ -245,9 +245,7 @@ class LIPSYNC_SpriteSheetAnimator:
         data_path = 'lipsync2d_props.lip_sync_2d_sprite_sheet_index'
         fcurves = self.channelbag.fcurves
 
-        if (fcurve := fcurves.find(data_path)) is not None:
-            fcurves.remove(fcurve)
-        
+        fcurves.clear()
         fcurves.new(data_path)
 
 

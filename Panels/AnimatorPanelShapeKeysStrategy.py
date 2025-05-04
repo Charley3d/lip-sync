@@ -24,9 +24,12 @@ class AnimatorPanelShapeKeysStrategy(AnimatorPanelMixin):
             (obj.data and obj.data.shape_keys and obj.data.shape_keys.use_relative)
         )
 
+    def draw_animator_section(self, context: BpyContext, layout: BpyUILayout):
+        pass
+
     def draw_animation_section(self, context: BpyContext, layout: BpyUILayout):
         panel_header, panel_body = layout.panel(
-            "cgp_lipsync_sprite_audio_dropdown", default_closed=False
+            "cgp_lipsync_animation_dropdown", default_closed=False
         )
         panel_header.label(text="Animation Settings")
         if panel_body is not None:

@@ -4,11 +4,11 @@ from ..lipsync_types import BpyContext, BpyUILayout
 
 
 class AnimatorPanelSpriteSheetStrategy(AnimatorPanelMixin):
-    def draw_animation_section(self, context: BpyContext, layout: BpyUILayout):
+    def draw_animator_section(self, context: BpyContext, layout: BpyUILayout):
         panel_header, panel_body = layout.panel(
-            "cgp_lipsync_sprite_audio_dropdown", default_closed=False
+            "cgp_lipsync_animator_dropdown", default_closed=False
         )
-        panel_header.label(text="Animation Settings")
+        panel_header.label(text="Sprite Sheet Settings")
         if panel_body is not None:
             row = panel_body.row()
             row.label(text="Area")
@@ -16,7 +16,7 @@ class AnimatorPanelSpriteSheetStrategy(AnimatorPanelMixin):
             row = panel_body.row()
             row.label(
                 text="Go in Edit Mode to define Mouth Area",
-                icon="INFO",
+                icon="INFO_LARGE",
             )
 
             row = panel_body.row()
@@ -62,9 +62,13 @@ class AnimatorPanelSpriteSheetStrategy(AnimatorPanelMixin):
             row = panel_body.row(align=True)
             row.prop(self.props, "lip_sync_2d_sprite_sheet_sprite_scale")
             row.prop(self.props, "lip_sync_2d_sprite_sheet_main_scale", text="Main")
-
-            panel_body.separator(factor=1)
-
+        
+    def draw_animation_section(self, context: BpyContext, layout: BpyUILayout):
+        panel_header, panel_body = layout.panel(
+            "cgp_lipsync_animation_dropdown", default_closed=True
+        )
+        panel_header.label(text="Animation Settings")
+        if panel_body is not None:
             self.draw_thresholds(self.props, panel_body)
 
     def draw_visemes_section(self, context: BpyContext, layout: BpyUILayout):

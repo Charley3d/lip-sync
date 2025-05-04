@@ -152,7 +152,7 @@ class LIPSYNC2D_PG_CustomProperties(bpy.types.PropertyGroup):
                 "Sprite Sheet",
                 "Use a Sprite Sheet containg all of your visemes",
             ),
-            ("SHAPEKEYS", "Shape Keys (BETA)", "Use your Shape Keys to animate mouth"),
+            ("SHAPEKEYS", "Shape Keys", "Use your Shape Keys to animate mouth"),
             # ("BONES", "Bones", "Use Bones position to animate mouth") Next release
         ],
         update=update_sprite_sheet_format,
