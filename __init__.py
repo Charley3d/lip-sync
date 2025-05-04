@@ -5,12 +5,14 @@ from .Core.LIPSYNC2D_EspeakInspector import LIPSYNC2D_EspeakInspector
 from .Core.LIPSYNC2D_VoskHelper import LIPSYNC2D_VoskHelper
 from .Operators.LIPSYNC2D_OT_AnalyzeAudio import LIPSYNC2D_OT_AnalyzeAudio
 from .Operators.LIPSYNC2D_OT_DownloadModelsList import LIPSYNC2D_OT_DownloadModelsList
+from .Operators.LIPSYNC2D_OT_RemoveAnimations import LIPSYNC2D_OT_RemoveAnimations
 from .Operators.LIPSYNC2D_OT_RemoveLipSync import LIPSYNC2D_OT_RemoveLipSync
 from .Operators.LIPSYNC2D_OT_RemoveNodeGroups import LIPSYNC2D_OT_RemoveNodeGroups
 from .Operators.LIPSYNC2D_OT_SetCustomProperties import LIPSYNC2D_OT_SetCustomProperties
 from .Operators.LIPSYNC2D_OT_SetMouthArea import LIPSYNC2D_OT_SetMouthArea
 from .Panels.LIPSYNC2D_PT_Panel import LIPSYNC2D_PT_Panel
 from .Panels.LIPSYNC2D_PT_Settings import LIPSYNC2D_PT_Settings
+from .Panels.LIPSYNC2D_PT_Edit import LIPSYNC2D_PT_Edit
 from .Preferences.LIPSYNC2D_AP_Preferences import LIPSYNC2D_AP_Preferences
 from .Properties.LIPSYNC2D_PG_CustomProperties import LIPSYNC2D_PG_CustomProperties
 
@@ -31,6 +33,8 @@ def register():
     bpy.utils.register_class(LIPSYNC2D_OT_DownloadModelsList)
     bpy.utils.register_class(LIPSYNC2D_OT_RemoveLipSync)
     bpy.utils.register_class(LIPSYNC2D_OT_RemoveNodeGroups)
+    bpy.utils.register_class(LIPSYNC2D_PT_Edit)
+    bpy.utils.register_class(LIPSYNC2D_OT_RemoveAnimations)
     bpy.types.Object.lipsync2d_props = bpy.props.PointerProperty(type=LIPSYNC2D_PG_CustomProperties)  # type: ignore
 
 
@@ -45,6 +49,8 @@ def unregister():
     bpy.utils.unregister_class(LIPSYNC2D_OT_DownloadModelsList)
     bpy.utils.unregister_class(LIPSYNC2D_OT_RemoveLipSync)
     bpy.utils.unregister_class(LIPSYNC2D_OT_RemoveNodeGroups)
+    bpy.utils.unregister_class(LIPSYNC2D_PT_Edit)
+    bpy.utils.unregister_class(LIPSYNC2D_OT_RemoveAnimations)
     del bpy.types.Object.lipsync2d_props  # type: ignore
 
 
