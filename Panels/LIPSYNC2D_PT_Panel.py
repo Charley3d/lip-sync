@@ -6,9 +6,6 @@ from .AnimatorPanelSpriteSheetStrategy import AnimatorPanelSpriteSheetStrategy
 
 from .AnimatorPanelShapeKeysStrategy import AnimatorPanelShapeKeysStrategy
 
-from ..Core.phoneme_to_viseme import viseme_items_mpeg4_v2 as viseme_items
-from ..LIPSYNC2D_Utils import get_package_name
-
 
 class LIPSYNC2D_PT_Panel(bpy.types.Panel):
     """Creates a Panel in the scene context of the property editor"""
@@ -57,8 +54,6 @@ class LIPSYNC2D_PT_Panel(bpy.types.Panel):
         elif props.lip_sync_2d_lips_type == "SPRITESHEET":
             self.animator_panel = AnimatorPanelSpriteSheetStrategy(active_obj)
 
-        if self.animator_panel is None:
-            return
 
         layout = self.layout
 
@@ -77,8 +72,12 @@ class LIPSYNC2D_PT_Panel(bpy.types.Panel):
         row.label(text="Animation type")
         row.prop(props, "lip_sync_2d_lips_type", text="")
 
+        if self.animator_panel is None:
+            return
+
         layout.separator()
-        self.animator_panel.draw_animation_section(context, layout)
+        self.animator_panel.draw_animator_section(context, layout)
         self.animator_panel.draw_visemes_section(context, layout)
+        self.animator_panel.draw_animation_section(context, layout)
         layout.separator()
         self.animator_panel.draw_baking_section(context, layout)

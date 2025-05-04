@@ -32,6 +32,9 @@ class AnimatorPanelMixin:
 
     def draw_visemes_section(self, context: BpyContext, layout: BpyUILayout):
         raise NotImplementedError()
+    
+    def draw_animator_section(self, context: BpyContext, layout: BpyUILayout):
+        raise NotImplementedError()
 
     def draw_edit_section(self, context: BpyContext, layout: BpyUILayout):
 
