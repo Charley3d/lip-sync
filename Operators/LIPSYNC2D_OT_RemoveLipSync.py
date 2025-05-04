@@ -11,14 +11,21 @@ class LIPSYNC2D_OT_RemoveLipSync(bpy.types.Operator):
     bl_idname = "object.remove_lip_sync_from_selection"
     bl_label = "Remove Lip Sync"
     bl_description = "Remove all Lip Sync properties from the selection. All custom settings will be forever lost"
-    bl_options = {'REGISTER', 'UNDO'}
+    bl_options = {"REGISTER", "UNDO"}
 
-    def execute(self, context: Context) -> set[
-        Literal['RUNNING_MODAL', 'CANCELLED', 'FINISHED', 'PASS_THROUGH', 'INTERFACE']]:
+    def execute(
+        self, context: Context
+    ) -> set[
+        Literal["RUNNING_MODAL", "CANCELLED", "FINISHED", "PASS_THROUGH", "INTERFACE"]
+    ]:
         obj = context.active_object
 
         if obj is None:
-            self.report({'ERROR'}, message="Lip Sync cannot be removed! Please, select an Active Object")
+            self.report(
+                {"ERROR"},
+                message="Lip Sync cannot be removed! Please, select an Active Object",
+            )
+            return {"FINISHED"}
 
         elif "lipsync2d_props" in obj:
 
@@ -36,6 +43,8 @@ class LIPSYNC2D_OT_RemoveLipSync(bpy.types.Operator):
 
             del obj["lipsync2d_props"]
 
-            self.report({'INFO'}, message=f"Lip Sync successfully removed! {second_message}")
+            self.report(
+                {"INFO"}, message=f"Lip Sync successfully removed! {second_message}"
+            )
 
-        return {'FINISHED'}
+        return {"FINISHED"}

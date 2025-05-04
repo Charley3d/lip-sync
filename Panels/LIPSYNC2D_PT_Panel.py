@@ -62,18 +62,15 @@ class LIPSYNC2D_PT_Panel(bpy.types.Panel):
 
         layout = self.layout
 
-        if "lip_sync_2d_sprite_sheet" not in context.active_object.lipsync2d_props:  # type: ignore
+        if (
+            context.active_object is None
+            or not hasattr(context.active_object, "lipsync2d_props")
+            or context.active_object.lipsync2d_props.lip_sync_2d_initialized == False  # type: ignore
+        ):
             row = layout.row(align=True)
             row.operator(
                 "object.set_lipsync_custom_properties", text="Add Lip Sync on Selection"
             )
-
-        if (
-            context.active_object is None
-            or not hasattr(context.active_object, "lipsync2d_props")
-            or "lip_sync_2d_sprite_sheet"
-            not in context.active_object["lipsync2d_props"]
-        ):
             return
 
         row = layout.row(align=True)
@@ -81,17 +78,7 @@ class LIPSYNC2D_PT_Panel(bpy.types.Panel):
         row.prop(props, "lip_sync_2d_lips_type", text="")
 
         layout.separator()
-        self.animator_panel.draw_visemes_section(context, layout)
         self.animator_panel.draw_animation_section(context, layout)
+        self.animator_panel.draw_visemes_section(context, layout)
         layout.separator()
         self.animator_panel.draw_baking_section(context, layout)
-        layout.separator()
-
-        self.animator_panel.draw_edit_section(context, layout)
-
-    def draw_thresholds(self, props, layout, data_list: list[str]):
-        box = layout.box()
-        box.label(text="Thresholds:")
-        row = box.row()
-        for data in data_list:
-            row.prop(props, data)

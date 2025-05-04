@@ -69,13 +69,13 @@ class AnimatorPanelSpriteSheetStrategy(AnimatorPanelMixin):
 
     def draw_visemes_section(self, context: BpyContext, layout: BpyUILayout):
         panel_head, panel_body = layout.panel(
-            "cgp_lipsync_viseme_dropdown", default_closed=False
+            "cgp_lipsync_viseme_dropdown", default_closed=True
         )
         panel_head.label(text="Viseme Settings")
         if panel_body is not None:
             row = panel_body.row(align=True)
             row.label(text="Viseme")
-            row.label(text="Shape Key")
+            row.label(text="Image index")
 
             visemes = viseme_items(None, None)
 
@@ -83,9 +83,7 @@ class AnimatorPanelSpriteSheetStrategy(AnimatorPanelMixin):
                 lang_code = list(viseme)[0]
                 row = panel_body.row(align=True)
                 row.label(text=f"{lang_code}")
-                row.prop(
-                    self.props, f"lip_sync_2d_viseme_shape_keys_{lang_code}", text=""
-                )
+                row.prop(self.props, f"lip_sync_2d_viseme_{lang_code}", text="")
 
     def draw_thresholds(self, props, layout):
         row = layout.row()

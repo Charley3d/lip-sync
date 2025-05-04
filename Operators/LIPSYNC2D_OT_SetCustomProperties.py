@@ -3,45 +3,72 @@ from typing import Literal, cast
 
 import bpy
 
-from ..Core.LIPSYNC2D_SpritesheetNode import cgp_spriteratio_node_group, cgp_spritesheet_reader_node_group
+from ..Core.phoneme_to_viseme import (
+    phonemes_to_default_sprite_index,
+    viseme_items_mpeg4_v2 as viseme_items,
+)
+
+from ..Core.LIPSYNC2D_SpritesheetNode import (
+    cgp_spriteratio_node_group,
+    cgp_spritesheet_reader_node_group,
+)
 
 
 class LIPSYNC2D_OT_SetCustomProperties(bpy.types.Operator):
     bl_idname = "object.set_lipsync_custom_properties"
     bl_label = "Set Lips Material"
-    bl_options = {'REGISTER', 'UNDO'}
+    bl_options = {"REGISTER", "UNDO"}
 
     @classmethod
     def poll(cls, context: bpy.types.Context) -> bool:
         obj = context.active_object
-        return obj is not None and obj.type == 'MESH' and (not hasattr(obj,
-                                                                       "lipsync2d_props") or "lip_sync_2d_sprite_sheet" not in obj.lipsync2d_props)  # type: ignore
+        return (
+            obj is not None
+            and obj.type == "MESH"
+            and (
+                not hasattr(obj, "lipsync2d_props")
+                or context.active_object.lipsync2d_props.lip_sync_2d_initialized  # type: ignore
+                == False
+            )
+        )  # type: ignore
 
-    def execute(self, context: bpy.types.Context) -> set[
-        Literal['RUNNING_MODAL', 'CANCELLED', 'FINISHED', 'PASS_THROUGH', 'INTERFACE']]:
+    def execute(
+        self, context: bpy.types.Context
+    ) -> set[
+        Literal["RUNNING_MODAL", "CANCELLED", "FINISHED", "PASS_THROUGH", "INTERFACE"]
+    ]:
         if context.active_object is None:
-            return {'CANCELLED'}
+            return {"CANCELLED"}
 
         create_custom_prop(context.active_object)
 
         context.active_object.lipsync2d_props.lip_sync_2d_sprite_sheet = add_default_image_spritesheet()  # type: ignore
 
-        return {'FINISHED'}
+        return {"FINISHED"}
 
 
 def add_default_image_spritesheet():
     image = bpy.data.images.get("CGP_default_spritesheet_visemes")
 
     if image is None:
-        spritesheet_path = os.path.join(os.path.dirname(__file__), "..", "Assets", "Images", "spritesheet_visemes.png")
-        image = bpy.data.images.new("CGP_default_spritesheet_visemes", width=512, height=6144)
-        image.source = 'FILE'
+        spritesheet_path = os.path.join(
+            os.path.dirname(__file__),
+            "..",
+            "Assets",
+            "Images",
+            "spritesheet_visemes.png",
+        )
+        image = bpy.data.images.new(
+            "CGP_default_spritesheet_visemes", width=512, height=6144
+        )
+        image.source = "FILE"
         image.filepath = spritesheet_path
 
     return image
 
 
 def create_custom_prop(obj: bpy.types.Object):
+    obj.lipsync2d_props.lip_sync_2d_initialized = True  # type: ignore
     obj.lipsync2d_props.lip_sync_2d_sprite_sheet = None  # type: ignore
     obj.lipsync2d_props.lip_sync_2d_main_material = None  # type: ignore
     obj.lipsync2d_props.lip_sync_2d_sprite_sheet_columns = 1  # type: ignore
@@ -54,45 +81,59 @@ def create_custom_prop(obj: bpy.types.Object):
     obj.lipsync2d_props["lip_sync_2d_viseme_shape_keys"] = 0  # type: ignore
     obj.lipsync2d_props.lip_sync_2d_in_between_threshold = 0.417  # type: ignore
 
-    # TODO: Generate this from the phoneme dict
-    obj.lipsync2d_props.lip_sync_2d_viseme_sil = 0  # type: ignore
-    obj.lipsync2d_props.lip_sync_2d_viseme_PP = 4  # type: ignore
-    obj.lipsync2d_props.lip_sync_2d_viseme_FF = 7  # type: ignore
-    obj.lipsync2d_props.lip_sync_2d_viseme_TH = 1  # type: ignore
-    obj.lipsync2d_props.lip_sync_2d_viseme_DD = 9  # type: ignore
-    obj.lipsync2d_props.lip_sync_2d_viseme_kk = 9  # type: ignore
-    obj.lipsync2d_props.lip_sync_2d_viseme_CH = 10  # type: ignore
-    obj.lipsync2d_props.lip_sync_2d_viseme_SS = 2  # type: ignore
-    obj.lipsync2d_props.lip_sync_2d_viseme_nn = 10  # type: ignore
-    obj.lipsync2d_props.lip_sync_2d_viseme_RR = 3  # type: ignore
-    obj.lipsync2d_props.lip_sync_2d_viseme_aa = 11  # type: ignore
-    obj.lipsync2d_props.lip_sync_2d_viseme_E = 8  # type: ignore
-    obj.lipsync2d_props.lip_sync_2d_viseme_ih = 6  # type: ignore
-    obj.lipsync2d_props.lip_sync_2d_viseme_oh = 5  # type: ignore
-    obj.lipsync2d_props.lip_sync_2d_viseme_ou = 5  # type: ignore
-    obj.lipsync2d_props.lip_sync_2d_viseme_UNK = 0  # type: ignore
+    visemes = viseme_items(None, None)
+    mapping = phonemes_to_default_sprite_index()
+
+    for v in visemes:
+        enum_id, _, _ = v
+        prop_name = f"lip_sync_2d_viseme_{enum_id}"
+        actual_value = getattr(obj.lipsync2d_props, prop_name)  # type: ignore
+        value = actual_value if actual_value != -1 else mapping[enum_id]
+        setattr(obj.lipsync2d_props, prop_name, value)  # type: ignore
 
 
-def add_spritesheet_node_to_mat(active_obj, material: bpy.types.Material, spritesheet_reader: bpy.types.ShaderNodeTree):
-    if material.node_tree is None: return
+def add_spritesheet_node_to_mat(
+    active_obj,
+    material: bpy.types.Material,
+    spritesheet_reader: bpy.types.ShaderNodeTree,
+):
+    if material.node_tree is None:
+        return
 
-    main_group = cast(bpy.types.ShaderNodeGroup, material.node_tree.nodes.new("ShaderNodeGroup"))
+    main_group = cast(
+        bpy.types.ShaderNodeGroup, material.node_tree.nodes.new("ShaderNodeGroup")
+    )
     main_group.name = "cgp_main_group"
-    main_group.node_tree = cast(bpy.types.ShaderNodeTree,
-                                bpy.data.node_groups.new("cgp_main_group", type='ShaderNodeTree'))
+    main_group.node_tree = cast(
+        bpy.types.ShaderNodeTree,
+        bpy.data.node_groups.new("cgp_main_group", type="ShaderNodeTree"),
+    )
 
     if main_group.node_tree.interface is None:
         return
 
-    main_group.node_tree.interface.new_socket("Shader", in_out='INPUT', socket_type='NodeSocketShader')
-    main_group.node_tree.interface.new_socket("Output", in_out='OUTPUT', socket_type='NodeSocketShader')
+    main_group.node_tree.interface.new_socket(
+        "Shader", in_out="INPUT", socket_type="NodeSocketShader"
+    )
+    main_group.node_tree.interface.new_socket(
+        "Output", in_out="OUTPUT", socket_type="NodeSocketShader"
+    )
 
-    group_input = cast(bpy.types.ShaderNodeGroup, main_group.node_tree.nodes.new("NodeGroupInput"))
-    group_output = cast(bpy.types.ShaderNodeGroup, main_group.node_tree.nodes.new("NodeGroupOutput"))
+    group_input = cast(
+        bpy.types.ShaderNodeGroup, main_group.node_tree.nodes.new("NodeGroupInput")
+    )
+    group_output = cast(
+        bpy.types.ShaderNodeGroup, main_group.node_tree.nodes.new("NodeGroupOutput")
+    )
 
-    group = cast(bpy.types.ShaderNodeGroup, main_group.node_tree.nodes.new("ShaderNodeGroup"))
+    group = cast(
+        bpy.types.ShaderNodeGroup, main_group.node_tree.nodes.new("ShaderNodeGroup")
+    )
     group.name = "cgp_spritesheet_reader"
-    principled = cast(bpy.types.ShaderNodeGroup, main_group.node_tree.nodes.new("ShaderNodeBsdfPrincipled"))
+    principled = cast(
+        bpy.types.ShaderNodeGroup,
+        main_group.node_tree.nodes.new("ShaderNodeBsdfPrincipled"),
+    )
     mix_shader = main_group.node_tree.nodes.new("ShaderNodeMixShader")
 
     # group1.node_tree.nodes.new(mix_shader.bl_idname)
@@ -132,12 +173,14 @@ def add_spritesheet_node_to_mat(active_obj, material: bpy.types.Material, sprite
             for input_name in inputs_name:
                 if input_name == "Surface":
                     node_links = node.inputs[input_name].links
-                    if node_links is None: continue
+                    if node_links is None:
+                        continue
 
                     for link in node_links:
                         prev_node = link.from_node
 
-                        if prev_node is None: return
+                        if prev_node is None:
+                            return
 
                         group.node_tree = spritesheet_reader
                         material.node_tree.links.remove(link)
@@ -161,53 +204,105 @@ def add_spritesheet_node_to_mat(active_obj, material: bpy.types.Material, sprite
                         # Connect Mix Node to Output group
                         link_nodes(main_group.node_tree, mix_shader, group_output, 0, 0)
 
-                        column_field = 'nodes["cgp_spritesheet_reader"].inputs[1].default_value'
-                        rows_field = 'nodes["cgp_spritesheet_reader"].inputs[2].default_value'
-                        index_field = 'nodes["cgp_spritesheet_reader"].inputs[0].default_value'
-                        sprite_scale_field = 'nodes["cgp_spritesheet_reader"].inputs[3].default_value'
-                        main_scale_field = 'nodes["cgp_spritesheet_reader"].inputs[4].default_value'
+                        column_field = (
+                            'nodes["cgp_spritesheet_reader"].inputs[1].default_value'
+                        )
+                        rows_field = (
+                            'nodes["cgp_spritesheet_reader"].inputs[2].default_value'
+                        )
+                        index_field = (
+                            'nodes["cgp_spritesheet_reader"].inputs[0].default_value'
+                        )
+                        sprite_scale_field = (
+                            'nodes["cgp_spritesheet_reader"].inputs[3].default_value'
+                        )
+                        main_scale_field = (
+                            'nodes["cgp_spritesheet_reader"].inputs[4].default_value'
+                        )
 
-                        add_object_driver(main_group.node_tree, column_field, active_obj,
-                                          'lipsync2d_props.lip_sync_2d_sprite_sheet_columns')
-                        add_object_driver(main_group.node_tree, rows_field, active_obj,
-                                          'lipsync2d_props.lip_sync_2d_sprite_sheet_rows')
-                        add_object_driver(main_group.node_tree, index_field, active_obj,
-                                          'lipsync2d_props.lip_sync_2d_sprite_sheet_index')
-                        add_object_driver(main_group.node_tree, sprite_scale_field, active_obj,
-                                          'lipsync2d_props.lip_sync_2d_sprite_sheet_sprite_scale')
-                        add_object_driver(main_group.node_tree, main_scale_field, active_obj,
-                                          'lipsync2d_props.lip_sync_2d_sprite_sheet_main_scale')
+                        add_object_driver(
+                            main_group.node_tree,
+                            column_field,
+                            active_obj,
+                            "lipsync2d_props.lip_sync_2d_sprite_sheet_columns",
+                        )
+                        add_object_driver(
+                            main_group.node_tree,
+                            rows_field,
+                            active_obj,
+                            "lipsync2d_props.lip_sync_2d_sprite_sheet_rows",
+                        )
+                        add_object_driver(
+                            main_group.node_tree,
+                            index_field,
+                            active_obj,
+                            "lipsync2d_props.lip_sync_2d_sprite_sheet_index",
+                        )
+                        add_object_driver(
+                            main_group.node_tree,
+                            sprite_scale_field,
+                            active_obj,
+                            "lipsync2d_props.lip_sync_2d_sprite_sheet_sprite_scale",
+                        )
+                        add_object_driver(
+                            main_group.node_tree,
+                            main_scale_field,
+                            active_obj,
+                            "lipsync2d_props.lip_sync_2d_sprite_sheet_main_scale",
+                        )
 
 
-def link_nodes(node_tree: bpy.types.NodeTree, output_node: bpy.types.Node, input_node: bpy.types.Node,
-               output_socket: int, input_socket: int):
+def link_nodes(
+    node_tree: bpy.types.NodeTree,
+    output_node: bpy.types.Node,
+    input_node: bpy.types.Node,
+    output_socket: int,
+    input_socket: int,
+):
     output = output_node.outputs[output_socket]
     input = input_node.inputs[input_socket]
     node_tree.links.new(input, output)
 
 
-def create_spritesheet_nodes(context: bpy.types.Context, material: bpy.types.Material) -> bpy.types.ShaderNodeTree:
+def create_spritesheet_nodes(
+    context: bpy.types.Context, material: bpy.types.Material
+) -> bpy.types.ShaderNodeTree:
     node_sprite_ratio = bpy.data.node_groups.get("CGP_SpriteRatio")
-    nodes_spritesheet_reader = cast(bpy.types.ShaderNodeTree, bpy.data.node_groups.get("cgp_spritesheet_reader"))
+    nodes_spritesheet_reader = cast(
+        bpy.types.ShaderNodeTree, bpy.data.node_groups.get("cgp_spritesheet_reader")
+    )
 
-    if isinstance(nodes_spritesheet_reader, bpy.types.ShaderNodeTree): return nodes_spritesheet_reader.copy()
+    if isinstance(nodes_spritesheet_reader, bpy.types.ShaderNodeTree):
+        return nodes_spritesheet_reader.copy()
 
     # TODO: Here we could have an issue if node is found but is not a shadernodetree. See if we should delete it or not
+    # TODO: context.active_object should always be valid, but maybe object should be passed as argument
     if node_sprite_ratio is None:
         node_sprite_ratio = cgp_spriteratio_node_group()
     if nodes_spritesheet_reader is None:
-        nodes_spritesheet_reader = cast(bpy.types.ShaderNodeTree, cgp_spritesheet_reader_node_group(node_sprite_ratio,
-                                                                                                    context.active_object.lipsync2d_props.lip_sync_2d_sprite_sheet))  # type: ignore
+        nodes_spritesheet_reader = cast(
+            bpy.types.ShaderNodeTree,
+            cgp_spritesheet_reader_node_group(
+                node_sprite_ratio,
+                context.active_object.lipsync2d_props.lip_sync_2d_sprite_sheet,  # type: ignore
+            ),
+        )  # type: ignore
 
     return nodes_spritesheet_reader
 
 
-def get_or_create_material(obj: bpy.types.Object, material_index: int) -> bpy.types.Material:
-    if not obj or obj.type != 'MESH' or not isinstance(obj.data, bpy.types.Mesh):
+def get_or_create_material(
+    obj: bpy.types.Object, material_index: int
+) -> bpy.types.Material:
+    if not obj or obj.type != "MESH" or not isinstance(obj.data, bpy.types.Mesh):
         raise TypeError("Object must be a mesh")
 
     # If there's already a material in the first slot
-    if obj.material_slots and material_index >= 0 and material_index < len(obj.material_slots):
+    if (
+        obj.material_slots
+        and material_index >= 0
+        and material_index < len(obj.material_slots)
+    ):
         mat = obj.material_slots[material_index].material
         if mat:
             return mat
@@ -226,22 +321,23 @@ def get_or_create_material(obj: bpy.types.Object, material_index: int) -> bpy.ty
 
 
 def add_object_driver(
-        target: bpy.types.ID,
-        target_property: str,
-        ref_obj: bpy.types.ID,
-        data_path: str,
-        expression: str = "var"
+    target: bpy.types.ID,
+    target_property: str,
+    ref_obj: bpy.types.ID,
+    data_path: str,
+    expression: str = "var",
 ):
     """Add a driver to a node socket (input) inside a material."""
 
     fcurve = cast(bpy.types.FCurve, target.driver_add(target_property))
     driver = fcurve.driver
-    if driver is None: return
+    if driver is None:
+        return
 
-    driver.type = 'SCRIPTED'
+    driver.type = "SCRIPTED"
     var = driver.variables.new()
     var.name = "var"
     var.targets[0].data_path = data_path
     var.targets[0].id = ref_obj
-    var.type = 'SINGLE_PROP'
+    var.type = "SINGLE_PROP"
     driver.expression = expression

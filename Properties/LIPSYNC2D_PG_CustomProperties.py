@@ -84,6 +84,11 @@ def shape_keys_list(self: bpy.types.bpy_struct, context: bpy.types.Context | Non
 
 
 class LIPSYNC2D_PG_CustomProperties(bpy.types.PropertyGroup):
+    lip_sync_2d_initialized: bpy.props.BoolProperty(
+        name="Initilize Lip Sync",
+        description="Initilize Lip Sync on selection",
+        default=False,
+    )  # type: ignore
     lip_sync_2d_sprite_sheet: bpy.props.PointerProperty(
         name="Sprite Sheet",
         description="The name of the addon to reload",
@@ -197,7 +202,7 @@ class LIPSYNC2D_PG_CustomProperties(bpy.types.PropertyGroup):
     lip_sync_2d_remove_animation_data: bpy.props.BoolProperty(
         name="Remove Animation",
         description="Also remove action, action slot and keyframes",
-        default=False,
+        default=True,
     )  # type: ignore
 
     lip_sync_2d_remove_cgp_node_group: bpy.props.BoolProperty(
@@ -217,7 +222,7 @@ class LIPSYNC2D_PG_CustomProperties(bpy.types.PropertyGroup):
                 cls,
                 prop_name,
                 bpy.props.IntProperty(
-                    name=f"Viseme {name}", description=desc, min=0, max=99, default=0
+                    name=f"Viseme {name}", description=desc, min=0, max=99, default=-1
                 ),  # type: ignore
             )
 

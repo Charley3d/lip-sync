@@ -34,24 +34,41 @@ class AnimatorPanelMixin:
         raise NotImplementedError()
 
     def draw_edit_section(self, context: BpyContext, layout: BpyUILayout):
-        panel_head, panel_body = layout.panel(
-            "cgp_lipsync_edit_dropdown", default_closed=True
+
+        row = layout.row()
+        row.label(text="Clean Up:")
+
+        box = layout.box()
+        row = box.row()
+        row.label(text="Shader Editor:")
+        row = box.row()
+        row.operator("object.remove_lip_sync_node_groups")
+
+        box = layout.box()
+        row = box.row()
+        row.label(text="Animation:")
+        row = box.row()
+        operator = row.operator(
+            "object.remove_lip_sync_animations", text="Remove SK Animations"
         )
-        panel_head.label(text="Edit")
+        operator.animation_type = "SHAPEKEYS"  # type: ignore
+        operator = row.operator(
+            "object.remove_lip_sync_animations", text="Remove SPT Animations"
+        )
+        operator.animation_type = "SPRITESHEET"  # type: ignore
+        row = box.row()
+        operator = row.operator(
+            "object.remove_lip_sync_animations", text="Remove all Animations"
+        )
+        operator.animation_type = "ALL"  # type: ignore
 
-        if panel_body is not None:
-            box = layout.box()
-            row = box.row()
-            row.operator("object.remove_lip_sync_node_groups")
-
-            box = layout.box()
-            row = box.row()
-            row.alert = True
-            row.prop(self.props, "lip_sync_2d_remove_animation_data")
-            row.prop(self.props, "lip_sync_2d_remove_cgp_node_group")
-            row = box.row()
-            row.alert = True
-            row.operator("object.remove_lip_sync_from_selection")
+        box = layout.box()
+        row = box.row()
+        row.prop(self.props, "lip_sync_2d_remove_animation_data")
+        row.prop(self.props, "lip_sync_2d_remove_cgp_node_group")
+        row = box.row()
+        row.alert = True
+        row.operator("object.remove_lip_sync_from_selection")
 
     def draw_baking_section(self, context: BpyContext, layout: BpyUILayout):
         if not self.is_model_installed:
