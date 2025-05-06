@@ -79,7 +79,7 @@ def create_custom_prop(obj: bpy.types.Object):
     obj.lipsync2d_props.lip_sync_2d_sprite_sheet_format = "VLINE"  # type: ignore
     obj.lipsync2d_props.lip_sync_2d_lips_type = "SPRITESHEET"  # type: ignore
     obj.lipsync2d_props["lip_sync_2d_viseme_shape_keys"] = 0  # type: ignore
-    obj.lipsync2d_props.lip_sync_2d_in_between_threshold = 0.417  # type: ignore
+    obj.lipsync2d_props.lip_sync_2d_in_between_threshold = 0.0417  # type: ignore
 
     visemes = viseme_items(None, None)
     mapping = phonemes_to_default_sprite_index()
