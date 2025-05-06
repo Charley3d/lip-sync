@@ -80,7 +80,8 @@ jobs:
             path: ./*.zip
 
   automatic-release:
-    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    needs: [ build-extension ]
+    # if: github.event_name == 'push' && github.ref == 'refs/heads/master'
     name: Automatic Release
     runs-on: ubuntu-latest
 
