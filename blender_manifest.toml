@@ -27,5 +27,6 @@ paths_exclude_pattern = [
   "/.venv311/",
   ".github/",
   ".gitignore",
-  "/scripts/"
+  "/scripts/",
+  ".releaserc"
 ]
