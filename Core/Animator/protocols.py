@@ -28,15 +28,23 @@ class LIPSYNC2D_LipSyncAnimator(Protocol):
     """
 
     inserted_keyframes: int
-    
+
     def setup(self, obj: BpyObject):
         pass
 
     def clear_previous_keyframes(self, obj: BpyObject):
         pass
 
-    def insert_keyframes(self, obj: BpyObject, props: BpyPropertyGroup, visemes_data: VisemeData, word_timing: WordTiming,
-                         delay_until_next_word: int, is_last_word: bool, index: int):
+    def insert_keyframes(
+        self,
+        obj: BpyObject,
+        props: BpyPropertyGroup,
+        visemes_data: VisemeData,
+        word_timing: WordTiming,
+        delay_until_next_word: int,
+        is_last_word: bool,
+        index: int,
+    ):
         pass
 
     def set_interpolation(self, obj: BpyObject):
@@ -47,4 +55,3 @@ class LIPSYNC2D_LipSyncAnimator(Protocol):
 
     def poll(self, cls, context: BpyContext) -> bool:
         return False
-    
