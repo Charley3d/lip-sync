@@ -1,4 +1,5 @@
 {
+  "repositoryUrl": "https://github.com/Charley3d/lip-sync.git",
   "plugins": [
     "@semantic-release/commit-analyzer",
     "@semantic-release/release-notes-generator",
