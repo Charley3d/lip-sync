@@ -89,5 +89,5 @@ jobs:
       - name: Semantic release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: npx semantic-release
+        run: npx semantic-release --repositoryUrl https://github.com/Charley3d/lip-sync.git --debug true
         
