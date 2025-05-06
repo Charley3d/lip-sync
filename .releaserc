@@ -1,0 +1,17 @@
+{
+  "plugins": [
+    "@semantic-release/commit-analyzer",
+    "@semantic-release/release-notes-generator",
+    [
+      "@semantic-release/github",
+      {
+        "assets": [
+          { "path": "iocgpoly_lip_sync-*-linux_x64.zip", "label": "LipSync for Linux ${nextRelease.gitTag}" },
+          { "path": "iocgpoly_lip_sync-*-macos_arm64.zip", "label": "LipSync for MacOS arm64 ${nextRelease.gitTag}" },
+          { "path": "iocgpoly_lip_sync-*-macos_x64.zip", "label": "LipSync for MacOS x64 ${nextRelease.gitTag}" },
+          { "path": "iocgpoly_lip_sync-*-windows_x64.zip", "label": "LipSync for Windows x64 ${nextRelease.gitTag}" }
+        ]
+      }
+    ]
+  ]
+}

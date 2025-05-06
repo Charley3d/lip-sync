@@ -78,4 +78,15 @@ jobs:
           with:
             name: extension-builds
             path: ./*.zip
+
+  automatic-release:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    name: Automatic Release
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Semantic release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npx semantic-release
         
