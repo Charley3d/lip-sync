@@ -7,6 +7,12 @@ on:
   
 jobs:
   build-extension:
+      permissions:
+        contents: write # to be able to publish a GitHub release
+        issues: write # to be able to comment on released issues
+        pull-requests: write # to be able to comment on released pull requests
+      # if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+
       name: Blender Extension Build
       runs-on: ubuntu-latest
 
@@ -19,13 +25,6 @@ jobs:
 
         - name: Build Extension with blender
           run: blender --command extension build --split-platforms
-
-          # Not used for now but will be used when automating releases
-#        - name: Get generated zip filenames
-#          id: get-zips
-#          run: |
-#            ZIP_NAMES=$(ls ./*.zip | tr '\n' ' ')
-#            echo "ZIP_NAMES=$ZIP_NAMES" >> $GITHUB_OUTPUT
 
         # Upload the full release of Blender Add-on
         - name: Clean platform-specific archives
@@ -73,28 +72,14 @@ jobs:
               rm -rf "$temp_dir"
             done
 
+        - name: Semantic release
+          env:
+            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          run: npx semantic-release
+          
         - name: Upload Blender Addon
           uses: actions/upload-artifact@v4
           with:
             name: extension-builds
             path: ./*.zip
-
-  automatic-release:
-    permissions:
-        contents: write # to be able to publish a GitHub release
-        issues: write # to be able to comment on released issues
-        pull-requests: write # to be able to comment on released pull requests
-    needs: [ build-extension ]
-    # if: github.event_name == 'push' && github.ref == 'refs/heads/master'
-    name: Automatic Release
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
-        
-      - name: Semantic release
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: npx semantic-release --repositoryUrl https://github.com/Charley3d/lip-sync.git --debug true
         
