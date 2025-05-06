@@ -1,4 +1,4 @@
-name: Simple Build
+name: Publish Release
 
 on:
   push:
@@ -7,25 +7,55 @@ on:
   
 jobs:
   build-extension:
+      permissions:
+        contents: write # to be able to publish a GitHub release
+        issues: write # to be able to comment on released issues
+        pull-requests: write # to be able to comment on released pull requests
+
       name: Blender Extension Build
       runs-on: ubuntu-latest
 
       steps:
         - name: Checkout repo
           uses: actions/checkout@v4
+        - name: Get next version from semantic-release
+          id: next_version
+          env:
+            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          run: |
+            OUTPUT=$(npx semantic-release --dry-run 2>&1 || true)
+            echo "$OUTPUT"
+
+            VERSION=$(echo "$OUTPUT" | grep -oP 'The next release version is \K[0-9]+\.[0-9]+\.[0-9]+' || true)
+
+            if [ -z "$VERSION" ]; then
+              echo "⚠️ No new version detected (probably no semantic commits)."
+              exit 0
+            fi
+
+            echo "✅ Found next version: $VERSION"
+            echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+        - name: Set up Python
+          if: steps.next_version.outputs.version != ''
+          uses: actions/setup-python@v4
+          with:
+            python-version: '3.11'
+  
+        - name: Install tomlkit
+          if: steps.next_version.outputs.version != ''
+          run: pip install tomlkit
+
+        - name: Update version in Blender Manifest
+          if: steps.next_version.outputs.version != ''
+          run: |
+            python scripts/update_version.py ${{ steps.next_version.outputs.version }}
 
         - name: Install Blender via Snap
           run: sudo snap install blender --classic
 
         - name: Build Extension with blender
           run: blender --command extension build --split-platforms
-
-          # Not used for now but will be used when automating releases
-#        - name: Get generated zip filenames
-#          id: get-zips
-#          run: |
-#            ZIP_NAMES=$(ls ./*.zip | tr '\n' ' ')
-#            echo "ZIP_NAMES=$ZIP_NAMES" >> $GITHUB_OUTPUT
 
         # Upload the full release of Blender Add-on
         - name: Clean platform-specific archives
@@ -73,7 +103,14 @@ jobs:
               rm -rf "$temp_dir"
             done
 
+        - name: Semantic release
+          # if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+          env:
+            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          run: npx semantic-release --debug true
+          
         - name: Upload Blender Addon
+          if: ${{ github.event_name == 'workflow_dispatch' || steps.next_version.outputs.version == '' }}
           uses: actions/upload-artifact@v4
           with:
             name: extension-builds
