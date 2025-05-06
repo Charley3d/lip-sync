@@ -29,6 +29,8 @@ jobs:
 
         - name: Get next version from semantic-release
           id: next_version
+          env:
+            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           run: |
             VERSION=$(npx semantic-release --dry-run | grep -oP 'The next release version is \K[0-9]+\.[0-9]+\.[0-9]+')
             echo "version=$VERSION" >> $GITHUB_OUTPUT
