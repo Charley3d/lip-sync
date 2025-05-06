@@ -11,7 +11,6 @@ jobs:
         contents: write # to be able to publish a GitHub release
         issues: write # to be able to comment on released issues
         pull-requests: write # to be able to comment on released pull requests
-      # if: github.event_name == 'push' && github.ref == 'refs/heads/master'
 
       name: Blender Extension Build
       runs-on: ubuntu-latest
@@ -19,6 +18,24 @@ jobs:
       steps:
         - name: Checkout repo
           uses: actions/checkout@v4
+
+        - name: Set up Python
+          uses: actions/setup-python@v4
+          with:
+            python-version: '3.11'
+  
+        - name: Install tomlkit
+          run: pip install tomlkit
+
+        - name: Get next version from semantic-release
+          id: next_version
+          run: |
+            VERSION=$(npx semantic-release --dry-run | grep -oP 'The next release version is \K[0-9]+\.[0-9]+\.[0-9]+')
+            echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+        - name: Update version in Blender Manifest
+          run: |
+            python scripts/update_version.py ${{ steps.next_version.outputs.version }}
 
         - name: Install Blender via Snap
           run: sudo snap install blender --classic
@@ -73,11 +90,13 @@ jobs:
             done
 
         - name: Semantic release
+          # if: github.event_name == 'push' && github.ref == 'refs/heads/master'
           env:
             GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           run: npx semantic-release
           
         - name: Upload Blender Addon
+          if: github.event_name == 'workflow_dispatch'
           uses: actions/upload-artifact@v4
           with:
             name: extension-builds
