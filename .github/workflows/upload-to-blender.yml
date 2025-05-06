@@ -25,7 +25,7 @@ jobs:
 
       - name: Upload to Extensions Platform
         env:
-          EXTENSION: typst_importer
+          EXTENSION: iocgpoly_lip_sync
         run: |
           for zipfile in assets/*.zip; do
             echo "Uploading $zipfile to Blender Extensions Platform"
