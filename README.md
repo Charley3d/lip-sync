@@ -1,7 +1,9 @@
 # 🗣️ Blender Lip Sync Addon
 
+Official Documentation: [https://docs.cgpoly.io](https://docs.cgpoly.io/lip-sync-documentation)
+
 A **Blender addon** for automatic lip-syncing based on audio input.  
-Cross-platform (Windows, macOS, Linux), works **out of the box** with **30 languages**.
+Cross-platform (Windows, macOS, Linux), works **out of the box** with **~25 languages**.
 
 ⚡ **Just install it from Blender’s Add-ons panel and you’re ready to go!**
 ## Video Demo
@@ -19,21 +21,22 @@ Wall Art 06 by Jarlan Perez [CC-BY](https://creativecommons.org/licenses/by/3.0/
 ## ✨ Features
 
 - 🎤 Converts voice audio into animated mouth shapes
+- Interpolates between Shape Key to give natural lips motion
 - 🖼️ Projects a viseme **spritesheet** onto your character’s face (one spritesheet is shipped with the add-on, but you can use your own)
 - 🧠 Uses offline speech recognition (Vosk + Phonemizer + eSpeak)
 - 🖥️ Fully supported on Windows, macOS and Linux
-- 🔜 Future upgrade: **shapekey-based animation** for facial rigs
+- 🔜 Future upgrade: **Pose-based animation** for facial rigs
 
 ## 📦 Installation
 
 1. Open Blender.
-2. Go to **Edit > Preferences > Add-ons > Install**.
-3. Select the `.zip` file of the addon.
-4. Enable it in the list – done!
+2. Go to **Edit > Preferences > Get Extensions**.
+3. Look for **Lip Sync**
+4. Install it – done!
 
 When you select a Language Model for the first time, Model file is downloaded and cached for future uses  (~40Mo, depending on the language).
 
-## 🛠️ How to Use
+## 🛠️ How to Use (Spritesheet)
 
 1. Import or create a 3D character.
 2. Add your movie / sound clip in Video Sequencer
@@ -47,12 +50,12 @@ When you select a Language Model for the first time, Model file is downloaded an
 
 - [x] Sprite-based viseme projection
 - [x] Timeline keyframe baking
-- [ ] Shapekey-based viseme support
+- [x] Shapekey-based viseme support
+- [ ] Pose-based animation
 
 ## 🐞 Known Issues
 
-- Your Movie / Sound clip needs to be placed at the \#1 frame of Video Sequencer
-- Ukrainian Language cannot be cached (it works but it is downloaded each time you select it)
+- Characters require no rotation and applied Scale
 
 ## 🧩 Compatibility
 
