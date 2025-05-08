@@ -7,10 +7,10 @@ Cross-platform (Windows, macOS, Linux), works **out of the box** with **~25 lang
 
 ⚡ **Just install it from Blender’s Add-ons panel and you’re ready to go!**
 ## Video Demo
-### Lip Sync on a short animation
+
+https://github.com/user-attachments/assets/cb90ea7b-02fc-4ca1-b19f-631024cd79cd
+
 https://github.com/user-attachments/assets/57ea3912-2d50-4090-ba49-3035ab673a05
-### Animation Making Of:
-https://github.com/user-attachments/assets/cb5fa9a6-6deb-4997-a5af-41c00d0cefee
 
 Animated Platformer Character by [Quaternius](https://poly.pizza/m/kKtL4zvS3n)
 
