@@ -7,6 +7,7 @@ from .Animator.LIPSYNC2D_ShapeKeysAnimator import LIPSYNC2D_ShapeKeysAnimator
 from .types import VisemeData, WordTiming
 from ..Core.LIPSYNC2D_ISOLangConverter import LIPSYNC2D_ISOLangConverter
 from ..Core.phoneme_to_viseme import phoneme_to_viseme_arkit_v2 as phoneme_to_viseme
+from ..Core.Timeline.LIPSYNC2D_Timeline import LIPSYNC2D_Timeline
 from ..Preferences.LIPSYNC2D_AP_Preferences import LIPSYNC2D_AP_Preferences
 from ..lipsync_types import BpyContext, BpyRenderSettings
 
@@ -30,8 +31,8 @@ class LIPSYNC2D_DialogInspector:
         return phoneme_to_viseme.get(clean, "UNK")
 
     def get_word_timing(self, recognized_word) -> WordTiming:
-        word_frame_start = self.time_conversion.time_to_frame(recognized_word['start']) + max(0,LIPSYNC2D_ShapeKeysAnimator.get_frame_start() - 1)
-        word_frame_end = self.time_conversion.time_to_frame(recognized_word['end']) + max(0, LIPSYNC2D_ShapeKeysAnimator.get_frame_start() - 1)
+        word_frame_start = self.time_conversion.time_to_frame(recognized_word['start']) + max(0,LIPSYNC2D_Timeline.get_frame_start() - 1)
+        word_frame_end = self.time_conversion.time_to_frame(recognized_word['end']) + max(0, LIPSYNC2D_Timeline.get_frame_start() - 1)
         duration = word_frame_end - word_frame_start
 
         return {

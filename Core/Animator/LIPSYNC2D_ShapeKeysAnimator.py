@@ -2,14 +2,17 @@ from typing import Any, Iterator, cast
 
 import bpy
 
+
 from ..phoneme_to_viseme import viseme_items_mpeg4_v2
 
 from ..Timeline.LIPSYNC2D_TimeConversion import LIPSYNC2D_TimeConversion
 from ...Core.constants import ACTION_SUFFIX_NAME, SLOT_SHAPE_KEY_NAME
+from ...Core.Timeline.LIPSYNC2D_Timeline import LIPSYNC2D_Timeline
 from ...Core.types import VisemeData, VisemeSKeyAnimationData, WordTiming
 from ...Preferences.LIPSYNC2D_AP_Preferences import LIPSYNC2D_AP_Preferences
 from ...lipsync_types import (
     BpyAction,
+    BpyActionChannelbag,
     BpyActionKeyframeStrip,
     BpyActionSlot,
     BpyContext,
@@ -48,6 +51,7 @@ class LIPSYNC2D_ShapeKeysAnimator:
         self.is_first_word = False
         self.time_conversion = None
         self.close_motion_duration = -1
+        self.channelbag: BpyActionChannelbag
 
     @staticmethod
     def get_shape_key_action(obj: BpyObject):
@@ -214,7 +218,7 @@ class LIPSYNC2D_ShapeKeysAnimator:
                 fcurve: bpy.types.FCurve
                 value = 1 if silence_data_path == fcurve.data_path else 0
                 frame = max(
-                    LIPSYNC2D_ShapeKeysAnimator.get_frame_start(),
+                    LIPSYNC2D_Timeline.get_frame_start(),
                     self.word_start_frame - max(1, self.close_motion_duration),
                 )
                 fcurve.keyframe_points.insert(frame, value=value, options={"FAST"})
@@ -414,6 +418,8 @@ class LIPSYNC2D_ShapeKeysAnimator:
         if not isinstance(obj.data, bpy.types.Mesh) or obj.data.shape_keys is None:
             return
 
+        props = obj.lipsync2d_props  # type: ignore
+
         available_shape_keys = self.get_available_shape_key_names()
         self._key_blocks = [
             shape_key
@@ -423,11 +429,14 @@ class LIPSYNC2D_ShapeKeysAnimator:
         self.channelbag = strip.channelbag(self._slot, ensure=True)
         fcurves = self.channelbag.fcurves
         fcurves: bpy.types.ActionChannelbagFCurves
-        fcurves.clear()
+
+        if props.lip_sync_2d_use_clear_keyframes:
+            fcurves.clear()
 
         for shape_key in self._key_blocks:
             shape_key_data_path = f'key_blocks["{shape_key.name}"].value'
-            fcurves.new(shape_key_data_path)
+            if fcurves.find(shape_key_data_path) is None:
+                fcurves.new(shape_key_data_path)
 
     def set_up_action(
         self, obj: BpyObject
@@ -485,20 +494,6 @@ class LIPSYNC2D_ShapeKeysAnimator:
         return (
             context.scene is not None or context.active_object is not None
         ) and model_state != "DOWNLOADING"
-
-    @staticmethod
-    def get_fps_range() -> int:
-        if bpy.context.scene is None:
-            return -1
-
-        return bpy.context.scene.frame_end - bpy.context.scene.frame_start
-
-    @staticmethod
-    def get_frame_start():
-        if bpy.context.scene is None:
-            return -1
-
-        return bpy.context.scene.frame_start
 
     @staticmethod
     def get_corrected_end_frame(word_start_frame, visemes_data: VisemeData) -> int:

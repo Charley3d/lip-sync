@@ -82,6 +82,24 @@ def shape_keys_list(self: bpy.types.bpy_struct, context: bpy.types.Context | Non
 
     return result
 
+def set_bake_end(self, value):
+    if value < self.lip_sync_2d_bake_start:
+        self["lip_sync_2d_bake_start"] = value
+
+    self["lip_sync_2d_bake_end"] = value
+
+def get_bake_end(self):
+    return self["lip_sync_2d_bake_end"]
+
+def set_bake_start(self, value):
+    if value > self.lip_sync_2d_bake_end:
+        self["lip_sync_2d_bake_end"] = value
+
+    self["lip_sync_2d_bake_start"] = value
+
+def get_bake_start(self):
+    return self["lip_sync_2d_bake_start"]
+
 
 class LIPSYNC2D_PG_CustomProperties(bpy.types.PropertyGroup):
     lip_sync_2d_initialized: bpy.props.BoolProperty(
@@ -209,6 +227,36 @@ class LIPSYNC2D_PG_CustomProperties(bpy.types.PropertyGroup):
         name="Remove Nodes",
         description="Also remove node groups from Object's Materials",
         default=True,
+    )  # type: ignore
+
+    lip_sync_2d_use_clear_keyframes: bpy.props.BoolProperty(
+        name="Clear Keyframes",
+        description="Clear Keyframes before Bake",
+        default=True,
+    )  # type: ignore
+
+    lip_sync_2d_use_bake_range: bpy.props.BoolProperty(
+        name="Use Range",
+        description="Only bake between specified range",
+        default=False,
+    )  # type: ignore
+
+    lip_sync_2d_bake_start: bpy.props.IntProperty(
+        name="Bake Start",
+        description="Start Baking at this frame",
+        default=1,
+        min=0,
+        set=set_bake_start,
+        get=get_bake_start
+    )  # type: ignore
+
+    lip_sync_2d_bake_end: bpy.props.IntProperty(
+        name="Bake End",
+        description="End Baking at this frame",
+        default=250,
+        min=0,
+        set=set_bake_end,
+        get=get_bake_end
     )  # type: ignore
 
     @classmethod
