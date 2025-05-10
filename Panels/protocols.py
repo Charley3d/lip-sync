@@ -18,3 +18,6 @@ class LIPSYNC2D_AnimatorPanel(Protocol):
 
     def draw_animator_section(self, context: BpyContext, layout: BpyUILayout):
         pass
+
+    def draw_bake_section(self, context: BpyContext, layout: BpyUILayout):
+        pass

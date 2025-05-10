@@ -11,6 +11,7 @@ from ..Core.Animator.LIPSYNC_SpriteSheetAnimator import LIPSYNC_SpriteSheetAnima
 from ..Core.Animator.protocols import LIPSYNC2D_LipSyncAnimator
 from ..Core.LIPSYNC2D_DialogInspector import LIPSYNC2D_DialogInspector
 from ..Core.LIPSYNC2D_VoskHelper import LIPSYNC2D_VoskHelper
+from ..Core.Timeline.LIPSYNC2D_Timeline import LIPSYNC2D_Timeline
 from ..LIPSYNC2D_Utils import get_package_name
 from ..lipsync_types import BpyObject
 
@@ -18,6 +19,7 @@ from ..lipsync_types import BpyObject
 class LIPSYNC2D_OT_AnalyzeAudio(bpy.types.Operator):
     bl_idname = "sound.cgp_analyze_audio"
     bl_label = "Bake audio"
+    bl_description = "Analyze audio and insert Keyframes on detected phonemes"
     bl_options = {"REGISTER", "UNDO"}
 
     animator: LIPSYNC2D_LipSyncAnimator
@@ -57,6 +59,7 @@ class LIPSYNC2D_OT_AnalyzeAudio(bpy.types.Operator):
             self.report(type={"ERROR"}, message="No sound detected in Sequence Editor")
             return {"CANCELLED"}
 
+        self.set_bake_range()
         file_path = extract_audio()
 
         if not os.path.isfile(f"{file_path}"):
@@ -64,12 +67,14 @@ class LIPSYNC2D_OT_AnalyzeAudio(bpy.types.Operator):
                 type={"ERROR"},
                 message="Error while importing extracted audio WAV file from /tmp",
             )
+            self.reset_bake_range()
             return {"CANCELLED"}
 
         model = self.get_model(prefs)
         result = self.vosk_recognize_voice(file_path, model)
 
         if "result" not in result:
+            self.reset_bake_range()
             return {"FINISHED"}
 
         recognized_words = result["result"]
@@ -89,6 +94,7 @@ class LIPSYNC2D_OT_AnalyzeAudio(bpy.types.Operator):
         )
         auto_obj.set_interpolation(obj)
         auto_obj.cleanup(obj)
+        self.reset_bake_range()
 
         self.report(
             {"INFO"}, message=f"{auto_obj.inserted_keyframes} keyframes inserted"
@@ -180,6 +186,36 @@ class LIPSYNC2D_OT_AnalyzeAudio(bpy.types.Operator):
             result = json.loads(rec.FinalResult())
         return result
 
+    def set_bake_range(self) -> None:
+        if bpy.context.scene is None:
+            return
+        
+        props = bpy.context.active_object.lipsync2d_props # type: ignore
+        bake_start = props.lip_sync_2d_bake_start
+        bake_end = props.lip_sync_2d_bake_end
+        use_bake_range = props.lip_sync_2d_use_bake_range
+
+        if not use_bake_range:
+            return
+        
+        self.frame_start = LIPSYNC2D_Timeline.get_frame_start()
+        self.frame_end = LIPSYNC2D_Timeline.get_frame_end()
+
+        bpy.context.scene.frame_start = max(0, bake_start)
+        # Bake end should never be lower than bake start
+        bpy.context.scene.frame_end = max(bake_start, bake_end)
+
+    def reset_bake_range(self) -> None:
+        if bpy.context.scene is None:
+            return
+        props = bpy.context.active_object.lipsync2d_props # type: ignore
+        use_bake_range = props.lip_sync_2d_use_bake_range
+
+        if not use_bake_range:
+            return
+        
+        bpy.context.scene.frame_start = self.frame_start
+        bpy.context.scene.frame_end = self.frame_end
 
 def extract_audio():
     package_name = cast(str, get_package_name())

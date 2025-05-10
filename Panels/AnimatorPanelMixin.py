@@ -86,3 +86,24 @@ class AnimatorPanelMixin:
             "sound.cgp_analyze_audio", text="Bake audio", icon="SCRIPTPLUGINS"
         )
         new_row.enabled = self.is_model_installed
+
+    def draw_bake_section(self, context: BpyContext, layout: BpyUILayout):
+        panel_head, panel_body = layout.panel(
+            "cgp_lipsync_bake_settings_dropdown", default_closed=True
+        )
+        panel_head.label(text="Bake Settings")
+
+        if panel_body is not None:
+            row = panel_body.row()
+            row.label(text="Misc:")
+            row = panel_body.row()
+            row.prop(self.props, "lip_sync_2d_use_clear_keyframes")
+            row = panel_body.row()
+            row.label(text="Range:")
+            row = panel_body.row()
+            row.prop(self.props, "lip_sync_2d_use_bake_range")
+            row = panel_body.row(align=True)
+            row.prop(self.props, "lip_sync_2d_bake_start", text="Start")
+            row.prop(self.props, "lip_sync_2d_bake_end", text="End")
+            row.enabled = self.props.lip_sync_2d_use_bake_range # type: ignore
+            
