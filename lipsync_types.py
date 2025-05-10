@@ -14,6 +14,7 @@ if TYPE_CHECKING:
         ShapeKey,
         ActionSlot,
         Mesh,
+        ActionChannelbag
     )
 
 # Export commonly used types
@@ -28,3 +29,4 @@ BpyMesh: TypeAlias = "Mesh"
 BpyAction: TypeAlias = "Action"
 BpyActionKeyframeStrip: TypeAlias = "ActionKeyframeStrip"
 BpyUILayout: TypeAlias = "UILayout"
+BpyActionChannelbag: TypeAlias = "ActionChannelbag"

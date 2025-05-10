@@ -3,8 +3,9 @@ from typing import cast
 
 from ...Preferences.LIPSYNC2D_AP_Preferences import LIPSYNC2D_AP_Preferences
 from ...Core.constants import ACTION_SUFFIX_NAME, SLOT_SPRITE_SHEET_NAME
+from ...Core.Timeline.LIPSYNC2D_Timeline import LIPSYNC2D_Timeline
 from ...Core.types import VisemeData, WordTiming
-from ...lipsync_types import BpyAction, BpyActionSlot, BpyActionKeyframeStrip, BpyContext, BpyObject, BpyPropertyGroup
+from ...lipsync_types import BpyAction, BpyActionChannelbag, BpyActionSlot, BpyActionKeyframeStrip, BpyContext, BpyObject, BpyPropertyGroup
 from .LIPSYNC2D_ShapeKeysAnimator import LIPSYNC2D_ShapeKeysAnimator
 from ..Timeline.LIPSYNC2D_TimeConversion import LIPSYNC2D_TimeConversion
 
@@ -40,6 +41,7 @@ class LIPSYNC_SpriteSheetAnimator:
         self.is_last_word = False
         self.is_first_word = False
         self.time_conversion: LIPSYNC2D_TimeConversion | None = None
+        self.channelbag: BpyActionChannelbag
 
     def clear_previous_keyframes(self, obj: BpyObject):
         """
@@ -128,8 +130,8 @@ class LIPSYNC_SpriteSheetAnimator:
         if self.is_first_word:
             for fcurve in self.channelbag.fcurves:
                 fcurve: bpy.types.FCurve
-                value = props[f"lip_sync_2d_viseme_sil"]
-                frame = max(LIPSYNC2D_ShapeKeysAnimator.get_frame_start(),
+                value = props["lip_sync_2d_viseme_sil"]
+                frame = max(LIPSYNC2D_Timeline.get_frame_start(),
                             self.word_start_frame - max(1, self.in_between_frame_threshold))
                 fcurve.keyframe_points.insert(frame, value=value, options={"FAST"})
 
@@ -240,13 +242,17 @@ class LIPSYNC_SpriteSheetAnimator:
         if not isinstance(obj.data, bpy.types.Mesh):
             return
 
+        props = obj.lipsync2d_props  # type: ignore
         self.channelbag = strip.channelbag(self._slot, ensure=True)
 
         data_path = 'lipsync2d_props.lip_sync_2d_sprite_sheet_index'
         fcurves = self.channelbag.fcurves
 
-        fcurves.clear()
-        fcurves.new(data_path)
+        if props.lip_sync_2d_use_clear_keyframes:
+            fcurves.clear()
+        
+        if fcurves.find(data_path) is None:
+            fcurves.new(data_path)
 
 
     def set_up_action(self, obj: BpyObject) -> tuple[BpyAction, BpyActionKeyframeStrip] | tuple[None, None]:

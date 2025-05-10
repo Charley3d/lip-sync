@@ -43,7 +43,7 @@ class LIPSYNC2D_LipSyncAnimator(Protocol):
         word_timing: WordTiming,
         delay_until_next_word: int,
         is_last_word: bool,
-        index: int,
+        word_index: int,
     ):
         pass
 

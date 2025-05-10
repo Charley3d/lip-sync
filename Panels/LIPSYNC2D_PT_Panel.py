@@ -79,5 +79,6 @@ class LIPSYNC2D_PT_Panel(bpy.types.Panel):
         self.animator_panel.draw_animator_section(context, layout)
         self.animator_panel.draw_visemes_section(context, layout)
         self.animator_panel.draw_animation_section(context, layout)
+        self.animator_panel.draw_bake_section(context, layout)
         layout.separator()
         self.animator_panel.draw_baking_section(context, layout)
