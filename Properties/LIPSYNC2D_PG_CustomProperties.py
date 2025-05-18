@@ -82,20 +82,24 @@ def shape_keys_list(self: bpy.types.bpy_struct, context: bpy.types.Context | Non
 
     return result
 
+
 def set_bake_end(self, value):
     if value < self.lip_sync_2d_bake_start:
         self["lip_sync_2d_bake_start"] = value
 
     self["lip_sync_2d_bake_end"] = value
 
+
 def get_bake_end(self):
     return self["lip_sync_2d_bake_end"]
+
 
 def set_bake_start(self, value):
     if value > self.lip_sync_2d_bake_end:
         self["lip_sync_2d_bake_end"] = value
 
     self["lip_sync_2d_bake_start"] = value
+
 
 def get_bake_start(self):
     return self["lip_sync_2d_bake_start"]
@@ -171,7 +175,7 @@ class LIPSYNC2D_PG_CustomProperties(bpy.types.PropertyGroup):
                 "Use a Sprite Sheet containg all of your visemes",
             ),
             ("SHAPEKEYS", "Shape Keys", "Use your Shape Keys to animate mouth"),
-            # ("BONES", "Bones", "Use Bones position to animate mouth") Next release
+            ("POSELIBRARY", "Pose Library", "Use Pose Library to animate mouth"),
         ],
         update=update_sprite_sheet_format,
         default=0,
@@ -247,7 +251,7 @@ class LIPSYNC2D_PG_CustomProperties(bpy.types.PropertyGroup):
         default=1,
         min=0,
         set=set_bake_start,
-        get=get_bake_start
+        get=get_bake_start,
     )  # type: ignore
 
     lip_sync_2d_bake_end: bpy.props.IntProperty(
@@ -256,7 +260,7 @@ class LIPSYNC2D_PG_CustomProperties(bpy.types.PropertyGroup):
         default=250,
         min=0,
         set=set_bake_end,
-        get=get_bake_end
+        get=get_bake_end,
     )  # type: ignore
 
     @classmethod
@@ -285,3 +289,20 @@ class LIPSYNC2D_PG_CustomProperties(bpy.types.PropertyGroup):
                     default=0,
                 ),  # type: ignore
             )
+
+            prop_name = f"lip_sync_2d_viseme_pose_{enum_id}"
+            setattr(
+                cls,
+                prop_name,
+                bpy.props.PointerProperty(
+                    type=bpy.types.Action,
+                    name=f"Viseme {name}",
+                    description=desc,
+                    poll=poll_pose_lib,
+                ),
+            )
+
+
+def poll_pose_lib(self, obj: bpy.types.ID):
+
+    return bool(obj.asset_data)
