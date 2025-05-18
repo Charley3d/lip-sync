@@ -153,6 +153,7 @@ class LIPSYNC2D_OT_AnalyzeAudio(bpy.types.Operator):
         automations = {
             "SPRITESHEET": LIPSYNC_SpriteSheetAnimator,
             "SHAPEKEYS": LIPSYNC2D_ShapeKeysAnimator,
+            "POSELIBRARY": LIPSYNC2D_ShapeKeysAnimator,
         }
 
         return automations[type]()
@@ -189,15 +190,15 @@ class LIPSYNC2D_OT_AnalyzeAudio(bpy.types.Operator):
     def set_bake_range(self) -> None:
         if bpy.context.scene is None:
             return
-        
-        props = bpy.context.active_object.lipsync2d_props # type: ignore
+
+        props = bpy.context.active_object.lipsync2d_props  # type: ignore
         bake_start = props.lip_sync_2d_bake_start
         bake_end = props.lip_sync_2d_bake_end
         use_bake_range = props.lip_sync_2d_use_bake_range
 
         if not use_bake_range:
             return
-        
+
         self.frame_start = LIPSYNC2D_Timeline.get_frame_start()
         self.frame_end = LIPSYNC2D_Timeline.get_frame_end()
 
@@ -208,14 +209,15 @@ class LIPSYNC2D_OT_AnalyzeAudio(bpy.types.Operator):
     def reset_bake_range(self) -> None:
         if bpy.context.scene is None:
             return
-        props = bpy.context.active_object.lipsync2d_props # type: ignore
+        props = bpy.context.active_object.lipsync2d_props  # type: ignore
         use_bake_range = props.lip_sync_2d_use_bake_range
 
         if not use_bake_range:
             return
-        
+
         bpy.context.scene.frame_start = self.frame_start
         bpy.context.scene.frame_end = self.frame_end
+
 
 def extract_audio():
     package_name = cast(str, get_package_name())
