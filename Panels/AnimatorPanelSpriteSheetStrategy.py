@@ -62,7 +62,7 @@ class AnimatorPanelSpriteSheetStrategy(AnimatorPanelMixin):
             row = panel_body.row(align=True)
             row.prop(self.props, "lip_sync_2d_sprite_sheet_sprite_scale")
             row.prop(self.props, "lip_sync_2d_sprite_sheet_main_scale", text="Main")
-        
+
     def draw_animation_section(self, context: BpyContext, layout: BpyUILayout):
         panel_header, panel_body = layout.panel(
             "cgp_lipsync_animation_dropdown", default_closed=True

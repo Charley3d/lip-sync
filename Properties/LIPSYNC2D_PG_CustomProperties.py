@@ -105,6 +105,10 @@ def get_bake_start(self):
     return self["lip_sync_2d_bake_start"]
 
 
+def armature_prop_poll(self, obj):
+    return obj.type == "ARMATURE"
+
+
 class LIPSYNC2D_PG_CustomProperties(bpy.types.PropertyGroup):
     lip_sync_2d_initialized: bpy.props.BoolProperty(
         name="Initilize Lip Sync",
@@ -261,6 +265,13 @@ class LIPSYNC2D_PG_CustomProperties(bpy.types.PropertyGroup):
         min=0,
         set=set_bake_end,
         get=get_bake_end,
+    )  # type: ignore
+
+    lip_sync_2d_armature_to_animate: bpy.props.PointerProperty(
+        name="Armature",
+        description="Armature to animate",
+        type=bpy.types.Object,
+        poll=armature_prop_poll,
     )  # type: ignore
 
     @classmethod
