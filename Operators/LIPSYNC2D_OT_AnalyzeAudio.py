@@ -6,6 +6,8 @@ from typing import Literal, cast
 import bpy
 from vosk import KaldiRecognizer, Model
 
+from ..Core.Animator.LIPSYNC2D_PoseLibraryAnimator import LIPSYNC2D_PoseLibraryAnimator
+
 from ..Core.Animator.LIPSYNC2D_ShapeKeysAnimator import LIPSYNC2D_ShapeKeysAnimator
 from ..Core.Animator.LIPSYNC_SpriteSheetAnimator import LIPSYNC_SpriteSheetAnimator
 from ..Core.Animator.protocols import LIPSYNC2D_LipSyncAnimator
@@ -75,6 +77,7 @@ class LIPSYNC2D_OT_AnalyzeAudio(bpy.types.Operator):
 
         if "result" not in result:
             self.reset_bake_range()
+            os.remove(file_path)  # Need to be removed AFTER vosk_recognize_voice
             return {"FINISHED"}
 
         recognized_words = result["result"]
@@ -92,9 +95,12 @@ class LIPSYNC2D_OT_AnalyzeAudio(bpy.types.Operator):
         self.auto_insert_keyframes(
             auto_obj, obj, recognized_words, dialog_inspector, total_words, phonemes
         )
-        auto_obj.set_interpolation(obj)
+        # auto_obj.set_interpolation(obj)
         auto_obj.cleanup(obj)
         self.reset_bake_range()
+
+        if bpy.context.view_layer:
+            bpy.context.view_layer.update()
 
         self.report(
             {"INFO"}, message=f"{auto_obj.inserted_keyframes} keyframes inserted"
@@ -153,7 +159,7 @@ class LIPSYNC2D_OT_AnalyzeAudio(bpy.types.Operator):
         automations = {
             "SPRITESHEET": LIPSYNC_SpriteSheetAnimator,
             "SHAPEKEYS": LIPSYNC2D_ShapeKeysAnimator,
-            "POSELIBRARY": LIPSYNC2D_ShapeKeysAnimator,
+            "POSELIBRARY": LIPSYNC2D_PoseLibraryAnimator,
         }
 
         return automations[type]()

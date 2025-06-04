@@ -13,7 +13,16 @@ class AnimatorPanelPoseLibraryStrategy(AnimatorPanelMixin):
             return
 
     def draw_animator_section(self, context: BpyContext, layout: BpyUILayout):
-        pass
+        panel_header, panel_body = layout.panel(
+            "vpg_lipsync_animator_dropdown", default_closed=False
+        )
+
+        panel_header.label(text="Armature Settings")
+
+        if panel_body is not None:
+            row = panel_body.row()
+            row.label(text="Armature:")
+            row.prop(self.props, "lip_sync_2d_armature_to_animate", text="")
 
     def draw_animation_section(self, context: BpyContext, layout: BpyUILayout):
         panel_header, panel_body = layout.panel(
