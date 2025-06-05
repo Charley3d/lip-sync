@@ -95,7 +95,7 @@ class LIPSYNC2D_OT_AnalyzeAudio(bpy.types.Operator):
         self.auto_insert_keyframes(
             auto_obj, obj, recognized_words, dialog_inspector, total_words, phonemes
         )
-        # auto_obj.set_interpolation(obj)
+        auto_obj.set_interpolation(obj)
         auto_obj.cleanup(obj)
         self.reset_bake_range()
 

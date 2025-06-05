@@ -1,4 +1,5 @@
-from typing import Any, Iterator, cast
+import tracemalloc
+from typing import Iterator, Literal, cast
 
 import bpy
 
@@ -13,7 +14,6 @@ from ..Timeline.LIPSYNC2D_Timeline import LIPSYNC2D_Timeline
 from ..types import (
     VisemeActionAnimationData,
     VisemeData,
-    VisemeSKeyAnimationData,
     WordTiming,
 )
 from ...Preferences.LIPSYNC2D_AP_Preferences import LIPSYNC2D_AP_Preferences
@@ -22,11 +22,9 @@ from ...lipsync_types import (
     BpyActionChannelbag,
     BpyActionKeyframeStrip,
     BpyActionSlot,
-    BpyArmature,
     BpyContext,
     BpyObject,
     BpyPropertyGroup,
-    BpyShapeKey,
 )
 
 
@@ -152,21 +150,32 @@ class LIPSYNC2D_PoseLibraryAnimator:
         for action_anim_data in self._insert_on_visemes(
             obj, props, visemes_data, word_timing
         ):
-            for fcurve in self.channelbag.fcurves:
-                action = action_anim_data["action"]
-                if action is None:
-                    continue
-                pose_asset_fcurve = action.fcurves.find(
-                    fcurve.data_path, index=fcurve.array_index
-                )
-                if pose_asset_fcurve:
-                    fcurve_value = pose_asset_fcurve.keyframe_points[0].co.y
-                    kframe = fcurve.keyframe_points.insert(
-                        action_anim_data["frame"],
-                        value=fcurve_value,
-                    )
-                    kframe.interpolation = "LINEAR"
-                self.inserted_keyframes += 1
+            if (action := action_anim_data["action"]) is None:
+                continue
+
+            self.insert_keyframe_points(action, action_anim_data["frame"])
+
+    def insert_keyframe_points(
+        self,
+        pose_action: BpyAction,
+        frame: int,
+        interpolation: Literal["LINEAR"] = "LINEAR",
+    ):
+        for fcurve in self.channelbag.fcurves:
+            pose_asset_fcurve = pose_action.fcurves.find(
+                fcurve.data_path, index=fcurve.array_index
+            )
+            if pose_asset_fcurve is None:
+                continue
+
+            # Since Action is from a Pose Asset, we can safely assume that first keyframe point holds the Pose
+            fcurve_value = pose_asset_fcurve.keyframe_points[0].co.y
+            kframe = fcurve.keyframe_points.insert(
+                frame,
+                value=fcurve_value,
+            )
+            kframe.interpolation = interpolation
+            self.inserted_keyframes += 1
 
     def insert_silences(self, visemes_data: VisemeData, word_index: int):
         add_sil_at_word_end = (
@@ -190,110 +199,35 @@ class LIPSYNC2D_PoseLibraryAnimator:
                 ),
             )
 
-            for f in action.fcurves:
-                fcurve_value = f.keyframe_points[0].co.y
-                if not self.is_last_word:
-                    # Add silence after current word, with some delay to allow a smooth motion
-                    # If close_motion_duration is too high, fallback to next word time-postion minus defined threshold
-                    frame = corrected_word_end_frame + max(
-                        1,
-                        min(
-                            self.delay_until_next_word
-                            - self.in_between_frame_threshold,
-                            self.close_motion_duration,
-                        ),
-                    )
+            if not self.is_last_word:
+                # Add silence after current word, with some delay to allow a smooth motion
+                # If close_motion_duration is too high, fallback to next word time-postion minus defined threshold
+                frame = corrected_word_end_frame + max(
+                    1,
+                    min(
+                        self.delay_until_next_word - self.in_between_frame_threshold,
+                        self.close_motion_duration,
+                    ),
+                )
+                self.insert_keyframe_points(action, int(frame))
 
-                    self.channelbag.fcurves.find(
-                        f.data_path, index=f.array_index
-                    ).keyframe_points.insert(frame, fcurve_value)
-                    self.inserted_keyframes += 1
-
-                    frame = (
-                        corrected_word_end_frame
-                        + self.delay_until_next_word
-                        - max(1, self.in_between_frame_threshold)
-                    )
-
-                    self.channelbag.fcurves.find(
-                        f.data_path, index=f.array_index
-                    ).keyframe_points.insert(frame, fcurve_value)
-                    self.inserted_keyframes += 1
-
-                elif self.is_last_word:
-                    frame = corrected_word_end_frame + self.close_motion_duration
-                    self.channelbag.fcurves.find(
-                        f.data_path, index=f.array_index
-                    ).keyframe_points.insert(frame, fcurve_value)
-                    self.inserted_keyframes += 1
+                frame = (
+                    corrected_word_end_frame
+                    + self.delay_until_next_word
+                    - max(1, self.in_between_frame_threshold)
+                )
+                self.insert_keyframe_points(action, int(frame))
+            else:
+                frame = corrected_word_end_frame + self.close_motion_duration
+                self.insert_keyframe_points(action, int(frame))
 
         if self.is_first_word:
 
             frame = max(
                 LIPSYNC2D_Timeline.get_frame_start(),
-                self.word_start_frame - max(1, self.close_motion_duration),
+                self.word_start_frame - max(1, self.close_motion_duration / 2),
             )
-            for f in action.fcurves:
-                fcurve_value = f.keyframe_points[0].co.y
-                self.channelbag.fcurves.find(
-                    f.data_path, index=f.array_index
-                ).keyframe_points.insert(frame, fcurve_value)
-                self.inserted_keyframes += 1
-
-        #     for fcurve in self.channelbag.fcurves:
-        #         fcurve: bpy.types.FCurve
-        #         # Define data-path and value
-
-        #         value = 1 if silence_data_path == fcurve.data_path else 0
-
-        #         # Last viseme is inserted a bit before end of word. This ensures that silence uses correct timing
-        #         corrected_word_end_frame = (
-        #             LIPSYNC2D_ShapeKeysAnimator.get_corrected_end_frame(
-        #                 self.word_start_frame, visemes_data
-        #             )
-        #         )
-
-        #         if not self.is_last_word:
-        #             # Add silence after current word, with some delay to allow a smooth motion
-        #             # If close_motion_duration is too high, fallback to next word time-postion minus defined threshold
-        #             frame = corrected_word_end_frame + max(
-        #                 1,
-        #                 min(
-        #                     self.delay_until_next_word
-        #                     - self.in_between_frame_threshold,
-        #                     self.close_motion_duration,
-        #                 ),
-        #             )
-
-        #             fcurve.keyframe_points.insert(frame, value=value, options={"FAST"})
-        #             self.inserted_keyframes += 1
-
-        #             # Add silence just before the next word.
-        #             # This prevents the lips from sliding unnaturally.
-        #             # TODO previous_start is not updated although new keyframe is inserted. see how to update it
-
-        #             frame = (
-        #                 corrected_word_end_frame
-        #                 + self.delay_until_next_word
-        #                 - max(1, self.in_between_frame_threshold)
-        #             )
-        #             fcurve.keyframe_points.insert(frame, value=value, options={"FAST"})
-        #             self.inserted_keyframes += 1
-
-        #         elif self.is_last_word:
-        #             frame = corrected_word_end_frame + self.close_motion_duration
-        #             fcurve.keyframe_points.insert(frame, value=value, options={"FAST"})
-        #             self.inserted_keyframes += 1
-
-        # if self.is_first_word:
-        #     for fcurve in self.channelbag.fcurves:
-        #         fcurve: bpy.types.FCurve
-        #         value = 1 if silence_data_path == fcurve.data_path else 0
-        #         frame = max(
-        #             LIPSYNC2D_Timeline.get_frame_start(),
-        #             self.word_start_frame - max(1, self.close_motion_duration),
-        #         )
-        #         fcurve.keyframe_points.insert(frame, value=value, options={"FAST"})
+            self.insert_keyframe_points(action, int(frame))
 
     def _insert_on_visemes(
         self,
@@ -379,31 +313,7 @@ class LIPSYNC2D_PoseLibraryAnimator:
         return previous_viseme_prop_name == viseme_prop_name
 
     def set_interpolation(self, obj: BpyObject):
-        """
-        Sets the interpolation type for all keyframes of the given object's animation
-        data to 'LINEAR'. This ensures that the transition between keyframes is linear
-        and removes any other interpolation effects.
-
-        :param obj: The Blender object whose animation keyframe interpolation will be
-            modified.
-        :type obj: BpyObject
-        :return: None
-        """
-        if (action := self.get_armature_action(obj)) is None:
-            return
-
-        strip = cast(BpyActionKeyframeStrip, action.layers[0].strips[0])
-
-        channelbag = strip.channelbag(self._slot, ensure=True)
-
-        for fcurve in channelbag.fcurves:
-            for fcurve in (
-                cast(BpyActionKeyframeStrip, action.layers[0].strips[0])
-                .channelbag(action.slots.get(f"OB{SLOT_POSE_LIB_NAME}"))
-                .fcurves
-            ):
-                for keyframe in fcurve.keyframe_points:
-                    keyframe.interpolation = "LINEAR"
+        pass
 
     def setup(self, obj: BpyObject):
         """
@@ -469,47 +379,74 @@ class LIPSYNC2D_PoseLibraryAnimator:
     def setup_fcurves(self, obj: BpyObject, strip: BpyActionKeyframeStrip):
         if not isinstance(obj.data, bpy.types.Mesh):
             return
-
+        tracemalloc.start()
         props = obj.lipsync2d_props  # type: ignore
-
+        is_basic_rig = props.lip_sync_2d_rig_type_basic
         self.pose_assets_actions = self.get_available_actions()
-
         self.channelbag = strip.channelbag(self._slot, ensure=True)
         fcurves = self.channelbag.fcurves
-        fcurves: bpy.types.ActionChannelbagFCurves
 
         if props.lip_sync_2d_use_clear_keyframes:
             fcurves.clear()
 
-        # First, remove duplicated actions
-        all_pose_assets_actions = list(set(self.pose_assets_actions.values()))
-        # Then remove duplicated fcurves
-        # all_pose_assets_fcurves = [
-        #     f for a in all_pose_assets_actions for f in a.fcurves
-        # ]
+        seen_actions = set()
+        bone_groups_cache = {}
 
-        all_pose_assets_fcurves_by_action = {
-            a: a.fcurves for a in all_pose_assets_actions
-        }
+        for action in self.pose_assets_actions.values():
+            action_id = id(action)
+            if action_id in seen_actions:
+                continue
 
-        # all_pose_assets_fcurves_dpath = list(
-        #     set([f.data_path for a in all_pose_assets_actions for f in a.fcurves])
-        # )
+            seen_actions.add(action_id)
 
-        for a, fs in all_pose_assets_fcurves_by_action.items():
-            for f in fs:
-                if fcurves.find(f.data_path, index=f.array_index) is None:
-                    new_fcurve = fcurves.new(f.data_path, index=f.array_index)
+            if (
+                len(action.layers) == 0
+                or len(action.layers[0].strips) == 0
+                or not isinstance(
+                    pose_strip := action.layers[0].strips[0],
+                    bpy.types.ActionKeyframeStrip,
+                )
+                or len(action.slots) == 0
+            ):
+                continue  # Skip malformed actions
 
-                    # Create bone group if needed
-                    if "pose.bones[" in f.data_path:
-                        bone_name = f.data_path.split('"')[1]
+            pose_channelbag = pose_strip.channelbag(action.slots[0])
 
-                        # Find or create action group for this bone
-                        group = self.channelbag.groups.get(bone_name)
-                        if not group:
-                            group = self.channelbag.groups.new(bone_name)
-                        new_fcurve.group = group
+            for fcurve in pose_channelbag.fcurves:
+                if fcurves.find(fcurve.data_path, index=fcurve.array_index):
+                    continue
+
+                property_name = fcurve.data_path.split(".")[-1]
+
+                if is_basic_rig and (
+                    "bbone" in fcurve.data_path
+                    or property_name
+                    not in {
+                        "location",
+                        "rotation_euler",
+                        "rotation_quaternion",
+                        "scale",
+                    }
+                ):
+                    continue
+
+                new_fcurve = fcurves.new(fcurve.data_path, index=fcurve.array_index)
+
+                if "pose.bones[" in fcurve.data_path:
+                    bone_name = fcurve.data_path.split('"')[1]
+
+                    if bone_name not in bone_groups_cache:
+                        bone_groups_cache[bone_name] = self.channelbag.groups.get(
+                            bone_name
+                        ) or self.channelbag.groups.new(bone_name)
+
+                    new_fcurve.group = bone_groups_cache[bone_name]
+
+        current, peak = tracemalloc.get_traced_memory()
+        print(f"Current memory usage: {current / 1024 :.3f} kb")
+        print(f"Peak memory usage: {peak / 1024 :.3f} kb")
+
+        tracemalloc.stop()
 
     def set_up_action(
         self, obj: BpyObject

@@ -17,12 +17,20 @@ class AnimatorPanelPoseLibraryStrategy(AnimatorPanelMixin):
             "vpg_lipsync_animator_dropdown", default_closed=False
         )
 
-        panel_header.label(text="Armature Settings")
+        panel_header.label(text="Rig Settings")
 
         if panel_body is not None:
             row = panel_body.row()
-            row.label(text="Armature:")
+            row.label(text="Armature")
             row.prop(self.props, "lip_sync_2d_armature_to_animate", text="")
+
+            row = panel_body.row()
+            row.label(text="Rig Type")
+
+            row = panel_body.row(align=True)
+            row.prop(self.props, "lip_sync_2d_rig_type_basic", toggle=True)
+            row.prop(self.props, "lip_sync_2d_rig_type_advanced", toggle=True)
+            panel_body.separator(factor=1)
 
     def draw_animation_section(self, context: BpyContext, layout: BpyUILayout):
         panel_header, panel_body = layout.panel(
