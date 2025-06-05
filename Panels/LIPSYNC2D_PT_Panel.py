@@ -1,6 +1,6 @@
 import bpy
 
-from .AnimatorPanelPoseLibraryStrategy import AnimatorPanelPoseLibraryStrategy
+from .AnimatorPanelPoseAssetsStrategy import AnimatorPanelPoseAssetsStrategy
 
 from .protocols import LIPSYNC2D_AnimatorPanel
 
@@ -58,8 +58,8 @@ class LIPSYNC2D_PT_Panel(bpy.types.Panel):
             self.animator_panel = AnimatorPanelShapeKeysStrategy(active_obj)
         elif props.lip_sync_2d_lips_type == "SPRITESHEET":
             self.animator_panel = AnimatorPanelSpriteSheetStrategy(active_obj)
-        elif props.lip_sync_2d_lips_type == "POSELIBRARY":
-            self.animator_panel = AnimatorPanelPoseLibraryStrategy(active_obj)
+        elif props.lip_sync_2d_lips_type == "POSEASSETS":
+            self.animator_panel = AnimatorPanelPoseAssetsStrategy(active_obj)
 
         layout = self.layout
 

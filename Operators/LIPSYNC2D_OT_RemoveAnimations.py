@@ -3,7 +3,7 @@ import bpy
 
 from ..Core.constants import (
     ACTION_SUFFIX_NAME,
-    SLOT_POSE_LIB_NAME,
+    SLOT_POSE_ASSETS_NAME,
     SLOT_SHAPE_KEY_NAME,
     SLOT_SPRITE_SHEET_NAME,
 )
@@ -52,8 +52,8 @@ class LIPSYNC2D_OT_RemoveAnimations(bpy.types.Operator):
                 slots = [action.slots.get(f"KE{SLOT_SHAPE_KEY_NAME}")]
             elif self.animation_type == "SPRITESHEET":
                 slots = [action.slots.get(f"OB{SLOT_SPRITE_SHEET_NAME}")]
-            elif self.animation_type == "POSELIB":
-                slots = [action.slots.get(f"OB{SLOT_POSE_LIB_NAME}")]
+            elif self.animation_type == "POSEASSETS":
+                slots = [action.slots.get(f"OB{SLOT_POSE_ASSETS_NAME}")]
 
             for slot in slots:
                 if slot is not None:

@@ -78,7 +78,7 @@ def create_custom_prop(obj: bpy.types.Object):
     obj.lipsync2d_props.lip_sync_2d_sprite_sheet_main_scale = 1  # type: ignore
     obj.lipsync2d_props.lip_sync_2d_sprite_sheet_index = 0  # type: ignore
     obj.lipsync2d_props.lip_sync_2d_sprite_sheet_format = "VLINE"  # type: ignore
-    obj.lipsync2d_props.lip_sync_2d_lips_type = "SPRITESHEET" if obj.type == "MESH" else "POSELIBRARY"  # type: ignore
+    obj.lipsync2d_props.lip_sync_2d_lips_type = "SPRITESHEET" if obj.type == "MESH" else "POSEASSETS"  # type: ignore
     obj.lipsync2d_props["lip_sync_2d_viseme_shape_keys"] = 0  # type: ignore
     obj.lipsync2d_props.lip_sync_2d_in_between_threshold = 0.0417  # type: ignore
     obj.lipsync2d_props["lip_sync_2d_bake_start"] = 0  # type: ignore

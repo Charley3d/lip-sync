@@ -6,7 +6,7 @@ from typing import Literal, cast
 import bpy
 from vosk import KaldiRecognizer, Model
 
-from ..Core.Animator.LIPSYNC2D_PoseLibraryAnimator import LIPSYNC2D_PoseLibraryAnimator
+from ..Core.Animator.LIPSYNC2D_PoseAssetsAnimator import LIPSYNC2D_PoseAssetsAnimator
 
 from ..Core.Animator.LIPSYNC2D_ShapeKeysAnimator import LIPSYNC2D_ShapeKeysAnimator
 from ..Core.Animator.LIPSYNC_SpriteSheetAnimator import LIPSYNC_SpriteSheetAnimator
@@ -159,7 +159,7 @@ class LIPSYNC2D_OT_AnalyzeAudio(bpy.types.Operator):
         automations = {
             "SPRITESHEET": LIPSYNC_SpriteSheetAnimator,
             "SHAPEKEYS": LIPSYNC2D_ShapeKeysAnimator,
-            "POSELIBRARY": LIPSYNC2D_PoseLibraryAnimator,
+            "POSEASSETS": LIPSYNC2D_PoseAssetsAnimator,
         }
 
         return automations[type]()

@@ -139,10 +139,14 @@ def get_lip_sync_type_items(self, context: BpyContext | None):
 
     if context.active_object.type == "ARMATURE":
         items = [
-            ("POSELIBRARY", "Pose Assets", "Use Pose Library to animate mouth"),
+            ("POSEASSETS", "Pose Assets", "Use Pose Library to animate mouth"),
         ]
 
     return items
+
+
+def poll_pose_assets(self, obj: bpy.types.ID):
+    return bool(obj.asset_data)
 
 
 class LIPSYNC2D_PG_CustomProperties(bpy.types.PropertyGroup):
@@ -350,11 +354,6 @@ class LIPSYNC2D_PG_CustomProperties(bpy.types.PropertyGroup):
                     type=bpy.types.Action,
                     name=f"Viseme {name}",
                     description=desc,
-                    poll=poll_pose_lib,
+                    poll=poll_pose_assets,
                 ),
             )
-
-
-def poll_pose_lib(self, obj: bpy.types.ID):
-
-    return bool(obj.asset_data)
