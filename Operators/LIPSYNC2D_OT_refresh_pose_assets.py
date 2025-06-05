@@ -33,7 +33,6 @@ class LIPSYNC2D_OT_refresh_pose_assets(bpy.types.Operator):
         asset_libraries = filepaths.asset_libraries
 
         for asset_library in asset_libraries:
-            library_name = asset_library.name
             library_path = Path(asset_library.path)
 
             if not library_path.exists():
@@ -53,5 +52,4 @@ class LIPSYNC2D_OT_refresh_pose_assets(bpy.types.Operator):
                         data_to.actions = data_from.actions
 
                 except Exception as e:
-                    print(f"Could not load assets from {blend_file}: {e}")
                     continue

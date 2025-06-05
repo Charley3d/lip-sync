@@ -1,4 +1,3 @@
-import tracemalloc
 from typing import Iterator, Literal, cast
 
 import bpy
@@ -449,7 +448,7 @@ class LIPSYNC2D_PoseAssetsAnimator:
         """
         if not isinstance(obj.data, bpy.types.Armature):
             return
-        tracemalloc.start()
+
         props = obj.lipsync2d_props  # type: ignore
         is_basic_rig = props.lip_sync_2d_rig_type_basic
         self.pose_assets_actions = self.get_available_actions()
@@ -511,12 +510,6 @@ class LIPSYNC2D_PoseAssetsAnimator:
                         ) or self.channelbag.groups.new(bone_name)
 
                     new_fcurve.group = bone_groups_cache[bone_name]
-
-        current, peak = tracemalloc.get_traced_memory()
-        print(f"Current memory usage: {current / 1024 :.3f} kb")
-        print(f"Peak memory usage: {peak / 1024 :.3f} kb")
-
-        tracemalloc.stop()
 
     def set_up_action(
         self, obj: BpyObject
