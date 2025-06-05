@@ -9,7 +9,7 @@ from .LIPSYNC2D_ShapeKeysAnimator import LIPSYNC2D_ShapeKeysAnimator
 from ..phoneme_to_viseme import viseme_items_mpeg4_v2
 
 from ..Timeline.LIPSYNC2D_TimeConversion import LIPSYNC2D_TimeConversion
-from ..constants import ACTION_SUFFIX_NAME, SLOT_POSE_LIB_NAME
+from ..constants import ACTION_SUFFIX_NAME, SLOT_POSE_ASSETS_NAME
 from ..Timeline.LIPSYNC2D_Timeline import LIPSYNC2D_Timeline
 from ..types import (
     VisemeActionAnimationData,
@@ -28,7 +28,7 @@ from ...lipsync_types import (
 )
 
 
-class LIPSYNC2D_PoseLibraryAnimator:
+class LIPSYNC2D_PoseAssetsAnimator:
     """
     A class designed to manage lip-sync animation using pose assets in Blender.
 
@@ -560,8 +560,8 @@ class LIPSYNC2D_PoseLibraryAnimator:
             layer = action.layers[0]
             strip = cast(bpy.types.ActionKeyframeStrip, layer.strips[0])
 
-        self._slot = action.slots.get(f"OB{SLOT_POSE_LIB_NAME}") or action.slots.new(
-            id_type="OBJECT", name=f"{SLOT_POSE_LIB_NAME}"
+        self._slot = action.slots.get(f"OB{SLOT_POSE_ASSETS_NAME}") or action.slots.new(
+            id_type="OBJECT", name=f"{SLOT_POSE_ASSETS_NAME}"
         )
 
         self.armature.animation_data.action = action

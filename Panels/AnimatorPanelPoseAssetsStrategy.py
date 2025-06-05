@@ -6,7 +6,7 @@ from ..Core.phoneme_to_viseme import viseme_items_mpeg4_v2 as viseme_items
 from ..lipsync_types import BpyContext, BpyUILayout
 
 
-class AnimatorPanelPoseLibraryStrategy(AnimatorPanelMixin):
+class AnimatorPanelPoseAssetsStrategy(AnimatorPanelMixin):
     def __init__(self, obj: BpyObject):
         super().__init__(obj)
         if not isinstance(obj.data, bpy.types.Mesh):
@@ -93,7 +93,7 @@ class AnimatorPanelPoseLibraryStrategy(AnimatorPanelMixin):
         operator = row.operator(
             "object.remove_lip_sync_animations", text="Remove Pose Animation"
         )
-        operator.animation_type = "POSELIB"  # type: ignore
+        operator.animation_type = "POSEASSETS"  # type: ignore
         row = box.row()
         operator = row.operator(
             "object.remove_lip_sync_animations", text="Remove all Animations"
