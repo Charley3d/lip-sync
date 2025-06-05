@@ -1,5 +1,7 @@
 import bpy
 
+from .Operators.LIPSYNC2D_OT_refresh_pose_assets import LIPSYNC2D_OT_refresh_pose_assets
+
 
 from .Core.LIPSYNC2D_EspeakInspector import LIPSYNC2D_EspeakInspector
 from .Core.LIPSYNC2D_VoskHelper import LIPSYNC2D_VoskHelper
@@ -35,6 +37,7 @@ def register():
     bpy.utils.register_class(LIPSYNC2D_OT_RemoveNodeGroups)
     bpy.utils.register_class(LIPSYNC2D_PT_Edit)
     bpy.utils.register_class(LIPSYNC2D_OT_RemoveAnimations)
+    bpy.utils.register_class(LIPSYNC2D_OT_refresh_pose_assets)
     bpy.types.Object.lipsync2d_props = bpy.props.PointerProperty(type=LIPSYNC2D_PG_CustomProperties)  # type: ignore
 
 
@@ -51,6 +54,7 @@ def unregister():
     bpy.utils.unregister_class(LIPSYNC2D_OT_RemoveNodeGroups)
     bpy.utils.unregister_class(LIPSYNC2D_PT_Edit)
     bpy.utils.unregister_class(LIPSYNC2D_OT_RemoveAnimations)
+    bpy.utils.unregister_class(LIPSYNC2D_OT_refresh_pose_assets)
     del bpy.types.Object.lipsync2d_props  # type: ignore
 
 
