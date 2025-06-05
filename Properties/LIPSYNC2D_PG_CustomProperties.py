@@ -5,6 +5,18 @@ import bpy
 from ..Core.phoneme_to_viseme import viseme_items_mpeg4_v2 as viseme_items
 
 
+def update_rig_type_advanced(self, context):
+    if self.lip_sync_2d_rig_type_advanced:
+        self["lip_sync_2d_rig_type_basic"] = False
+    self["lip_sync_2d_rig_type_advanced"] = True
+
+
+def update_rig_type_basic(self, context):
+    if self.lip_sync_2d_rig_type_basic:
+        self["lip_sync_2d_rig_type_advanced"] = False
+    self["lip_sync_2d_rig_type_basic"] = True
+
+
 def update_sprite_sheet(self: bpy.types.bpy_struct, context: bpy.types.Context):
     obj = context.active_object
     mat: bpy.types.Material = obj.lipsync2d_props.lip_sync_2d_main_material  # type: ignore
@@ -272,6 +284,26 @@ class LIPSYNC2D_PG_CustomProperties(bpy.types.PropertyGroup):
         description="Armature to animate",
         type=bpy.types.Object,
         poll=armature_prop_poll,
+    )  # type: ignore
+
+    lip_sync_2d_rig_type_basic: bpy.props.BoolProperty(
+        name="Basic Rig",
+        description=(
+            "Rig with basic bones animation.\n"
+            "As long as only basic bones are animated, this should be your default choice."
+        ),
+        default=True,
+        update=update_rig_type_basic,
+    )  # type: ignore
+
+    lip_sync_2d_rig_type_advanced: bpy.props.BoolProperty(
+        name="Advanced Rig",
+        description=(
+            "Rig with more complex animated elements like BBone or Custom Properties.\n"
+            "Since this inserts keyframes on ALL of your animated properties, it will be slower.\n"
+            "Only use this if Basic Rig is not working."
+        ),
+        update=update_rig_type_advanced,
     )  # type: ignore
 
     @classmethod
