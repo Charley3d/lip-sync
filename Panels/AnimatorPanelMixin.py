@@ -32,7 +32,7 @@ class AnimatorPanelMixin:
 
     def draw_visemes_section(self, context: BpyContext, layout: BpyUILayout):
         raise NotImplementedError()
-    
+
     def draw_animator_section(self, context: BpyContext, layout: BpyUILayout):
         raise NotImplementedError()
 
@@ -51,13 +51,11 @@ class AnimatorPanelMixin:
         row = box.row()
         row.label(text="Animation:")
         row = box.row()
-        operator = row.operator(
-            "object.remove_lip_sync_animations", text="Remove SK Animations"
-        )
+        operator = row.operator("object.remove_lip_sync_animations", text="Remove SK")
         operator.animation_type = "SHAPEKEYS"  # type: ignore
-        operator = row.operator(
-            "object.remove_lip_sync_animations", text="Remove SPT Animations"
-        )
+        operator = row.operator("object.remove_lip_sync_animations", text="Remove Pose")
+        operator.animation_type = "POSELIB"  # type: ignore
+        operator = row.operator("object.remove_lip_sync_animations", text="Remove SPT")
         operator.animation_type = "SPRITESHEET"  # type: ignore
         row = box.row()
         operator = row.operator(
@@ -105,5 +103,4 @@ class AnimatorPanelMixin:
             row = panel_body.row(align=True)
             row.prop(self.props, "lip_sync_2d_bake_start", text="Start")
             row.prop(self.props, "lip_sync_2d_bake_end", text="End")
-            row.enabled = self.props.lip_sync_2d_use_bake_range # type: ignore
-            
+            row.enabled = self.props.lip_sync_2d_use_bake_range  # type: ignore

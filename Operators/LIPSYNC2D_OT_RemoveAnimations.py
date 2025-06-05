@@ -3,6 +3,7 @@ import bpy
 
 from ..Core.constants import (
     ACTION_SUFFIX_NAME,
+    SLOT_POSE_LIB_NAME,
     SLOT_SHAPE_KEY_NAME,
     SLOT_SPRITE_SHEET_NAME,
 )
@@ -15,8 +16,10 @@ class LIPSYNC2D_OT_RemoveAnimations(bpy.types.Operator):
     bl_label = "Remove Animations"
     bl_description = (
         "Remove Lip Sync Animation Data from your Object. "
-        "\nSPT: Sprite Sheet Animation Data."
+        "\n"
         "\nSK: ShapeKeys Animation Data."
+        "\nPose: Poses Animation Data."
+        "\nSPT: Sprite Sheet Animation Data."
         "\nall: Remove the entire Action"
     )
     bl_options = {"UNDO"}
@@ -50,6 +53,8 @@ class LIPSYNC2D_OT_RemoveAnimations(bpy.types.Operator):
                 slots = [action.slots.get(f"KE{SLOT_SHAPE_KEY_NAME}")]
             elif self.animation_type == "SPRITESHEET":
                 slots = [action.slots.get(f"OB{SLOT_SPRITE_SHEET_NAME}")]
+            elif self.animation_type == "POSELIB":
+                slots = [action.slots.get(f"OB{SLOT_POSE_LIB_NAME}")]
 
             for slot in slots:
                 if slot is not None:
