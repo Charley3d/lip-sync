@@ -30,11 +30,11 @@ from ...lipsync_types import (
 
 class LIPSYNC2D_PoseLibraryAnimator:
     """
-    A class designed to manage lip-sync animation using shape keys in Blender.
+    A class designed to manage lip-sync animation using pose assets in Blender.
 
-    This class provides methods for manipulating shape key animations, including clearing
+    This class provides methods for manipulating bone pose animations, including clearing
     existing keyframes, setting up new animations, modifying interpolation types, and inserting
-    keyframes for viseme data.
+    keyframes for viseme data using pose library assets.
 
     :ivar _slot: Internal storage representing a reference to an action slot used in
         the animation chain for lip-syncing (assigned during setup phase).
@@ -61,16 +61,16 @@ class LIPSYNC2D_PoseLibraryAnimator:
 
     def get_armature_action(self, obj: BpyObject):
         """
-        Retrieves the action associated with the shape keys of the given object, if available.
+        Retrieves the action associated with the armature of the given object, if available.
 
-        This function checks if the provided object has shape keys defined. If shape keys
-        are present and they have associated animation data and an assigned action, the
-        function returns the action. If any of these conditions fail, the function returns None.
+        This function checks if the provided object has an armature with animation data.
+        If the armature is present and has associated animation data with an assigned action,
+        the function returns the action. If any of these conditions fail, the function returns None.
 
-        :param obj: The object to retrieve the shape key action from.
-        :type obj: Any
-        :return: The action associated with the object's shape keys if available, otherwise None.
-        :rtype: Any or None
+        :param obj: The armature object to retrieve the action from.
+        :type obj: BpyObject
+        :return: The action associated with the armature's animation data if available, otherwise None.
+        :rtype: BpyAction or None
         """
         if not isinstance(obj.data, bpy.types.Armature):
             return None
@@ -86,15 +86,15 @@ class LIPSYNC2D_PoseLibraryAnimator:
 
     def clear_previous_keyframes(self, obj: BpyObject):
         """
-        Clears all previous keyframes from the shape key action's channelbag for
+        Clears all previous keyframes from the armature action's channelbag for
         the provided object, ensuring the removal of existing animation
         data within the specified context.
 
-        :param obj: The Blender object from which previous keyframes are to be
-            cleared. Must have a mesh data type.
+        :param obj: The Blender armature object from which previous keyframes are to be
+            cleared. Must have an armature data type.
         :type obj: BpyObject
         :return: This function does not return any value. If the provided object
-            does not meet the required conditions (e.g., not a mesh or has no
+            does not meet the required conditions (e.g., not an armature or has no
             trackable action), the function terminates without modification.
         :rtype: None
         """
@@ -122,13 +122,13 @@ class LIPSYNC2D_PoseLibraryAnimator:
     ):
         """
         Insert viseme animations based on given viseme data, word timing, and properties. This function ensures
-        that the shape keys for lip-sync animations are manipulated and keyframed correctly for smooth transitions
-        between viseme states. It also optionally adds a silence (SIL) shape key at the end of a word depending
-        on specific conditions.
+        that the pose assets for lip-sync animations are manipulated and keyframed correctly for smooth transitions
+        between viseme states using bone poses. It also optionally adds a silence (SIL) pose asset at the end of a word
+        depending on specific conditions.
 
         :param word_index: Word index
-        :param obj: The Blender object to insert visemes into.
-        :param props: Properties related to lipsync and shape key data.
+        :param obj: The Blender armature object to insert visemes into.
+        :param props: Properties related to lipsync and pose asset data.
         :param visemes_data: Data about visemes, including their order and division details.
         :param word_timing: Timing information for the word's animation frames.
         :param delay_until_next_word: A delay value used to determine if silence should be inserted between words.
@@ -161,6 +161,19 @@ class LIPSYNC2D_PoseLibraryAnimator:
         frame: int,
         interpolation: Literal["LINEAR"] = "LINEAR",
     ):
+        """
+        Inserts keyframe points from a pose asset action into the target armature action.
+
+        This method copies bone transform values from the pose asset's F-curves and inserts
+        them as keyframes at the specified frame in the target armature's action.
+
+        :param pose_action: The pose asset action containing the bone poses to copy.
+        :type pose_action: BpyAction
+        :param frame: The frame number where keyframes should be inserted.
+        :type frame: int
+        :param interpolation: The interpolation type for the keyframes.
+        :type interpolation: Literal["LINEAR"]
+        """
         for fcurve in self.channelbag.fcurves:
             pose_asset_fcurve = pose_action.fcurves.find(
                 fcurve.data_path, index=fcurve.array_index
@@ -178,6 +191,17 @@ class LIPSYNC2D_PoseLibraryAnimator:
             self.inserted_keyframes += 1
 
     def insert_silences(self, visemes_data: VisemeData, word_index: int):
+        """
+        Inserts silence pose assets at appropriate timing intervals.
+
+        This method adds silence poses (typically mouth closed positions) before the first word,
+        after the last word, and between words when there's sufficient delay.
+
+        :param visemes_data: Data about visemes, including their timing information.
+        :type visemes_data: VisemeData
+        :param word_index: The index of the current word being processed.
+        :type word_index: int
+        """
         add_sil_at_word_end = (
             self.delay_until_next_word > self.silence_frame_threshold
         ) or self.is_last_word
@@ -237,19 +261,22 @@ class LIPSYNC2D_PoseLibraryAnimator:
         word_timing: WordTiming,
     ) -> Iterator[VisemeActionAnimationData]:
         """
-        Insert viseme animations based on given viseme data, word timing, and properties. This function ensures
-        that the shape keys for lip-sync animations are manipulated and keyframed correctly for smooth transitions
-        between viseme states. It also optionally adds a silence (SIL) shape key at the end of a word depending
-        on specific conditions.
+        Generate viseme animation data for inserting pose asset keyframes based on viseme timing.
 
-        :param word_index: Word index
-        :param obj: The Blender object to insert visemes into.
-        :param props: Properties related to lipsync and shape key data.
+        This function processes viseme data and yields animation information for each viseme,
+        ensuring that pose assets for lip-sync animations are applied correctly for smooth transitions
+        between bone pose states. It also handles timing and redundancy checks.
+
+        :param obj: The Blender armature object to insert visemes into.
+        :type obj: BpyObject
+        :param props: Properties related to lipsync and pose asset data.
+        :type props: BpyPropertyGroup
         :param visemes_data: Data about visemes, including their order and division details.
+        :type visemes_data: VisemeData
         :param word_timing: Timing information for the word's animation frames.
-        :param delay_until_next_word: A delay value used to determine if silence should be inserted between words.
-        :param is_last_word: Indicates whether the current word is the last word in the sequence.
-        :return: None
+        :type word_timing: WordTiming
+        :yield: Animation data for each viseme including frame, action, and metadata.
+        :rtype: Iterator[VisemeActionAnimationData]
         """
 
         if not isinstance(obj.data, bpy.types.Armature):
@@ -297,14 +324,17 @@ class LIPSYNC2D_PoseLibraryAnimator:
             self.previous_viseme = v
 
     def has_already_a_kframe(self, viseme_frame_start):
+        """Check if a keyframe already exists at the specified frame."""
         return viseme_frame_start == self.previous_start
 
     def is_prev_kframe_too_close(self, viseme_frame_start):
+        """Check if the previous keyframe is too close to the current frame."""
         return self.previous_start >= 0 and (
             viseme_frame_start - self.previous_start <= self.in_between_frame_threshold
         )
 
     def is_redundant(self, props: BpyPropertyGroup, v: str):
+        """Check if the current viseme pose asset is the same as the previous one."""
         if self.previous_viseme is None or self.previous_viseme == "sil":
             return False
 
@@ -316,17 +346,18 @@ class LIPSYNC2D_PoseLibraryAnimator:
         return previous_viseme_prop_name == viseme_prop_name
 
     def set_interpolation(self, obj: BpyObject):
+        """Set interpolation type for pose asset keyframes (placeholder method)."""
         pass
 
     def setup(self, obj: BpyObject):
         """
-        Sets up the animation action and its components for the provided Blender object
+        Sets up the animation action and its components for the provided Blender armature object
         if it meets the necessary conditions. Verifies the object's data type and animation
-        data, ensures that a specific action exists for lip-syncing, and assigns it to the
-        shape key animation data.
+        data, ensures that a specific action exists for lip-syncing with pose assets, and assigns
+        it to the armature's animation data.
 
-        :param obj: The Blender object for which the lip-sync animation is being set up.
-                    Must have a data type of Mesh and support animation data.
+        :param obj: The Blender armature object for which the lip-sync animation is being set up.
+                    Must have a data type of Armature and support animation data.
         :type obj: BpyObject
         :return: None if the object does not meet the specified conditions for setup.
         :rtype: None
@@ -336,6 +367,15 @@ class LIPSYNC2D_PoseLibraryAnimator:
         self.setup_animation_properties(obj)
 
     def setup_properties(self, obj: BpyObject):
+        """
+        Initialize timing and threshold properties for pose asset animation.
+
+        This method sets up frame thresholds, timing conversions, and other properties
+        needed for smooth pose asset transitions during lip-sync animation.
+
+        :param obj: The Blender armature object being configured.
+        :type obj: BpyObject
+        """
         props = obj.lipsync2d_props  # type: ignore
 
         if bpy.context.scene is not None:
@@ -357,11 +397,15 @@ class LIPSYNC2D_PoseLibraryAnimator:
         self.previous_viseme = None
         self.inserted_keyframes = 0
         self.props = props
-        # TODO: Eventually remove this prop to directly use obj instead.
-        # This animator strategy is only available on armature object atm
         self.armature = obj
 
     def setup_animation_properties(self, obj: BpyObject):
+        """
+        Set up animation-specific properties including actions and F-curves for pose assets.
+
+        :param obj: The Blender armature object to configure.
+        :type obj: BpyObject
+        """
         _, strip = self.set_up_action(obj)
 
         if strip is None:
@@ -369,10 +413,19 @@ class LIPSYNC2D_PoseLibraryAnimator:
 
         self.setup_fcurves(obj, strip)
 
-    def get_available_actions(self) -> dict[str, bpy.types.Action]:
+    def get_available_actions(self) -> dict[str, BpyAction]:
+        """
+        Retrieve all available pose asset actions mapped to their corresponding visemes.
+
+        This method scans through all viseme properties and returns a dictionary mapping
+        viseme IDs to their associated pose asset actions.
+
+        :return: Dictionary mapping viseme IDs to pose asset actions.
+        :rtype: dict[str, BpyAction]
+        """
         visemes = viseme_items_mpeg4_v2(None, None)
 
-        available_actions: dict[str, bpy.types.Action] = {
+        available_actions: dict[str, BpyAction] = {
             enum_id: key
             for (enum_id, _, _) in visemes
             if (key := getattr(self.props, f"lip_sync_2d_viseme_pose_{enum_id}"))
@@ -382,6 +435,18 @@ class LIPSYNC2D_PoseLibraryAnimator:
         return available_actions
 
     def setup_fcurves(self, obj: BpyObject, strip: BpyActionKeyframeStrip):
+        """
+        Set up F-curves in the target armature action based on pose asset F-curves.
+
+        This method copies F-curve structure from pose assets to the target armature action,
+        creating the necessary bone channels and groups for animation. It supports both
+        basic and advanced rig types with appropriate filtering.
+
+        :param obj: The Blender armature object to set up F-curves for.
+        :type obj: BpyObject
+        :param strip: The action keyframe strip to work with.
+        :type strip: BpyActionKeyframeStrip
+        """
         if not isinstance(obj.data, bpy.types.Armature):
             return
         tracemalloc.start()
@@ -413,7 +478,7 @@ class LIPSYNC2D_PoseLibraryAnimator:
                 )
                 or len(action.slots) == 0
             ):
-                continue  # Skip malformed actions
+                continue  # Skip malformed pose asset actions
 
             pose_channelbag = pose_strip.channelbag(action.slots[0])
 
@@ -456,6 +521,18 @@ class LIPSYNC2D_PoseLibraryAnimator:
     def set_up_action(
         self, obj: BpyObject
     ) -> tuple[BpyAction, BpyActionKeyframeStrip] | tuple[None, None]:
+        """
+        Create or retrieve the main armature action for lip-sync animation.
+
+        This method ensures that the armature has proper animation data and creates
+        a dedicated action for lip-sync pose asset animation with the necessary
+        layers, strips, and slots.
+
+        :param obj: The Blender armature object to set up the action for.
+        :type obj: BpyObject
+        :return: Tuple containing the action and keyframe strip, or (None, None) if setup fails.
+        :rtype: tuple[BpyAction, BpyActionKeyframeStrip] | tuple[None, None]
+        """
         if not isinstance(obj.data, bpy.types.Armature):
             return (None, None)
 
@@ -493,9 +570,22 @@ class LIPSYNC2D_PoseLibraryAnimator:
         return action, strip
 
     def cleanup(self, obj: BpyObject):
+        """Clean up resources after pose asset animation is complete."""
         pass
 
     def poll(self, cls, context: BpyContext):
+        """
+        Check if pose asset lip-sync animation can be performed in the current context.
+
+        This method verifies that an armature is selected, has the necessary properties,
+        and that the system is ready for pose asset animation.
+
+        :param cls: The class calling this poll method.
+        :param context: The current Blender context.
+        :type context: BpyContext
+        :return: True if pose asset animation can be performed, False otherwise.
+        :rtype: bool
+        """
         obj = context.active_object
 
         if obj is None or obj.type != "ARMATURE":
@@ -511,6 +601,19 @@ class LIPSYNC2D_PoseLibraryAnimator:
 
     @staticmethod
     def get_corrected_end_frame(word_start_frame, visemes_data: VisemeData) -> int:
+        """
+        Calculate the corrected end frame for a word based on viseme timing.
+
+        This method computes the actual end frame of the last viseme in a word,
+        which may differ from the word's theoretical end frame.
+
+        :param word_start_frame: The starting frame of the word.
+        :type word_start_frame: int
+        :param visemes_data: Data about visemes including timing information.
+        :type visemes_data: VisemeData
+        :return: The corrected end frame for the word.
+        :rtype: int
+        """
         return word_start_frame + round(
             visemes_data["visemes_parts"] * (visemes_data["visemes_len"] - 1)
         )
