@@ -139,7 +139,7 @@ def get_lip_sync_type_items(self, context: BpyContext | None):
 
     if context.active_object.type == "ARMATURE":
         items = [
-            ("POSELIBRARY", "Pose Library", "Use Pose Library to animate mouth"),
+            ("POSELIBRARY", "Pose Assets", "Use Pose Library to animate mouth"),
         ]
 
     return items
