@@ -21,10 +21,6 @@ class AnimatorPanelPoseLibraryStrategy(AnimatorPanelMixin):
 
         if panel_body is not None:
             row = panel_body.row()
-            row.label(text="Armature")
-            row.prop(self.props, "lip_sync_2d_armature_to_animate", text="")
-
-            row = panel_body.row()
             row.label(text="Rig Type")
 
             row = panel_body.row(align=True)
@@ -84,3 +80,29 @@ class AnimatorPanelPoseLibraryStrategy(AnimatorPanelMixin):
             "sound.cgp_analyze_audio", text="Bake audio", icon="SCRIPTPLUGINS"
         )
         new_row.enabled = self.is_model_installed
+
+    def draw_edit_section(self, context: BpyContext, layout: BpyUILayout):
+
+        row = layout.row()
+        row.label(text="Clean Up:")
+
+        box = layout.box()
+        row = box.row()
+        row.label(text="Animation:")
+        row = box.row()
+        operator = row.operator(
+            "object.remove_lip_sync_animations", text="Remove Pose Animation"
+        )
+        operator.animation_type = "POSELIB"  # type: ignore
+        row = box.row()
+        operator = row.operator(
+            "object.remove_lip_sync_animations", text="Remove all Animations"
+        )
+        operator.animation_type = "ALL"  # type: ignore
+
+        box = layout.box()
+        row = box.row()
+        row.prop(self.props, "lip_sync_2d_remove_animation_data")
+        row = box.row()
+        row.alert = True
+        row.operator("object.remove_lip_sync_from_selection")

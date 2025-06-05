@@ -24,7 +24,7 @@ class LIPSYNC2D_OT_SetCustomProperties(bpy.types.Operator):
         obj = context.active_object
         return (
             obj is not None
-            and obj.type == "MESH"
+            and (obj.type == "MESH" or obj.type == "ARMATURE")
             and (
                 not hasattr(obj, "lipsync2d_props")
                 or context.active_object.lipsync2d_props.lip_sync_2d_initialized  # type: ignore
@@ -42,7 +42,8 @@ class LIPSYNC2D_OT_SetCustomProperties(bpy.types.Operator):
 
         create_custom_prop(context.active_object)
 
-        context.active_object.lipsync2d_props.lip_sync_2d_sprite_sheet = add_default_image_spritesheet()  # type: ignore
+        if context.active_object.type == "MESH":
+            context.active_object.lipsync2d_props.lip_sync_2d_sprite_sheet = add_default_image_spritesheet()  # type: ignore
 
         return {"FINISHED"}
 
@@ -77,11 +78,11 @@ def create_custom_prop(obj: bpy.types.Object):
     obj.lipsync2d_props.lip_sync_2d_sprite_sheet_main_scale = 1  # type: ignore
     obj.lipsync2d_props.lip_sync_2d_sprite_sheet_index = 0  # type: ignore
     obj.lipsync2d_props.lip_sync_2d_sprite_sheet_format = "VLINE"  # type: ignore
-    obj.lipsync2d_props.lip_sync_2d_lips_type = "SPRITESHEET"  # type: ignore
+    obj.lipsync2d_props.lip_sync_2d_lips_type = "SPRITESHEET" if obj.type == "MESH" else "POSELIBRARY"  # type: ignore
     obj.lipsync2d_props["lip_sync_2d_viseme_shape_keys"] = 0  # type: ignore
     obj.lipsync2d_props.lip_sync_2d_in_between_threshold = 0.0417  # type: ignore
-    obj.lipsync2d_props.lip_sync_2d_bake_start = 0  # type: ignore
-    obj.lipsync2d_props.lip_sync_2d_bake_end = 0  # type: ignore
+    obj.lipsync2d_props["lip_sync_2d_bake_start"] = 0  # type: ignore
+    obj.lipsync2d_props["lip_sync_2d_bake_end"] = 0  # type: ignore
 
     visemes = viseme_items(None, None)
     mapping = phonemes_to_default_sprite_index()

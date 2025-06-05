@@ -53,8 +53,6 @@ class AnimatorPanelMixin:
         row = box.row()
         operator = row.operator("object.remove_lip_sync_animations", text="Remove SK")
         operator.animation_type = "SHAPEKEYS"  # type: ignore
-        operator = row.operator("object.remove_lip_sync_animations", text="Remove Pose")
-        operator.animation_type = "POSELIB"  # type: ignore
         operator = row.operator("object.remove_lip_sync_animations", text="Remove SPT")
         operator.animation_type = "SPRITESHEET"  # type: ignore
         row = box.row()

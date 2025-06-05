@@ -18,7 +18,6 @@ class LIPSYNC2D_OT_RemoveAnimations(bpy.types.Operator):
         "Remove Lip Sync Animation Data from your Object. "
         "\n"
         "\nSK: ShapeKeys Animation Data."
-        "\nPose: Poses Animation Data."
         "\nSPT: Sprite Sheet Animation Data."
         "\nall: Remove the entire Action"
     )
