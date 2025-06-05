@@ -33,9 +33,12 @@ class LIPSYNC2D_PT_Panel(bpy.types.Panel):
 
         active_obj = context.active_object
 
-        if active_obj is None or active_obj.type != "MESH":
+        if active_obj is None or (
+            active_obj.type != "MESH" and active_obj.type != "ARMATURE"
+        ):
             self.layout.label(
-                text="Please, select an Object with Mesh Data", icon="INFO_LARGE"
+                text="Please, select an Object with Mesh Data or an Armature",
+                icon="INFO_LARGE",
             )
             return
 

@@ -72,7 +72,7 @@ class LIPSYNC2D_PoseLibraryAnimator:
         :return: The action associated with the object's shape keys if available, otherwise None.
         :rtype: Any or None
         """
-        if not isinstance(obj.data, bpy.types.Mesh):
+        if not isinstance(obj.data, bpy.types.Armature):
             return None
 
         if (
@@ -98,7 +98,7 @@ class LIPSYNC2D_PoseLibraryAnimator:
             trackable action), the function terminates without modification.
         :rtype: None
         """
-        if not isinstance(obj.data, bpy.types.Mesh):
+        if not isinstance(obj.data, bpy.types.Armature):
             return
 
         if (action := self.get_armature_action(obj)) is None:
@@ -252,7 +252,7 @@ class LIPSYNC2D_PoseLibraryAnimator:
         :return: None
         """
 
-        if not isinstance(obj.data, bpy.types.Mesh):
+        if not isinstance(obj.data, bpy.types.Armature):
             yield {
                 "frame": -1,
                 "viseme": "",
@@ -268,6 +268,9 @@ class LIPSYNC2D_PoseLibraryAnimator:
             viseme_frame_start = word_timing["word_frame_start"] + round(
                 viseme_index * visemes_data["visemes_parts"]
             )
+
+            if v not in self.pose_assets_actions:
+                continue
 
             if (
                 # Do not insert a keyframe on a frame that already contains a keyframe
@@ -354,7 +357,9 @@ class LIPSYNC2D_PoseLibraryAnimator:
         self.previous_viseme = None
         self.inserted_keyframes = 0
         self.props = props
-        self.armature = getattr(props, "lip_sync_2d_armature_to_animate")
+        # TODO: Eventually remove this prop to directly use obj instead.
+        # This animator strategy is only available on armature object atm
+        self.armature = obj
 
     def setup_animation_properties(self, obj: BpyObject):
         _, strip = self.set_up_action(obj)
@@ -377,7 +382,7 @@ class LIPSYNC2D_PoseLibraryAnimator:
         return available_actions
 
     def setup_fcurves(self, obj: BpyObject, strip: BpyActionKeyframeStrip):
-        if not isinstance(obj.data, bpy.types.Mesh):
+        if not isinstance(obj.data, bpy.types.Armature):
             return
         tracemalloc.start()
         props = obj.lipsync2d_props  # type: ignore
@@ -451,7 +456,7 @@ class LIPSYNC2D_PoseLibraryAnimator:
     def set_up_action(
         self, obj: BpyObject
     ) -> tuple[BpyAction, BpyActionKeyframeStrip] | tuple[None, None]:
-        if not isinstance(obj.data, bpy.types.Mesh):
+        if not isinstance(obj.data, bpy.types.Armature):
             return (None, None)
 
         # Safety check but should never occur because of Operator's poll method
@@ -493,18 +498,16 @@ class LIPSYNC2D_PoseLibraryAnimator:
     def poll(self, cls, context: BpyContext):
         obj = context.active_object
 
-        if obj is None or not isinstance(obj.data, bpy.types.Mesh):
+        if obj is None or obj.type != "ARMATURE":
             return False
 
         props = getattr(obj, "lipsync2d_props")
-        if props is None or getattr(props, f"lip_sync_2d_armature_to_animate") is None:
+        if props is None:
             return False
 
         model_state = LIPSYNC2D_AP_Preferences.get_model_state()
 
-        return (
-            context.scene is not None or context.active_object is not None
-        ) and model_state != "DOWNLOADING"
+        return (context.scene is not None) and model_state != "DOWNLOADING"
 
     @staticmethod
     def get_corrected_end_frame(word_start_frame, visemes_data: VisemeData) -> int:
