@@ -94,6 +94,20 @@ phoneme_to_viseme_arkit_v2 = {
     "w": "ou",
 }
 
+visemes_priority = {"sil": 0, "pp": 1, "th": 2}
+UNSKIPPABLE_VISEMES = ["sil", "pp", "th", "nn"]
+
+
+def get_viseme_priority(viseme: str) -> int:
+    """Get viseme priority. Lower number = higher priority."""
+    if not viseme:
+        return 999  # Lowest priority for invalid visemes
+
+    try:
+        return getattr(visemes_priority, viseme.lower(), 999)
+    except (AttributeError, TypeError):
+        return 999  # Default to lowest priority on any error
+
 
 def viseme_items_mpeg4_v2(self, context):
     return [

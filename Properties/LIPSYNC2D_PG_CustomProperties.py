@@ -106,7 +106,10 @@ def set_bake_end(self, value):
 
 
 def get_bake_end(self):
-    return self["lip_sync_2d_bake_end"]
+    try:
+        return self["lip_sync_2d_bake_end"]
+    except:
+        return 0
 
 
 def set_bake_start(self, value):
@@ -117,7 +120,10 @@ def set_bake_start(self, value):
 
 
 def get_bake_start(self):
-    return self["lip_sync_2d_bake_start"]
+    try:
+        return self["lip_sync_2d_bake_start"]
+    except:
+        return 0
 
 
 def armature_prop_poll(self, obj):

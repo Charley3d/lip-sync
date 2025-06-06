@@ -5,7 +5,11 @@ import bpy
 from .LIPSYNC2D_ShapeKeysAnimator import LIPSYNC2D_ShapeKeysAnimator
 
 
-from ..phoneme_to_viseme import viseme_items_mpeg4_v2
+from ..phoneme_to_viseme import (
+    get_viseme_priority,
+    viseme_items_mpeg4_v2,
+    UNSKIPPABLE_VISEMES,
+)
 
 from ..Timeline.LIPSYNC2D_TimeConversion import LIPSYNC2D_TimeConversion
 from ..constants import ACTION_SUFFIX_NAME, SLOT_POSE_ASSETS_NAME
@@ -298,19 +302,12 @@ class LIPSYNC2D_PoseAssetsAnimator:
             if v not in self.pose_assets_actions:
                 continue
 
-            if (
-                # Do not insert a keyframe on a frame that already contains a keyframe
-                self.has_already_a_kframe(viseme_frame_start)
-                # Do not insert a keyframe if previous keyframe is too close
-                or self.is_prev_kframe_too_close(viseme_frame_start)
-                # Do not insert a keyframe if previous keyframe was for the same viseme
-                or self.is_redundant(props, v)
-            ):
+            if self.should_skip_keyframe(props, v, viseme_frame_start):
                 continue
 
             action_name: str = getattr(props, f"lip_sync_2d_viseme_pose_{v}")
             action = self.pose_assets_actions[v]
-            # self.pose_assets_fcurves.
+
             yield {
                 "frame": viseme_frame_start,
                 "viseme": v,
@@ -321,6 +318,32 @@ class LIPSYNC2D_PoseAssetsAnimator:
 
             self.previous_start = viseme_frame_start
             self.previous_viseme = v
+
+    def should_skip_keyframe(self, props, v, viseme_frame_start):
+        return (
+            # Do not insert a keyframe on a frame that already contains a viseme with higher priority
+            self.should_skip_due_to_priority_conflict(v, viseme_frame_start)
+            or (
+                # Do not insert a keyframe if previous keyframe is too close
+                v.lower() not in UNSKIPPABLE_VISEMES
+                and self.is_prev_kframe_too_close(viseme_frame_start)
+            )
+            # Do not insert a keyframe if previous keyframe was for the same viseme
+            or self.is_redundant(props, v)
+        )
+
+    def should_skip_due_to_priority_conflict(
+        self, current_viseme: str, frame: int
+    ) -> bool:
+        """Skip current viseme if previous viseme at same frame has higher priority."""
+        if not self.has_already_a_kframe(frame) or not self.previous_viseme:
+            return False
+
+        prev_priority = get_viseme_priority(self.previous_viseme)
+        current_priority = get_viseme_priority(current_viseme)
+
+        # Skip if current has lower priority (higher number)
+        return current_priority > prev_priority
 
     def has_already_a_kframe(self, viseme_frame_start):
         """Check if a keyframe already exists at the specified frame."""
