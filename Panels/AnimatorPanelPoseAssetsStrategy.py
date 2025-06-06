@@ -59,11 +59,6 @@ class AnimatorPanelPoseAssetsStrategy(AnimatorPanelMixin):
                 row.label(text=f"{lang_code}")
                 row.prop(self.props, f"lip_sync_2d_viseme_pose_{lang_code}", text="")
 
-            panel_body.separator()
-            row = panel_body.row(align=True)
-            row.operator("lipsync2d.refresh_pose_assets")
-            panel_body.separator()
-
     def draw_thresholds(self, props, layout):
         row = layout.row()
         row.label(text="Thresholds:")
@@ -87,6 +82,12 @@ class AnimatorPanelPoseAssetsStrategy(AnimatorPanelMixin):
         new_row.enabled = self.is_model_installed
 
     def draw_edit_section(self, context: BpyContext, layout: BpyUILayout):
+
+        row = layout.row()
+        row.label(text="Pose Assets:")
+        box = layout.box()
+        row = box.row(align=True)
+        row.operator("lipsync2d.refresh_pose_assets")
 
         row = layout.row()
         row.label(text="Clean Up:")
