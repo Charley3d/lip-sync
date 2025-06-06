@@ -41,6 +41,9 @@ class AnimatorPanelPoseAssetsStrategy(AnimatorPanelMixin):
 
             self.draw_thresholds(self.props, panel_body)
 
+            row = panel_body.row()
+            row.prop(self.props, "lip_sync_2d_prioritize_accuracy", toggle=True)
+
     def draw_visemes_section(self, context: BpyContext, layout: BpyUILayout):
         panel_head, panel_body = layout.panel(
             "cgp_lipsync_viseme_dropdown", default_closed=False

@@ -95,7 +95,7 @@ phoneme_to_viseme_arkit_v2 = {
 }
 
 visemes_priority = {"sil": 0, "pp": 1, "th": 2}
-UNSKIPPABLE_VISEMES = ["sil", "pp", "th", "nn"]
+UNSKIPPABLE_VISEMES = ["sil", "pp", "th", "ff"]
 
 
 def get_viseme_priority(viseme: str) -> int:

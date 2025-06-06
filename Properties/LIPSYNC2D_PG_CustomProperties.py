@@ -325,6 +325,16 @@ class LIPSYNC2D_PG_CustomProperties(bpy.types.PropertyGroup):
         update=update_rig_type_advanced,
     )  # type: ignore
 
+    lip_sync_2d_prioritize_accuracy: bpy.props.BoolProperty(
+        name="Prioritize Accuracy",
+        description=(
+            "Animate all important visemes regardless of timing constraints. "
+            "Prevents critical mouth shapes (lip contact sounds like P, B, M, F, TH) "
+            "from being skipped when they occur in rapid succession."
+        ),
+        default=False,
+    )  # type: ignore
+
     @classmethod
     def register(cls):
         visemes = viseme_items(None, None)

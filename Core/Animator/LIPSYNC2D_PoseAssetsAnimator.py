@@ -320,17 +320,31 @@ class LIPSYNC2D_PoseAssetsAnimator:
             self.previous_viseme = v
 
     def should_skip_keyframe(self, props, v, viseme_frame_start):
-        return (
-            # Do not insert a keyframe on a frame that already contains a viseme with higher priority
-            self.should_skip_due_to_priority_conflict(v, viseme_frame_start)
-            or (
-                # Do not insert a keyframe if previous keyframe is too close
-                v.lower() not in UNSKIPPABLE_VISEMES
-                and self.is_prev_kframe_too_close(viseme_frame_start)
-            )
-            # Do not insert a keyframe if previous keyframe was for the same viseme
-            or self.is_redundant(props, v)
-        )
+        # Skip if there's a priority conflict
+        if self.should_skip_due_to_priority_conflict(v, viseme_frame_start):
+            return True
+
+        # Skip if redundant with previous viseme
+        if self.is_redundant(props, v):
+            return True
+
+        # Handle timing conflicts
+        if self.is_prev_kframe_too_close(viseme_frame_start):
+            return self._should_skip_due_to_timing(props, v)
+
+        return False
+
+    def _should_skip_due_to_timing(self, props, v: str) -> bool:
+        """Handle timing conflicts based on force_lips_contact setting"""
+        force_lips_contact = props.lip_sync_2d_prioritize_accuracy
+        is_unskippable = v.lower() in UNSKIPPABLE_VISEMES
+
+        if force_lips_contact:
+            # With force enabled: only skip skippable visemes
+            return not is_unskippable
+        else:
+            # Without force: skip all visemes that are too close
+            return True
 
     def should_skip_due_to_priority_conflict(
         self, current_viseme: str, frame: int
