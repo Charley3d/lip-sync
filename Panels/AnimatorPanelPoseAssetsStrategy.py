@@ -14,7 +14,7 @@ class AnimatorPanelPoseAssetsStrategy(AnimatorPanelMixin):
 
     def draw_animator_section(self, context: BpyContext, layout: BpyUILayout):
         panel_header, panel_body = layout.panel(
-            "vpg_lipsync_animator_dropdown", default_closed=False
+            "vpg_lipsync_animator_dropdown", default_closed=True
         )
 
         panel_header.label(text="Rig Settings")
@@ -43,7 +43,7 @@ class AnimatorPanelPoseAssetsStrategy(AnimatorPanelMixin):
 
     def draw_visemes_section(self, context: BpyContext, layout: BpyUILayout):
         panel_head, panel_body = layout.panel(
-            "cgp_lipsync_viseme_dropdown", default_closed=True
+            "cgp_lipsync_viseme_dropdown", default_closed=False
         )
         panel_head.label(text="Viseme Settings")
         if panel_body is not None:
