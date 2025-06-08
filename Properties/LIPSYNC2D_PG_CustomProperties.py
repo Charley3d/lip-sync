@@ -3,6 +3,8 @@ from typing import cast
 
 import bpy
 
+from ..Utils.strings import intern_enum_items
+
 from ..lipsync_types import BpyContext
 
 from ..Core.phoneme_to_viseme import viseme_items_mpeg4_v2 as viseme_items
@@ -95,7 +97,7 @@ def shape_keys_list(self: bpy.types.bpy_struct, context: bpy.types.Context | Non
         (s.name, s.name, s.name) for s in key_blocks if s != shape_keys.reference_key
     ]
 
-    return result
+    return intern_enum_items(result)
 
 
 def set_bake_end(self, value):
