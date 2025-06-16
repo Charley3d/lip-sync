@@ -208,7 +208,10 @@ class LIPSYNC2D_PoseAssetsAnimator:
         add_sil_at_word_end = (
             self.delay_until_next_word > self.silence_frame_threshold
         ) or self.is_last_word
-        action: BpyAction = getattr(self.props, f"lip_sync_2d_viseme_pose_sil")
+        action: BpyAction | None = getattr(self.props, f"lip_sync_2d_viseme_pose_sil")
+
+        if action is None:
+            return
 
         if add_sil_at_word_end:
 
