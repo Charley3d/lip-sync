@@ -177,14 +177,43 @@ class LIPSYNC2D_PoseAssetsAnimator:
         :param interpolation: The interpolation type for the keyframes.
         :type interpolation: Literal["LINEAR"]
         """
+        # Determine where to read the pose asset fcurves from. In newer Blender
+        # APIs pose assets may not expose `.fcurves` directly; the pose data is
+        # stored in the action's first layer/strip channelbag. Fall back to
+        # `pose_action.fcurves` when available.
+        pose_fcurves = None
+
+        # Try to get fcurves from the pose asset's strip channelbag first
+        try:
+            if hasattr(pose_action, "layers") and len(pose_action.layers) > 0:
+                pose_strip = pose_action.layers[0].strips[0]
+                # Use first slot if present
+                pose_slot = pose_action.slots[0] if getattr(pose_action, "slots", None) else None
+                if pose_strip is not None and pose_slot is not None:
+                    pose_channelbag = pose_strip.channelbag(pose_slot)
+                    pose_fcurves = getattr(pose_channelbag, "fcurves", None)
+        except Exception:
+            pose_fcurves = None
+
+        # Fallback to action.fcurves when present
+        if pose_fcurves is None:
+            pose_fcurves = getattr(pose_action, "fcurves", None)
+
+        if pose_fcurves is None:
+            # Nothing we can copy from
+            return
+
         for fcurve in self.channelbag.fcurves:
-            pose_asset_fcurve = pose_action.fcurves.find(
+            pose_asset_fcurve = pose_fcurves.find(
                 fcurve.data_path, index=fcurve.array_index
             )
             if pose_asset_fcurve is None:
                 continue
 
             # Since Action is from a Pose Asset, we can safely assume that first keyframe point holds the Pose
+            if len(pose_asset_fcurve.keyframe_points) == 0:
+                continue
+
             fcurve_value = pose_asset_fcurve.keyframe_points[0].co.y
             kframe = fcurve.keyframe_points.insert(
                 frame,
