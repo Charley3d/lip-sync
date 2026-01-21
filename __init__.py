@@ -38,7 +38,10 @@ def register():
     bpy.utils.register_class(LIPSYNC2D_PT_Edit)
     bpy.utils.register_class(LIPSYNC2D_OT_RemoveAnimations)
     bpy.utils.register_class(LIPSYNC2D_OT_refresh_pose_assets)
-    bpy.types.Object.lipsync2d_props = bpy.props.PointerProperty(type=LIPSYNC2D_PG_CustomProperties)  # type: ignore
+    bpy.types.Object.lipsync2d_props = bpy.props.PointerProperty(
+        type=LIPSYNC2D_PG_CustomProperties,
+        override={'LIBRARY_OVERRIDABLE'}
+    )  # type: ignore
 
 
 def unregister():
