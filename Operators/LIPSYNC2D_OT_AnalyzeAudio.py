@@ -62,7 +62,26 @@ class LIPSYNC2D_OT_AnalyzeAudio(bpy.types.Operator):
             return {"CANCELLED"}
 
         self.set_bake_range()
-        file_path = extract_audio()
+        
+        props = context.active_object.lipsync2d_props  # type: ignore
+        target_channel = props.lip_sync_2d_bake_channel
+        
+        muted_strips = []
+        try:
+            if target_channel != "ALL":
+                target_ch_int = int(target_channel)
+                for strip in context.scene.sequence_editor.strips_all:
+                    if strip.type == "SOUND" and not strip.mute:
+                        if strip.channel != target_ch_int:
+                            strip.mute = True
+                            muted_strips.append(strip)
+
+            file_path = extract_audio()
+            
+        finally:
+            # Restore mute state
+            for strip in muted_strips:
+                strip.mute = False
 
         if not os.path.isfile(f"{file_path}"):
             self.report(

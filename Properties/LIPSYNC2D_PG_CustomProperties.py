@@ -157,7 +157,35 @@ def poll_pose_assets(self, obj: bpy.types.ID):
     return bool(obj.asset_data)
 
 
+def get_channel_items(self, context: BpyContext | None):
+    items = [("ALL", "All Channels", "Bake audio from all channels")]
+
+    if context is None or context.scene is None or context.scene.sequence_editor is None:
+        return intern_enum_items(items)
+
+    channels = set()
+    for strip in context.scene.sequence_editor.strips_all:
+        if strip.type == "SOUND" and not strip.mute:
+            channels.add(strip.channel)
+
+    sorted_channels = sorted(list(channels))
+    
+    for channel in sorted_channels:
+        c_data = context.scene.sequence_editor.channels[channel]
+        channel_name = str(channel)+" - "+c_data.name
+        if c_data.mute:
+            channel_name += " (Muted)"
+        items.append((str(channel), channel_name, f"Bake audio from Channel {channel}"))
+    return intern_enum_items(items)
+
+
 class LIPSYNC2D_PG_CustomProperties(bpy.types.PropertyGroup):
+    lip_sync_2d_bake_channel: bpy.props.EnumProperty(
+        name="Channel",
+        description="Select specific channel to bake audio from",
+        items=get_channel_items
+    )  # type: ignore
+
     lip_sync_2d_initialized: bpy.props.BoolProperty(
         name="Initilize Lip Sync",
         description="Initilize Lip Sync on selection",

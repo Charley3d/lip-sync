@@ -102,3 +102,6 @@ class AnimatorPanelMixin:
             row.prop(self.props, "lip_sync_2d_bake_start", text="Start")
             row.prop(self.props, "lip_sync_2d_bake_end", text="End")
             row.enabled = self.props.lip_sync_2d_use_bake_range  # type: ignore
+
+            row = panel_body.row()
+            row.prop(self.props, "lip_sync_2d_bake_channel")
