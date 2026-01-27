@@ -90,14 +90,19 @@ class LIPSYNC2D_OT_AnalyzeAudio(bpy.types.Operator):
         phonemes = LIPSYNC2D_DialogInspector.extract_phonemes(words, context)
 
         auto_obj = self.get_animator(obj)
+        props = obj.lipsync2d_props  # type: ignore
+        debug_entries = [] if props.lip_sync_2d_debug_output else None
 
         auto_obj.setup(obj)
         self.auto_insert_keyframes(
-            auto_obj, obj, recognized_words, dialog_inspector, total_words, phonemes
+            auto_obj, obj, recognized_words, dialog_inspector, total_words, phonemes, debug_entries
         )
         auto_obj.set_interpolation(obj)
         auto_obj.cleanup(obj)
         self.reset_bake_range()
+
+        if debug_entries is not None:
+            self.write_debug_output(debug_entries)
 
         if bpy.context.view_layer:
             bpy.context.view_layer.update()
@@ -116,6 +121,7 @@ class LIPSYNC2D_OT_AnalyzeAudio(bpy.types.Operator):
         dialog_inspector: LIPSYNC2D_DialogInspector,
         total_words,
         phonemes,
+        debug_entries: list | None = None,
     ):
         props = obj.lipsync2d_props  # type: ignore
         words = enumerate(recognized_words)
@@ -123,9 +129,19 @@ class LIPSYNC2D_OT_AnalyzeAudio(bpy.types.Operator):
         for index, recognized_word in words:
             is_last_word = index == total_words - 1
             word_timing = dialog_inspector.get_word_timing(recognized_word)
+            current_phonemes = phonemes[index]
             visemes_data = dialog_inspector.get_visemes(
-                phonemes[index], word_timing["duration"]
+                current_phonemes, word_timing["duration"]
             )
+            
+            if debug_entries is not None:
+                debug_entries.append({
+                    "word": recognized_word["word"],
+                    "phonemes": current_phonemes,
+                    "visemes": visemes_data,
+                    "start": word_timing["word_frame_start"],
+                })
+
             next_word_timing = dialog_inspector.get_next_word_timing(
                 recognized_words, index
             )
@@ -150,6 +166,54 @@ class LIPSYNC2D_OT_AnalyzeAudio(bpy.types.Operator):
                 is_last_word,
                 index,
             )
+
+    def write_debug_output(self, entries):
+        text_name = "LipSync Debug"
+        text = bpy.data.texts.get(text_name)
+        if text is None:
+            text = bpy.data.texts.new(text_name)
+        else:
+            text.clear()
+
+        # Header
+        output = [
+            f"{'Word':<15} {'Start':<10} {'Phonemes':<15} {'Viseme':<10} {'Frame':<10}",
+            "-" * 60
+        ]
+
+        for entry in entries:
+            word = entry['word']
+            start_frame = entry['start']
+            phonemes = entry['phonemes']  # list of phonemes strings
+            phonemes_str = " ".join(phonemes)
+            
+            viseme_data = entry['visemes']
+            visemes_list = viseme_data['visemes']
+            part_duration = viseme_data['visemes_parts']
+            
+            # First line with word info
+            first_viseme = visemes_list[0] if visemes_list else ""
+            first_viseme_frame = f"{start_frame:.2f}"
+            
+            # If no visemes, just print word info
+            if not visemes_list:
+                output.append(f"{word:<15} {start_frame:<10} {phonemes_str:<15}")
+                continue
+
+            # Print first viseme with word info
+            output.append(f"{word:<15} {start_frame:<10} {phonemes_str:<15} {visemes_list[0]:<10} {first_viseme_frame:<10}")
+
+            # Print remaining visemes
+            current_frame = start_frame
+            for i in range(1, len(visemes_list)):
+                current_frame += part_duration
+                viseme = visemes_list[i]
+                output.append(f"{'':<15} {'':<10} {'':<15} {viseme:<10} {current_frame:.2f}")
+            
+            # Add a separator blank line or just spacing
+            # output.append("") 
+                
+        text.write("\n".join(output))
 
     @staticmethod
     def get_animator(obj: BpyObject) -> LIPSYNC2D_LipSyncAnimator:

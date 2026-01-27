@@ -95,6 +95,8 @@ class AnimatorPanelMixin:
             row = panel_body.row()
             row.prop(self.props, "lip_sync_2d_use_clear_keyframes")
             row = panel_body.row()
+            row.prop(self.props, "lip_sync_2d_debug_output")
+            row = panel_body.row()
             row.label(text="Range:")
             row = panel_body.row()
             row.prop(self.props, "lip_sync_2d_use_bake_range")

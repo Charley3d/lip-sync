@@ -289,6 +289,12 @@ class LIPSYNC2D_PG_CustomProperties(bpy.types.PropertyGroup):
         default=False,
     )  # type: ignore
 
+    lip_sync_2d_debug_output: bpy.props.BoolProperty(
+        name="Debug Output",
+        description="Output phoneme and viseme data to a text block",
+        default=False,
+    )  # type: ignore
+
     lip_sync_2d_bake_start: bpy.props.IntProperty(
         name="Bake Start",
         description="Start Baking at this frame",
