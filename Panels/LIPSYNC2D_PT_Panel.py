@@ -78,6 +78,10 @@ class LIPSYNC2D_PT_Panel(bpy.types.Panel):
         row.label(text="Animation type")
         row.prop(props, "lip_sync_2d_lips_type", text="")
 
+        row = layout.row(align=True)
+        row.operator("lipsync2d.export_mappings", text="Export Viseme Mappings", icon="EXPORT")
+        row.operator("lipsync2d.import_mappings", text="Import Viseme Mappings", icon="IMPORT")
+
         if self.animator_panel is None:
             return
 
