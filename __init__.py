@@ -12,6 +12,7 @@ from .Operators.LIPSYNC2D_OT_RemoveLipSync import LIPSYNC2D_OT_RemoveLipSync
 from .Operators.LIPSYNC2D_OT_RemoveNodeGroups import LIPSYNC2D_OT_RemoveNodeGroups
 from .Operators.LIPSYNC2D_OT_SetCustomProperties import LIPSYNC2D_OT_SetCustomProperties
 from .Operators.LIPSYNC2D_OT_SetMouthArea import LIPSYNC2D_OT_SetMouthArea
+from .Operators.LIPSYNC2D_OT_InstallModel import LIPSYNC2D_OT_InstallModel, LIPSYNC2D_OT_CancelDownload
 from .Panels.LIPSYNC2D_PT_Panel import LIPSYNC2D_PT_Panel
 from .Panels.LIPSYNC2D_PT_Settings import LIPSYNC2D_PT_Settings
 from .Panels.LIPSYNC2D_PT_Edit import LIPSYNC2D_PT_Edit
@@ -31,6 +32,8 @@ def register():
     bpy.utils.register_class(LIPSYNC2D_PT_Panel)
     bpy.utils.register_class(LIPSYNC2D_OT_SetMouthArea)
     bpy.utils.register_class(LIPSYNC2D_OT_SetCustomProperties)
+    bpy.utils.register_class(LIPSYNC2D_OT_InstallModel)
+    bpy.utils.register_class(LIPSYNC2D_OT_CancelDownload)
     bpy.utils.register_class(LIPSYNC2D_OT_AnalyzeAudio)
     bpy.utils.register_class(LIPSYNC2D_OT_DownloadModelsList)
     bpy.utils.register_class(LIPSYNC2D_OT_RemoveLipSync)
@@ -46,6 +49,8 @@ def unregister():
     bpy.utils.unregister_class(LIPSYNC2D_PT_Panel)
     bpy.utils.unregister_class(LIPSYNC2D_OT_SetMouthArea)
     bpy.utils.unregister_class(LIPSYNC2D_OT_SetCustomProperties)
+    bpy.utils.unregister_class(LIPSYNC2D_OT_InstallModel)
+    bpy.utils.unregister_class(LIPSYNC2D_OT_CancelDownload)
     bpy.utils.unregister_class(LIPSYNC2D_OT_AnalyzeAudio)
     bpy.utils.unregister_class(LIPSYNC2D_AP_Preferences)
     bpy.utils.unregister_class(LIPSYNC2D_PT_Settings)

@@ -4,6 +4,7 @@ import bpy
 from ..LIPSYNC2D_Utils import get_package_name
 
 from ..lipsync_types import BpyContext, BpyObject, BpyPropertyGroup, BpyUILayout
+from ..Core.LIPSYNC2D_VoskHelper import LIPSYNC2D_VoskHelper
 
 
 class AnimatorPanelMixin:
@@ -23,9 +24,13 @@ class AnimatorPanelMixin:
             self.prefs = bpy.context.preferences.addons[self.package_name].preferences
 
         self.current_lang = self.prefs.current_lang if self.prefs is not None else None  # type: ignore
-        self.is_model_installed = (
-            True if self.current_lang not in ["", "none"] else False
-        )
+        self.is_model_installed = False
+
+        if self.current_lang and self.current_lang not in ["", "none"]:
+             cache_path = LIPSYNC2D_VoskHelper.get_extension_path("cache")
+             model_path = cache_path / self.current_lang
+             if model_path.exists() and model_path.is_dir():
+                 self.is_model_installed = True
 
     def draw_animation_section(self, context: BpyContext, layout: BpyUILayout):
         raise NotImplementedError()
@@ -72,11 +77,24 @@ class AnimatorPanelMixin:
     def draw_baking_section(self, context: BpyContext, layout: BpyUILayout):
         if not self.is_model_installed:
             new_row = layout.row()
-            new_row.label(
-                text="Select a Language Model before Analyzing audio",
-                icon="WARNING_LARGE",
-            )
+            if self.current_lang and self.current_lang != "none":
+                new_row.label(
+                    text="Model not installed. Click to download.",
+                    icon="INFO",
+                )
+                new_row = layout.row()
+                new_row.operator("wm.lipsync_install_model", text="Download Model", icon="IMPORT")
+            else:
+                 new_row.label(
+                    text="Select a Language Model before Analyzing audio",
+                    icon="WARNING_LARGE",
+                )
 
+        new_row = layout.row()
+        new_row.operator(
+            "wm.lipsync_download_list", text="Reload Models List", icon="FILE_REFRESH"
+        )
+        new_row.enabled = bpy.app.online_access
         new_row = layout.row()
         new_row.operator(
             "sound.cgp_analyze_audio", text="Bake audio", icon="SCRIPTPLUGINS"

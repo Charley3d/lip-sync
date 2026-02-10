@@ -166,7 +166,12 @@ class LIPSYNC2D_OT_AnalyzeAudio(bpy.types.Operator):
 
     @LIPSYNC2D_VoskHelper.setextensionpath
     def get_model(self, prefs):
-        model = Model(lang=prefs.current_lang)
+        # Get the full path to the model directory
+        cache_path = LIPSYNC2D_VoskHelper.get_extension_path("cache")
+        model_path = cache_path / prefs.current_lang
+        
+        # Vosk Model expects the full path when using custom cache directories
+        model = Model(model_path=str(model_path))
         return model
 
     def vosk_recognize_voice(self, file_path: str, model: Model):
