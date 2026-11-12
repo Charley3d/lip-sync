@@ -33,7 +33,6 @@ def build_addon():
     current_dir = os.getcwd()
     exclude_patterns = [
         '.venv',
-        'venv',
         '.gitignore',
         '.git',
         '.idea',
