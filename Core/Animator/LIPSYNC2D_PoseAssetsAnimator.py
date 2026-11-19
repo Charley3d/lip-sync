@@ -177,8 +177,23 @@ class LIPSYNC2D_PoseAssetsAnimator:
         :param interpolation: The interpolation type for the keyframes.
         :type interpolation: Literal["LINEAR"]
         """
+        if (
+            len(pose_action.layers) == 0
+            or len(pose_action.layers[0].strips) == 0
+            or not isinstance(
+                pose_strip := pose_action.layers[0].strips[0],
+                bpy.types.ActionKeyframeStrip,
+            )
+            or len(pose_action.slots) == 0
+        ):
+            return
+
+        pose_channelbag = pose_strip.channelbag(pose_action.slots[0])
+        if pose_channelbag is None:
+            return
+
         for fcurve in self.channelbag.fcurves:
-            pose_asset_fcurve = pose_action.fcurves.find(
+            pose_asset_fcurve = pose_channelbag.fcurves.find(
                 fcurve.data_path, index=fcurve.array_index
             )
             if pose_asset_fcurve is None:

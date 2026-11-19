@@ -58,8 +58,13 @@ class LIPSYNC_SpriteSheetAnimator:
         :return: None
         """
         action = obj.animation_data.action if obj.animation_data else None
-        if action:
-            for fcurve in action.fcurves:
+        if action and len(action.layers) > 0 and len(action.layers[0].strips) > 0:
+            slot = self._slot or action.slots.get(f"OB{SLOT_SPRITE_SHEET_NAME}")
+            if slot is None:
+                return
+            strip = cast(BpyActionKeyframeStrip, action.layers[0].strips[0])
+            channelbag = strip.channelbag(slot, ensure=True)
+            for fcurve in channelbag.fcurves:
                 if fcurve.data_path == "lipsync2d_props.lip_sync_2d_sprite_sheet_index":
                     fcurve.keyframe_points.clear()
 
@@ -205,8 +210,13 @@ class LIPSYNC_SpriteSheetAnimator:
         """
         action = obj.animation_data.action if obj.animation_data else None
 
-        if action:
-            for fcurve in action.fcurves:
+        if action and len(action.layers) > 0 and len(action.layers[0].strips) > 0:
+            slot = self._slot or action.slots.get(f"OB{SLOT_SPRITE_SHEET_NAME}")
+            if slot is None:
+                return
+            strip = cast(BpyActionKeyframeStrip, action.layers[0].strips[0])
+            channelbag = strip.channelbag(slot, ensure=True)
+            for fcurve in channelbag.fcurves:
                 for keyframe in fcurve.keyframe_points:
                     keyframe.interpolation = 'CONSTANT'
 
