@@ -54,7 +54,12 @@ class LIPSYNC2D_OT_AnalyzeAudio(bpy.types.Operator):
             self.report(type={"ERROR"}, message="No Sequence Editor found")
             return {"CANCELLED"}
 
-        all_strips = context.scene.sequence_editor.strips_all
+        seq_ed = context.scene.sequence_editor
+        all_strips = (
+            seq_ed.strips_all
+            if hasattr(seq_ed, "strips_all")
+            else seq_ed.sequences_all  # type: ignore
+        )
         has_sound = any(strip.type == "SOUND" for strip in all_strips)
 
         if not has_sound:

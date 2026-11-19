@@ -191,11 +191,11 @@ def add_spritesheet_node_to_mat(
                         # Connect Input group to Mix Node
                         link_nodes(main_group.node_tree, group_input, mix_shader, 0, 1)
                         # Connect spritesheet Node to new Principled Node
-                        link_nodes(main_group.node_tree, group, principled, 0, 0)
+                        link_nodes(main_group.node_tree, group, principled, 0, "Base Color")
                         # Connect spritesheet Node Specular to new Principled Node
-                        link_nodes(main_group.node_tree, group, principled, 2, 13)
+                        link_nodes(main_group.node_tree, group, principled, 2, "Specular IOR Level")
                         # Connect spritesheet Node Roughness to new Principled Node
-                        link_nodes(main_group.node_tree, group, principled, 3, 2)
+                        link_nodes(main_group.node_tree, group, principled, 3, "Roughness")
                         # Connect spritesheet Node to Mix Node
                         link_nodes(main_group.node_tree, group, mix_shader, 1, 0)
                         # Connect previous node to Mix Node
@@ -259,8 +259,8 @@ def link_nodes(
     node_tree: bpy.types.NodeTree,
     output_node: bpy.types.Node,
     input_node: bpy.types.Node,
-    output_socket: int,
-    input_socket: int,
+    output_socket: int | str,
+    input_socket: int | str,
 ):
     output = output_node.outputs[output_socket]
     input = input_node.inputs[input_socket]
@@ -312,7 +312,8 @@ def get_or_create_material(
 
     # No material? Create one
     new_mat = bpy.data.materials.new(name="CGP_LipsAutoMaterial")
-    new_mat.use_nodes = True
+    if new_mat.node_tree is None:
+        new_mat.use_nodes = True
 
     # Make sure there's at least one slot
     if not obj.material_slots:
